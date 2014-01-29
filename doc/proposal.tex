@@ -1,0 +1,52 @@
+\documentclass{report}
+\usepackage{fullpage}
+\usepackage{parskip}
+\pagestyle{empty}
+\begin{document}
+\begin{center}
+\begin{Huge}
+\textbf{Project Proposal}
+\end{Huge}
+
+Matt Kline, James Gordon, Tyler Kuske, and Creighton Long
+\end{center}
+
+\section*{Overview}
+The proposed project is a virtual shooting range.
+The setup would consist of multiple targets which could be placed around a room.
+Each target would consist of an IR receiver as well as some LEDs, and would be connected to our ZedBoard.
+
+Multiple players would then have some sort of ``gun'' (perhaps a modified airsoft gun or a 3D-printed frame)
+consisting of a processor package, an IR laser, a speaker, and a wireless transmitter.
+Each gun would be configured to emit a unique IR sequence when the trigger is pulled,
+which the ZedBoard/target setup would use to determine which player hit a target.
+Further work is mostly software-based and several games and scenarios,
+such as timing drills or hitting multiple targets in a sequence, could be played with one or more players.
+Statistics will be tracked by the ZedBoard and can be displayed using a desktop or mobile application.
+
+\section*{Primary Goals}
+
+The following goals should be considered basic benchmarks for the project.
+
+\begin{itemize}
+\item At least two IR ``guns'', each able to emit their own unique IR signature, sound, and wireless signal
+\item At least three target modules with IR receivers and LEDs
+\item At least one single player game/drill
+\item At least one multiplayer game/drill
+\item Statistic tracking via the ZedBoard
+\item Statistic display and game controls via a desktop or mobile application
+\end{itemize}
+
+\section*{Secondary Goals}
+
+The following goals are additional features to be developed once the primary goals are met.
+
+\begin{itemize}
+\item Additional targets
+\item Pop-up or moving targets
+\item Force feedback on the ``guns'' to simulate recoil
+\item Additional game modes and statistics
+\item Ability to track stability while aiming (likely through the use of an accelerometer)
+\end{itemize}
+
+\end{document}
