@@ -1,43 +1,48 @@
-\documentclass{report}
+\documentclass{article}
 \usepackage{fullpage}
 \usepackage{parskip}
 \pagestyle{empty}
 \begin{document}
-\begin{center}
-\begin{Huge}
-\textbf{Project Proposal}
-\end{Huge}
+\title{Proposal for the Implementation of an Laser Shooting Range}
+\author{Matt Kline, James Gordon, Tyler Kuske, and Creighton Long}
+\maketitle
+\tableofcontents
+\newpage
 
-Matt Kline, James Gordon, Tyler Kuske, and Creighton Long
-\end{center}
+\section{Executive Summary}
 
-\section*{Overview}
 The proposed project is a virtual shooting range.
 The setup would consist of multiple targets which could be placed around a room.
-Each target would consist of an IR receiver as well as some LEDs, and would be connected to our ZedBoard.
+Each target would consist of an Laser receiver as well as some LEDs, and would be connected to our ZedBoard.
 
 Multiple players would then have some sort of ``gun'' (perhaps a modified airsoft gun or a 3D-printed frame)
-consisting of a processor package, an IR laser, a speaker, and a wireless transmitter.
-Each gun would be configured to emit a unique IR sequence when the trigger is pulled,
+consisting of a processor package, an laser laser, a speaker, and a wireless transmitter.
+Each gun would be configured to emit a unique laser sequence when the trigger is pulled,
 which the ZedBoard/target setup would use to determine which player hit a target.
 Further work is mostly software-based and several games and scenarios,
 such as timing drills or hitting multiple targets in a sequence, could be played with one or more players.
 Statistics will be tracked by the ZedBoard and can be displayed using a desktop or mobile application.
 
-\section*{Primary Goals}
+\newpage
+
+\section{Detailed Report}
+
+\subsection{Objectives}
+
+\subsubsection{Primary}
 
 The following goals should be considered basic benchmarks for the project.
 
 \begin{itemize}
-\item At least two IR ``guns'', each able to emit their own unique IR signature, sound, and wireless signal
-\item At least three target modules with IR receivers and LEDs
+\item At least two laser ``guns'', each able to emit their own unique laser signature, sound, and wireless signal
+\item At least three target modules with laser receivers and LEDs
 \item At least one single player game/drill
 \item At least one multiplayer game/drill
 \item Statistic tracking via the ZedBoard
 \item Statistic display and game controls via a desktop or mobile application
 \end{itemize}
 
-\section*{Secondary Goals}
+\subsubsection{Secondary Goals}
 
 The following goals are additional features to be developed once the primary goals are met.
 
@@ -48,5 +53,61 @@ The following goals are additional features to be developed once the primary goa
 \item Additional game modes and statistics
 \item Ability to track stability while aiming (likely through the use of an accelerometer)
 \end{itemize}
+
+\subsection{Design Plan}
+
+\subsubsection{Hardware}
+
+\paragraph{Guns}
+
+Each gun will consist of
+\begin{itemize}
+\item A laser diode
+\item A collimating lens to focus the laser into a tight beam
+\item A small speaker for user feedback
+\item A multicolor LED for indicating status to the player (If design space and I/O pins permit)
+\item A TI CC430 for logic and radio communications
+\item An accelerometer for tracking the steadiness of the shooter before pulling the trigger.
+\item A supporting PCB
+\end{itemize}
+
+All of the gun's hardware will be enclosed in a gun-shaped controller with some sort of trigger mechanism.
+A Namco GunCon or similar is suggested as it should have ample room for housing the parts as well as a built-in trigger.
+
+\paragraph{Targets}
+
+Each target will consist of
+\begin{itemize}
+\item One or more photodiodes to detect incoming laser signals from the guns
+\item A series of multicolor LEDs for prompting a player to shoot at the target
+\item A small speaker for user feedback
+\item A TICC430 for logic and radio communications
+\item A supporting PCB
+\end{itemize}
+
+\paragraph{Central Control}
+
+The daughter card for the ZedBoard will consist of a TICC430 that will do minor processing and route communications
+back to the ZedBoard, and any needed accompanying hardware.
+The ZedBoard will manage the peripherals, handle game logic, and update the UI.
+The ZedBoard's FPGA, at the instructor's suggestion, can be used to handle the board's switches and display.
+
+\subsubsection{Software}
+
+\paragraph{Guns}
+
+\paragraph{Targets}
+
+\paragraph{Central control}
+
+\paragraph{User Interface}
+
+\section{Project Work Schedule}
+
+TBD
+
+\section{Costs}
+
+TBD
 
 \end{document}
