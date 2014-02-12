@@ -1,22 +1,23 @@
 \documentclass{article}
 \usepackage{fullpage}
 \usepackage{parskip}
-\pagestyle{empty}
-\begin{document}
+\usepackage[symbol]{footmisc}
 \title{Proposal for the Implementation of an Laser Shooting Range}
 \author{Matt Kline, James Gordon, Tyler Kuske, and Creighton Long}
+\begin{document}
 \maketitle
+\newpage
 \tableofcontents
 \newpage
 
 \section{Executive Summary}
 
 The proposed project is a virtual shooting range.
-The setup would consist of multiple targets which could be placed around a room.
-Each target would consist of an Laser receiver as well as some LEDs, and would be connected to our ZedBoard.
+The setup will consist of multiple targets which can be placed around a room.
+Each target would consist of a laser receiver as well as some LEDs, and will be connected to our ZedBoard via radio link.
 
-Multiple players would then have some sort of ``gun'' (perhaps a modified airsoft gun or a 3D-printed frame)
-consisting of a processor package, an laser laser, a speaker, and a wireless transmitter.
+Multiple players would then have a laser emitting ``gun''
+consisting of (at minimum) a processor package, an laser laser, a speaker, and a wireless transmitter.
 Each gun would be configured to emit a unique laser sequence when the trigger is pulled,
 which the ZedBoard/target setup would use to determine which player hit a target.
 Further work is mostly software-based and several games and scenarios,
@@ -78,7 +79,7 @@ A Namco GunCon or similar is suggested as it should have ample room for housing 
 
 Each target will consist of
 \begin{itemize}
-\item One or more photodiodes to detect incoming laser signals from the guns
+\item One or more phototransistors to detect incoming laser signals from the guns
 \item A series of multicolor LEDs for prompting a player to shoot at the target
 \item A small speaker for user feedback
 \item A TICC430 for logic and radio communications
@@ -96,11 +97,58 @@ The ZedBoard's FPGA, at the instructor's suggestion, can be used to handle the b
 
 \paragraph{Guns}
 
+The gun's software will run on the CC430 and accomplish the following tasks:
+\begin{itemize}
+\item Use the laser diode to emit a unique laser sequence when the trigger is pulled.
+	This will be used to uniquely identify each gun.
+\item Provide audio feedback when the trigger is pulled, and perhaps when the game starts/ends.
+\item Provide visual feedback via the LED indicating the player's color, game status, etc.
+\item Maintain a circular buffer of accelerometer information and take a snapshot when the trigger is pulled.
+	This will provide information about the user's stability up to his trigger squeeze.
+\item Respond to radio communication when needed.
+\end{itemize}
+
+To keep comms down, and since the guns themselves do not require any immediate response from the rest of the system
+when the game is being played, guns will not push any data over wireless.
+Instead they will be queried by the main controller.
+
 \paragraph{Targets}
 
-\paragraph{Central control}
+The target software will run on the CC430 and accomplish the following tasks:
+\begin{itemize}
+\item Use the phototransistor(s) to handle an incoming laser sequence and forward that sequence to the main controller.
+\item Provide visual feedback with the LEDs to indicate various game states and when the user hits the target.
+\item Provide audio feedback wheen targets are hit and as a prompt to shoot.
+\item Push hits and possibly other shot data to the central system via radio link.
+\end{itemize}
+
+\paragraph{Central Control}
+
+The ZedBoard software running on top of Linux will accomplish the following tasks
+with the assistance of the daughter board:
+\begin{itemize}
+\item Push instructions to the guns and targets to set up a round.
+\item Receive hit signals from the target through the daughter board.
+\item Query the guns at the end of the round to gather statistics.
+\item Manage game state.
+\item Provide a JSON interface via TCP.
+	This allows us to implement our user interace in whatever language, with whatever system, and on whatever platform
+	we please.
+\end{itemize}
 
 \paragraph{User Interface}
+
+The user interace will exist on a laptop computer or mobile device.
+Due to the open-ended nature of a JSON interface, any platform could be used, though currently the Qt framework
+with C++ is suggested.
+
+The interface will
+\begin{itemize}
+\item Allow users to choose a game and game options.
+\item Allow users to control the game by starting it, stopping it, pausing it, etc.
+\item Store users' runs and maintain statistics tracking. The game itself will only maintain pre-session/game stats,
+	while the UI program can offer more long-term statistics.
+\end{itemize}
 
 \section{Project Work Schedule}
 
@@ -108,6 +156,44 @@ TBD
 
 \section{Costs}
 
-TBD
+Costs are estimates, not hard values.\footnote{Batteries not included}
+
+\subsection{Guns}
+
+\begin{tabular}{|r|l|r|r|}
+\hline
+Qty & Item & Each & Total \\
+\hline
+2 & Piezo Buzzer & \$0.79 & \$1.58 \\
+\hline
+2 & TI CC430 & \$7.00 & \$14.00 \\
+\hline
+2 & Push-button & \$1.00 & \$2.00 \\
+\hline
+2 & Accelerometer & TBD & TBD \\
+\hline
+2 & Frame (Namco GunCon) & \$12.00 & \$24.00 \\
+\hline
+\end{tabular}
+
+The push buttons are for a backup/diagnostic trigger
+
+\subsection{Targets}
+
+\begin{tabular}{|r|l|r|r|}
+\hline
+3 & Frame & Max \$5.00 & Max \$15.00 \\
+\hline
+TBD & Tri-color LED & TBD & \$5--10 \\
+\hline
+TBD & Phototransistor & \$0.50 & TBD \\
+\hline
+3 & TI CC430 & \$7.00 & \$21.00 \\
+\hline
+3 & Power Supply & TBD & TBD \\
+\hline
+\end{tabular}
+
+\subsection{Central Control}
 
 \end{document}
