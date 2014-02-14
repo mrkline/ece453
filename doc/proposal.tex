@@ -1,7 +1,9 @@
 \documentclass{article}
 \usepackage{fullpage}
 \usepackage{parskip}
+\usepackage{hyperref}
 \usepackage[symbol]{footmisc}
+\hypersetup{colorlinks,urlcolor=blue}
 \title{Proposal for the Implementation of an Laser Shooting Range}
 \author{Matt Kline, James Gordon, Tyler Kuske, and Creighton Long}
 \begin{document}
@@ -152,7 +154,62 @@ The interface will
 
 \section{Project Work Schedule}
 
-TBD
+While dates are fairly set, the amount of hours required is largely a guestimate.
+As has been repeatedly pointed out \href{http://en.wikipedia.org/wiki/Waterfall_method#Criticism}{(link)} in the software
+and engineering communities,
+estimating time for all aspects of a project before building a prototype is quite difficult.
+Time measurements will become more accurate as the design is fleshed out and possible implementation issues arise.
+
+\subsection{Hardware}
+
+\begin{tabular}{|l|r|r|}
+\hline
+\textbf{Task} & \textbf{Completion Date} & \textbf{Estimated hours of work} \\
+\hline
+Order I/O components for testing & 2014-02-19 & 5 \\
+\hline
+Initial component verification & 2014-02-28 & 30 \\
+\hline
+Schematics, BOM, Test Plan & 2014-02-28 & 20 \\
+\hline
+Layout & 2014-03-05 & 30 \\
+\hline
+Place Orders & 2014-03-12 & 5 \\
+\hline
+Initial Hardware Assembly Testing & 2014-03-30 & 10 \\
+\hline
+Continued Hardware Testing & 2014-04-07 & 10 \\
+\hline
+Product Verification & 2014-04-07 & 30 \\
+\hline
+Software Integration & 2014-04-07 & 30 \\
+\hline
+\end{tabular}
+
+\subsection{Software}
+
+The software design will take advantage dependency injection to isolate the hardware into interfaces where possible.
+This way mock hardware implementations can be used for testing and a large chunk of the software can be developed
+independently of the backing hardware.
+Software development times include debugging.
+
+\begin{tabular}{|l|r|r|}
+\hline
+\textbf{Task} & \textbf{Completion Date} & \textbf{Estimated hours of work} \\
+\hline
+Develop JSON UI Protocol & 2014-02-19 & 10 \\
+\hline
+Setup TI CC430 Dev Environment & 3014-02-28 & 10 \\
+\hline
+Develop Game Software (ZedBoard) & 2014-03-21 & 50 \\
+\hline
+Develop Gun Software & 2014-03-30 & 20 \\
+\hline
+Develop Target Software & 2014-03-30 & 20 \\
+\hline
+Develop End-User GUI & 2014-04-07 & 20 \\
+\hline
+\end{tabular}
 
 \section{Costs}
 
@@ -162,7 +219,7 @@ Costs are estimates, not hard values.\footnote{Batteries not included}
 
 \begin{tabular}{|r|l|r|r|}
 \hline
-Qty & Item & Each & Total \\
+\textbf{Qty} & \textbf{Item} & \textbf{Each} & \textbf{Total} \\
 \hline
 2 & Piezo Buzzer & \$0.79 & \$1.58 \\
 \hline
@@ -174,6 +231,8 @@ Qty & Item & Each & Total \\
 \hline
 2 & Frame (Namco GunCon) & \$12.00 & \$24.00 \\
 \hline
+2 & PCB & \$33.00 & \$66.00 \\
+\hline
 \end{tabular}
 
 The push buttons are for a backup/diagnostic trigger
@@ -182,18 +241,36 @@ The push buttons are for a backup/diagnostic trigger
 
 \begin{tabular}{|r|l|r|r|}
 \hline
+\textbf{Qty} & \textbf{Item} & \textbf{Each} & \textbf{Total} \\
+\hline
 3 & Frame & Max \$5.00 & Max \$15.00 \\
 \hline
-TBD & Tri-color LED & TBD & \$5--10 \\
+Max 15 & Tri-color LED & TBD & \$5--10 \\
 \hline
-TBD & Phototransistor & \$0.50 & TBD \\
+12 & Phototransistor & \$0.50 & Max \$6 \\
 \hline
 3 & TI CC430 & \$7.00 & \$21.00 \\
 \hline
 3 & Power Supply & TBD & TBD \\
 \hline
+3 & PCB & \$33.00 & \$99.00 \\
+\hline
 \end{tabular}
 
 \subsection{Central Control}
+
+\begin{tabular}{|r|l|r|r|}
+\hline
+\textbf{Qty} & \textbf{Item} & \textbf{Each} & \textbf{Total} \\
+\hline
+1 & PCB & \$33.00 & \$33.00 \\
+\hline
+1 & TI CC430 & \$7.00 & \$21.00 \\
+\hline
+\end{tabular}
+
+\subsubsection{Additional Costs}
+
+Allocate an additional \$10.00 for miscellaneous parts (caps, resistors, etc.)
 
 \end{document}
