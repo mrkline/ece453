@@ -1,9 +1,10 @@
 \documentclass{article}
 \usepackage{fullpage}
 \usepackage{parskip}
-\usepackage{hyperref}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor} % Provides more color options
+\usepackage[bookmarks,colorlinks,linktoc=all,linkcolor=DarkGreen,urlcolor=Blue]{hyperref}
+\usepackage{graphicx}
 \usepackage[symbol]{footmisc}
-\hypersetup{colorlinks,urlcolor=blue}
 \title{Proposal for the Implementation of an Laser Shooting Range}
 \author{Matt Kline, James Gordon, Tyler Kuske, and Creighton Long}
 \begin{document}
@@ -19,10 +20,10 @@ The setup will consist of multiple targets which can be placed around a room.
 Each target would consist of a laser receiver as well as some LEDs, and will be connected to our ZedBoard via radio link.
 
 Multiple players would then have a laser emitting ``gun''
-consisting of (at minimum) a processor package, an laser laser, a speaker, and a wireless transmitter.
+consisting of (at minimum) a processor package, a laser, a speaker, and a wireless transmitter.
 Each gun would be configured to emit a unique laser sequence when the trigger is pulled,
 which the ZedBoard/target setup would use to determine which player hit a target.
-Further work is mostly software-based and several games and scenarios,
+Further work is mostly software-based with several games and scenarios,
 such as timing drills or hitting multiple targets in a sequence, could be played with one or more players.
 Statistics will be tracked by the ZedBoard and can be displayed using a desktop or mobile application.
 
@@ -152,37 +153,42 @@ The interface will
 	while the UI program can offer more long-term statistics.
 \end{itemize}
 
+\subsubsection{Block Diagram}
+
+\includegraphics[width=\textwidth, keepaspectratio]{block}
+
 \section{Project Work Schedule}
 
 While dates are fairly set, the amount of hours required is largely a guestimate.
-As has been repeatedly pointed out \href{http://en.wikipedia.org/wiki/Waterfall_method#Criticism}{(link)} in the software
-and engineering communities,
-estimating time for all aspects of a project before building a prototype is quite difficult.
 Time measurements will become more accurate as the design is fleshed out and possible implementation issues arise.
 
 \subsection{Hardware}
 
-\begin{tabular}{|l|r|r|}
+\begin{tabular}{|l|l|l|r|l|}
 \hline
-\textbf{Task} & \textbf{Completion Date} & \textbf{Estimated hours of work} \\
+\textbf{Task} & \textbf{Start Date} & \textbf{Completion Date} & \textbf{Days} & \textbf{Assignee} \\
 \hline
-Order I/O components for testing & 2014-02-19 & 5 \\
+Order I/O Components for Testing & 2014-02-14 & 2014-02-19 & 4 & Everyone \\
 \hline
-Initial component verification & 2014-02-28 & 30 \\
+Final Schematics, BOM, \& Test Plan & 2014-02-15 & 2014-02-28 & 11 & Tyler, Creighton \\
 \hline
-Schematics, BOM, Test Plan & 2014-02-28 & 20 \\
+Initial Component Verification & 2014-02-19 & 2014-02-28 & 8 & Tyler, Creighton \\
 \hline
-Layout & 2014-03-05 & 30 \\
+Layout & 2014-03-01 & 2014-01-05 & 4 & Tyler \\
 \hline
-Place Orders & 2014-03-12 & 5 \\
+Place Orders & 2014-03-06 & 2014-03-12 & 5 & TBD \\
 \hline
-Initial Hardware Assembly Testing & 2014-03-30 & 10 \\
+Initial Hardware Assembly \& Testing & 2014-03-24 & 2014-03-30 & 6 & Creighton \\
 \hline
-Continued Hardware Testing & 2014-04-07 & 10 \\
+Continued Hardware Testing & 2014-03-31 & 2014-04-07 & 6 & James \\
 \hline
-Product Verification & 2014-04-07 & 30 \\
+Build Target Frames & 2014-04-07 & 2014-04-14 & 6 & Tyler \\
 \hline
-Software Integration & 2014-04-07 & 30 \\
+Misc. Fixes & 2014-04-24 & 2014-04-27 & 3 & Everyone \\
+\hline
+Final Touch-Ups & 2014-04-28 & 2014-05-05 & 6 & Everyone \\
+\hline
+Final Project Report & 2014-05-06 & 2014-05-09 & 4 & Everyone \\
 \hline
 \end{tabular}
 
@@ -193,23 +199,26 @@ This way mock hardware implementations can be used for testing and a large chunk
 independently of the backing hardware.
 Software development times include debugging.
 
-\begin{tabular}{|l|r|r|}
+\begin{tabular}{|l|l|l|l|l|}
 \hline
-\textbf{Task} & \textbf{Completion Date} & \textbf{Estimated hours of work} \\
+\textbf{Task} & \textbf{Start Date} & \textbf{Completion Date} & \textbf{Days} & \textbf{Assignee} \\
 \hline
-Develop JSON UI Protocol & 2014-02-19 & 10 \\
+Develop JSON UI Protocol & 2014-02-15 & 2014-02-19 & 4 & Matt \\
 \hline
-Setup TI CC430 Dev Environment & 3014-02-28 & 10 \\
+Setup TI CC430 Dev Environment & 2014-02-24 & 2014-03-05 & 8 & Matt, James \\
 \hline
-Develop Game Software (ZedBoard) & 2014-03-21 & 50 \\
+Develop Game Software (ZedBoard) & 2014-03-06 & 2014-03-30 & 18 & Matt \\
 \hline
-Develop Gun Software & 2014-03-30 & 20 \\
+Develop Gun Software & 2014-03-31 & 2014-04-09 & 8 & Matt \\
 \hline
-Develop Target Software & 2014-03-30 & 20 \\
+Develop Target Software & 2014-04-09 & 2014-04-18 & 8 & Matt \\
 \hline
-Develop End-User GUI & 2014-04-07 & 20 \\
+Develop End-User GUI & 2014-04-14 & 2014-04-23 & 8 & Matt \\
 \hline
 \end{tabular}
+
+\subsection{Gantt Chart}
+\includegraphics[keepaspectratio, angle=90, width=6in]{schedule}
 
 \section{Costs}
 
@@ -227,12 +236,12 @@ Costs are estimates, not hard values.\footnote{Batteries not included}
 \hline
 2 & Push-button & \$1.00 & \$2.00 \\
 \hline
-2 & Accelerometer & TBD & TBD \\
+2 & Accelerometer (BMA222E) & \$3.00 & \$6.00 \\
 \hline
 2 & Frame (Namco GunCon) & \$12.00 & \$24.00 \\
 \hline
-2 & PCB & \$33.00 & \$66.00 \\
-\hline
+\multicolumn{3}{r|}{\textbf{Total:}} & \$47.58 \\
+\cline{4-4}
 \end{tabular}
 
 The push buttons are for a backup/diagnostic trigger
@@ -251,10 +260,10 @@ Max 15 & Tri-color LED & TBD & \$5--10 \\
 \hline
 3 & TI CC430 & \$7.00 & \$21.00 \\
 \hline
-3 & Power Supply & TBD & TBD \\
+3 & Power Supply & \$15.00 & \$45.00 \\
 \hline
-3 & PCB & \$33.00 & \$99.00 \\
-\hline
+\multicolumn{3}{r|}{\textbf{Total:}} & \$97.00 \\
+\cline{4-4}
 \end{tabular}
 
 \subsection{Central Control}
@@ -263,14 +272,17 @@ Max 15 & Tri-color LED & TBD & \$5--10 \\
 \hline
 \textbf{Qty} & \textbf{Item} & \textbf{Each} & \textbf{Total} \\
 \hline
-1 & PCB & \$33.00 & \$33.00 \\
-\hline
 1 & TI CC430 & \$7.00 & \$21.00 \\
 \hline
+2 & PCB & \$33.00 & \$66.00 \\
+\hline
+\multicolumn{3}{r|}{\textbf{Total:}} & \$87.00 \\
+\cline{4-4}
 \end{tabular}
 
 \subsubsection{Additional Costs}
 
-Allocate an additional \$10.00 for miscellaneous parts (caps, resistors, etc.)
+Allocate an additional \$10.00 for miscellaneous parts (caps, resistors, etc.), bringing us to a total of
+roughly \$245.00.
 
 \end{document}
