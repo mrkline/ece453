@@ -17,7 +17,7 @@ All messages in this protocol will be encapsulated in a JSON object with the fol
 
 ## Response
 
-A response from the controller to the UI, unless otherwise specified below, will be of type "response"
+A general response from the controller to the UI, unless otherwise specified below, will be of type "response"
 and contain a payload object with the following fields:
 
 - "responding to" - The ID of the message that this one is a response to
@@ -33,7 +33,7 @@ and contain a payload object with the following fields:
     - "invalid request" - The request was valid but was given at an inappropriate time.
                           An example may be issuing a stop command when no game is running.
 
-    - "unsupported" - The request was valid but the system could not fulfill it.
+    - "unsupported request" - The request was valid but the system could not fulfill it.
                       An example may be requesting a game setup with more players than the system supports.
 
 - "message" - (OPTIONAL) A field containing any text message to accompany the error code
@@ -80,3 +80,58 @@ To start the game, a message with type "start" and the following payload is sent
 ## Stop
 
 To stop a running game, a message with type "stop" is sent to the system with an empty payload object.
+
+## Status
+
+To get the status of the system, a message of type "get status" is sent to the system with an empty payload object.
+Future versions of the protocol may have this request contain a payload indicating which fields to fetch
+instead of mandating a monolithic update.
+
+## Status response
+
+Instead of the usual response (see above), status requests will be met with a message of type "status response"
+with the following payload:
+
+- "running" - A boolean indicating whether the game is currently running. If this value is false,
+              no other fields will be contained in the payload.
+
+- "time remaining" - An integer indicating the number of remaining seconds, or -1 if the current game has no time limit.
+
+- "winning score" - An integer indicating the score required to win a game, or -1 if the current game has no score limit.
+
+- "number of players" - The number of players currently playing the game
+
+- "player stats" - An array of objects containing the following fields:
+
+  - "score" - An integer representing the player's current score
+
+  - "hits" - The number of hits the player has gotten so far
+
+## Results
+
+To get the detailed results of a match, a message of type "get results" is sent to the system with an empty payload.
+This must be done _after_ a match has been run.
+Future versions of the protocol may have this request contain a payload indicating which fields to fetch
+instead of mandating a monolithic update.
+
+## Results response
+
+Instead of the usual response (see above), results requests will be met with a message of type "results response"
+with the following payload:
+
+- "number of players" - The number of players currently playing the game
+
+- "player stats" - An array of objects containing the following fields:
+
+  - "score" - An integer representing the player's final score
+
+  - "hits" - The number of hits the player got in the round
+
+  - "shots" - An array of objects, each one representing a shot the player took, containing the following information:
+
+        - "time" - An integer representing the time at which the shot was taken, in milliseconds since the game started.
+
+        - "hit" - A boolean indicating whether or not the shot was a hit
+
+        - "movement" - An array of decimal tuples of the form `{x, y, z}` which indicates motion leading up to the shot.
+                       These values will be at a known, to be determined interval.
