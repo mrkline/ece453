@@ -4,8 +4,8 @@
 
 CXXFLAGS := -std=c++11 -Wall -Wextra -Weffc++ -pedantic
 
-OBJS = $(filter-out common/WinsockRequirement.o, $(patsubst %.cpp,%.o, $(wildcard common/*.cpp)))
-TESTOBJS = $(patsubst %.cpp,%.o, $(wildcard tests/*.cpp))
+OBJS := $(patsubst %.cpp,%.o, $(wildcard common/*.cpp))
+TESTOBJS := $(patsubst %.cpp,%.o, $(wildcard tests/*.cpp))
 
 unit_tests: CXXFLAGS += -I. -Icommon -Itests -g
 unit_tests: $(OBJS) $(TESTOBJS)
