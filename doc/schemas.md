@@ -36,7 +36,7 @@ and contain a payload object with the following fields:
     - "unsupported request" - The request was valid but the system could not fulfill it.
                       An example may be requesting a game setup with more players than the system supports.
 
-- "message" - (OPTIONAL) A field containing any text message to accompany the error code
+- "message" - A field containing any text message to accompany the error code. Empty if there is no message.
 
 ## Setup
 
@@ -92,6 +92,8 @@ instead of mandating a monolithic update.
 Instead of the usual response (see above), status requests will be met with a message of type "status response"
 with the following payload:
 
+- As a subclass of results, this payload will contain all the members a normal results payload contains.
+
 - "running" - A boolean indicating whether the game is currently running. If this value is false,
               no other fields will be contained in the payload.
 
@@ -118,6 +120,8 @@ instead of mandating a monolithic update.
 
 Instead of the usual response (see above), results requests will be met with a message of type "results response"
 with the following payload:
+
+- As a subclass of results, this payload will contain all the members a normal results payload contains.
 
 - "number of players" - The number of players currently playing the game
 
