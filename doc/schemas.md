@@ -71,11 +71,11 @@ To start the game, a message with type "start" and the following payload is sent
 
 - "end time" - If "time" is listed as a win condition,
                this field is present and gives the maximum game length, in seconds.
-               If "time" is not a win condition, this field should not exist.
+               If "time" is not a win condition, this field contains -1.
 
 - "winning score" - If "points" is listed as a win condition,
                     this field is present and gives the score a player must get to win.
-                    If "points" is not a win condition, this field should not exist.
+                    If "points" is not a win condition, this field contains -1.
 
 ## Stop
 
@@ -92,7 +92,7 @@ instead of mandating a monolithic update.
 Instead of the usual response (see above), status requests will be met with a message of type "status response"
 with the following payload:
 
-- As a subclass of results, this payload will contain all the members a normal results payload contains.
+- As a subclass of response, this payload will contain all the members a normal response payload contains.
 
 - "running" - A boolean indicating whether the game is currently running. If this value is false,
               no other fields will be contained in the payload.
@@ -121,7 +121,7 @@ instead of mandating a monolithic update.
 Instead of the usual response (see above), results requests will be met with a message of type "results response"
 with the following payload:
 
-- As a subclass of results, this payload will contain all the members a normal results payload contains.
+- As a subclass of a response, this payload will contain all the members a normal response payload contains.
 
 - "number of players" - The number of players currently playing the game
 
