@@ -55,13 +55,6 @@ To set up a game, a message with type "setup" and a payload object with the foll
 
 - "player count" - The number of players for the game
 
-- "game data" - Some game types may require additional setup information, which will be in this object.
-                This field is not expected if the game type does not require it.
-
-## Start
-
-To start the game, a message with type "start" and the following payload is sent to the system:
-
 - "win condition" - An array containing one or both of the following
   (in which case the game ends when the first of the two is reached):
 
@@ -69,13 +62,20 @@ To start the game, a message with type "start" and the following payload is sent
 
   - "points" - End the game after a user has scored a given number of points
 
-- "end time" - If "time" is listed as a win condition,
-               this field is present and gives the maximum game length, in seconds.
-               If "time" is not a win condition, this field contains -1.
+- "end time" - If time is a win condition, this field gives the maximum game length, in seconds.
+               If time is not a win condition, this field contains -1.
 
-- "winning score" - If "points" is listed as a win condition,
-                    this field is present and gives the score a player must get to win.
-                    If "points" is not a win condition, this field contains -1.
+- "winning score" - If points is a win condition, this field gives the score a player must get to win.
+                    If points is not a win condition, this field contains -1.
+
+- "game data" - Some game types may require additional setup information, which will be in this object.
+                This field is not expected if the game type does not require it.
+                If it is present, it contains a map of integers.
+
+## Start
+
+To start the game, a message with type "start" is sent to the system with an empty payload object.
+
 
 ## Stop
 
@@ -101,8 +101,6 @@ with the following payload:
 
 - "winning score" - An integer indicating the score required to win a game, or -1 if the current game has no score limit.
 
-- "number of players" - The number of players currently playing the game
-
 - "player stats" - An array of objects containing the following fields:
 
   - "score" - An integer representing the player's current score
@@ -122,8 +120,6 @@ Instead of the usual response (see above), results requests will be met with a m
 with the following payload:
 
 - As a subclass of a response, this payload will contain all the members a normal response payload contains.
-
-- "number of players" - The number of players currently playing the game
 
 - "player stats" - An array of objects containing the following fields:
 

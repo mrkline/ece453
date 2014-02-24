@@ -25,5 +25,5 @@ public:
 
 	const std::string message;
 
-	Type getType() const override { return PT_RESPONSE; }
+	virtual Type getType() const override { return PT_RESPONSE; }
 };

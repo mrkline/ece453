@@ -20,6 +20,5 @@ public:
 		PT_UNKNOWN ///< An unknown/invalid payload type
 	};
 
-	
 	virtual Type getType() const { return PT_UNKNOWN; }
 };
