@@ -1,6 +1,9 @@
 #pragma once
 
+#include <memory>
 #include <string>
+
+#include <jsoncpp/json/json.h>
 
 #include "Payload.hpp"
 
@@ -18,6 +21,8 @@ public:
 	};
 
 	ResponsePayload(int respTo, Code c, const std::string& msg);
+
+	static std::unique_ptr<ResponsePayload> fromJSON(const Json::Value& object);
 
 	const int respondingTo;
 

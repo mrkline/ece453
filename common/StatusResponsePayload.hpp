@@ -1,6 +1,9 @@
 #pragma once
 
+#include <memory>
 #include <vector>
+
+#include <jsoncpp/json/json.h>
 
 #include "ResponsePayload.hpp"
 
@@ -15,7 +18,10 @@ public:
 
 	typedef std::vector<PlayerStats> PlayerList;
 
-	StatusResponsePayload(int respTo, bool isRunning, int timeLeft, int winScore, PlayerList&& playerStats);
+	StatusResponsePayload(int respTo, const std::string& message,
+	                      bool isRunning, int timeLeft, int winScore, PlayerList&& playerStats);
+
+	static std::unique_ptr<StatusResponsePayload> fromJSON(const Json::Value& object);
 
 	const bool running;
 

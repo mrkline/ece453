@@ -3,6 +3,7 @@
 # but will do just fine until then
 
 CXXFLAGS := -std=c++11 -Wall -Wextra -Weffc++ -pedantic
+LIBFLAGS := -ljsoncpp
 
 OBJS := $(patsubst %.cpp,%.o, $(wildcard common/*.cpp))
 TESTOBJS := $(patsubst %.cpp,%.o, $(wildcard tests/*.cpp))
@@ -10,15 +11,15 @@ TESTOBJS := $(patsubst %.cpp,%.o, $(wildcard tests/*.cpp))
 unit_tests: CXXFLAGS += -I. -Icommon -Itests -g
 unit_tests: $(OBJS) $(TESTOBJS)
 	echo $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) $(TESTOBJS) -o unit_tests
+	$(CXX) $(CXXFLAGS) $(OBJS) $(TESTOBJS) $(LIBFLAGS) -o unit_tests
 
 # debug: CXXFLAGS += -g
 
 # release: CXXFLAGS+= -O2 -DNDEBUG
 
 # link
-cstyle: $(OBJS) main.o
-	$(CXX) $(CXXFLAGS) $(OBJS) main.o -o cstyle
+gallery: $(OBJS) main.o
+	$(CXX) $(CXXFLAGS) $(OBJS)  $(LIBFLAGS) main.o -o gallery
 
 # pull in dependency info for *existing* .o files
 -include $(OBJS:.o=.d)
