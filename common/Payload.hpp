@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jsoncpp/json/json.h>
+
 #include "Exceptions.hpp"
 
 /// A Payload interface that provides copmile-time casting checks
@@ -20,5 +22,7 @@ public:
 		PT_UNKNOWN ///< An unknown/invalid payload type
 	};
 
-	virtual Type getType() const { return PT_UNKNOWN; }
+	virtual Type getType() const = 0;
+
+	virtual Json::Value toJSON() const  = 0;
 };

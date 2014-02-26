@@ -3,8 +3,6 @@
 #include <memory>
 #include <vector>
 
-#include <jsoncpp/json/json.h>
-
 #include "ResponsePayload.hpp"
 #include "Vector3.hpp"
 
@@ -31,9 +29,13 @@ public:
 
 	typedef std::vector<PlayerStats> StatsList;
 
-	const StatsList stats;
-
 	ResultsResponsePayload(int respTo, const std::string& message, StatsList&& playerStats);
 
 	static std::unique_ptr<ResultsResponsePayload> fromJSON(const Json::Value& object);
+
+	Json::Value toJSON() const override;
+
+	Type getType() const override { return PT_RESULTS_RESPONSE; }
+
+	const StatsList stats;
 };

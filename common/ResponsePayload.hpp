@@ -3,8 +3,6 @@
 #include <memory>
 #include <string>
 
-#include <jsoncpp/json/json.h>
-
 #include "Payload.hpp"
 
 /// A response payload for a message
@@ -23,6 +21,8 @@ public:
 	ResponsePayload(int respTo, Code c, const std::string& msg);
 
 	static std::unique_ptr<ResponsePayload> fromJSON(const Json::Value& object);
+
+	Json::Value toJSON() const override;
 
 	const int respondingTo;
 

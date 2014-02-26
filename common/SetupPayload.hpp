@@ -3,8 +3,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include <jsoncpp/json/json.h>
-
 #include "Payload.hpp"
 #include "GameTypes.hpp"
 
@@ -18,6 +16,10 @@ public:
 	SetupPayload(GameType gType, int pCount, uint8_t winConds, int time, int score, DataMap&& data);
 
 	static std::unique_ptr<SetupPayload> fromJson(const Json::Value& object);
+
+	Json::Value toJSON() const override;
+
+	Type getType() const override { return PT_SETUP; }
 
 	/// The type of game to play
 	const GameType gameType;
@@ -38,7 +40,4 @@ public:
 	const int winningScore;
 
 	const DataMap gameData;
-
-	Type getType() const override { return PT_SETUP; }
-
 };

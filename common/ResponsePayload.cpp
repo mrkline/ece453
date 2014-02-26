@@ -46,3 +46,14 @@ std::unique_ptr<ResponsePayload> ResponsePayload::fromJSON(const Json::Value& ob
 	return std::unique_ptr<ResponsePayload>(
 		new ResponsePayload(respondingToValue.asInt(), (Code)rawCode, messageValue.asString()));
 }
+
+Json::Value ResponsePayload::toJSON() const
+{
+	Value ret(objectValue);
+
+	ret[respondingToKey] = respondingTo;
+	ret[codeKey] = (int)code;
+	ret[messageKey] = message;
+
+	return ret;
+}

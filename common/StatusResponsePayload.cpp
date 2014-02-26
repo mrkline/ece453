@@ -94,3 +94,21 @@ std::unique_ptr<StatusResponsePayload> StatusResponsePayload::fromJSON(const Jso
 		                          runningValue.asBool(), timeRemainingValue.asInt(), winningScoreValue.asInt(),
 		                          parseStats(playerStatsValue)));
 }
+
+Json::Value StatusResponsePayload::toJSON() const
+{
+	Value ret(objectValue);
+
+	ret[runningKey] = running;
+	ret[timeRemainingKey] = timeRemaining;
+	ret[winningScore] = winningScore;
+	
+	Value playerList(arrayValue);
+
+	// TODO: Continue here
+
+
+	ret[playerStatsKey] = playerList;
+
+	return ret;
+}

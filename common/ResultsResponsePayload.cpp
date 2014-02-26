@@ -128,3 +128,12 @@ std::unique_ptr<ResultsResponsePayload> ResultsResponsePayload::fromJSON(const J
 	return std::unique_ptr<ResultsResponsePayload>(
 		new ResultsResponsePayload(responseInfo->respondingTo, responseInfo->message, move(playerStats)));
 }
+
+Json::Value ResultsResponsePayload::toJSON() const
+{
+	Value ret;
+
+	// TODO: Continue here
+
+	return ret;
+}

@@ -3,8 +3,6 @@
 #include <memory>
 #include <vector>
 
-#include <jsoncpp/json/json.h>
-
 #include "ResponsePayload.hpp"
 
 class StatusResponsePayload : public ResponsePayload {
@@ -23,6 +21,10 @@ public:
 
 	static std::unique_ptr<StatusResponsePayload> fromJSON(const Json::Value& object);
 
+	Json::Value toJSON() const override;
+
+	virtual Type getType() const override { return PT_STATUS_RESPONSE; }
+
 	const bool running;
 
 	const int timeRemaining;
@@ -30,6 +32,4 @@ public:
 	const int winningScore;
 
 	const PlayerList players;
-
-	virtual Type getType() const override { return PT_STATUS_RESPONSE; }
 };

@@ -83,3 +83,23 @@ std::unique_ptr<SetupPayload> SetupPayload::fromJson(const Json::Value& object)
 		new SetupPayload((GameType)gameTypeValue.asInt(), playerCountValue.asInt(), (uint8_t)rawWinConditions,
 		                 endTimeValue.asInt(), winningScoreValue.asInt(), parseGameData(gameDataValue)));
 }
+
+Json::Value SetupPayload::toJSON() const
+{
+	Value ret(objectValue);
+
+	ret[gameTypeKey] = (int)gameType;
+	ret[playerCountKey] = playerCount;
+	ret[winConditionsKey] = winConditions;
+	ret[endTimeKey] = endTime;
+	ret[winningScore] = winningScore;
+
+	Value data(objectValue);
+
+	for (const auto& pair : gameData)
+		data[pair.first] = pair.second;
+
+	ret[gameDataKey] = move(data);
+
+	return ret;
+}
