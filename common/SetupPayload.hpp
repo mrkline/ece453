@@ -1,6 +1,9 @@
 #pragma once
 
+#include <memory>
 #include <unordered_map>
+
+#include <jsoncpp/json/json.h>
 
 #include "Payload.hpp"
 #include "GameTypes.hpp"
@@ -13,6 +16,8 @@ public:
 	typedef std::unordered_map<std::string, int> DataMap;
 
 	SetupPayload(GameType gType, int pCount, uint8_t winConds, int time, int score, DataMap&& data);
+
+	static std::unique_ptr<SetupPayload> fromJson(const Json::Value& object);
 
 	/// The type of game to play
 	const GameType gameType;

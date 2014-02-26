@@ -55,7 +55,7 @@ To set up a game, a message with type "setup" and a payload object with the foll
 
 - "player count" - The number of players for the game
 
-- "win condition" - An array containing one or both of the following
+- "win conditions" - An array containing one or both of the following
   (in which case the game ends when the first of the two is reached):
 
   - "time" - End the game after a given amount of time
@@ -133,5 +133,5 @@ with the following payload:
 
         - "hit" - A boolean indicating whether or not the shot was a hit
 
-        - "movement" - An array of decimal tuples of the form `{x, y, z}` which indicates motion leading up to the shot.
+        - "movement" - An array of decimal arrays of the form `[x, y, z]` which indicates motion leading up to the shot.
                        These values will be at a known, to be determined interval.

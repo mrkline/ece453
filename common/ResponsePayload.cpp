@@ -14,8 +14,6 @@ const StaticString messageKey("message");
 
 } // End anonymous namespace
 
-
-
 ResponsePayload::ResponsePayload(int respTo, Code c, const std::string& msg) :
 	respondingTo(respTo),
 	code(c),
