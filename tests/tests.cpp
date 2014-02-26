@@ -4,6 +4,8 @@
 #include "Test.hpp"
 #include "TestUnit.hpp"
 
+#include "SetupPayloadTests.hpp"
+
 using namespace Testing;
 using namespace std;
 
@@ -18,7 +20,8 @@ queue<UnitPtr> testUnits;
 int main()
 {
 	// Push tests here
-	
+	testUnits.emplace(new SetupPayloadTests);
+
 	while (!testUnits.empty()) {
 		const auto& curr = testUnits.front();
 		try {
