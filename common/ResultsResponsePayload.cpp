@@ -131,9 +131,42 @@ std::unique_ptr<ResultsResponsePayload> ResultsResponsePayload::fromJSON(const J
 
 Json::Value ResultsResponsePayload::toJSON() const
 {
-	Value ret;
+	Value ret(objectValue);
 
-	// TODO: Continue here
+	Value statsList(arrayValue);
+
+	for (const auto& stat : stats) {
+		Value statValue(objectValue);
+
+		statValue[scoreKey] = stat.score;
+		statValue[hitsKey] = stat.hits;
+
+		Value shots(arrayValue);
+
+		for (const auto& shot : stat.shots) {
+			Value shotValue(objectValue);
+
+			shotValue[hitKey] = shot.hit;
+			shotValue[timeKey] = shot.time;
+
+			Value movementValue(arrayValue);
+
+			for (const auto& vec : shot.movement) {
+				Value vecArray(arrayValue);
+				vecArray.append(vec.x);
+				vecArray.append(vec.y);
+				vecArray.append(vec.z);
+
+				movementValue.append(move(vecArray));
+			}
+
+			shotValue[movementKey] = move(movementValue);
+		}
+
+		statValue[shotsKey] = move(shots);
+	}
+
+	ret[playerStatsKey] = statsList;
 
 	return ret;
 }

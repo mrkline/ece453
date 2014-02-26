@@ -1,5 +1,6 @@
 #include "SetupPayload.hpp"
 
+#include <algorithm>
 #include <utility>
 
 #include "Exceptions.hpp"
@@ -17,6 +18,9 @@ const StaticString winConditionsKey("win conditions");
 const StaticString endTimeKey("end time");
 const StaticString winningScoreKey("winning score");
 const StaticString gameDataKey("game data");
+
+const StaticString timeConditionValue("time");
+const StaticString pointsConditionValue("points");
 
 SetupPayload::DataMap parseGameData(const Value& data)
 {
@@ -42,14 +46,14 @@ SetupPayload::SetupPayload(GameType gType, int pCount, uint8_t winConds, int tim
 	gameData(move(data))
 {
 	enforce<ArgumentException>(playerCount > 0, "You must have at least one player.", __FUNCTION__);
-	enforce<ArgumentException>(winConditions == WC_TIME || winConditions == WC_POINTS
-	                           || winConditions == (WC_TIME | WC_POINTS),
+	enforce<ArgumentException>(winConditions != 0, "There are no win conditions.", __FUNCTION__);
+	enforce<ArgumentException>(((winConditions & WC_TIME) | (winConditions & WC_POINTS)) != 0,
 	                           "Invalid win condition flags", __FUNCTION__);
 	enforce<ArgumentException>(endTime >= -1, "Invalid game duration", __FUNCTION__);
 	enforce<ArgumentException>(winningScore >= -1, "Invalid winning score", __FUNCTION__);
 }
 
-std::unique_ptr<SetupPayload> SetupPayload::fromJson(const Json::Value& object)
+std::unique_ptr<SetupPayload> SetupPayload::fromJSON(const Json::Value& object)
 {
 	enforce<IOException>(object.isMember(gameTypeKey), "Setup payload is missing the game type", __FUNCTION__);
 	enforce<IOException>(object.isMember(playerCountKey), "Setup payload is missing the player count", __FUNCTION__);
@@ -68,19 +72,42 @@ std::unique_ptr<SetupPayload> SetupPayload::fromJson(const Json::Value& object)
 
 	enforce<IOException>(gameTypeValue.isInt(), "The game type is not an integer.", __FUNCTION__);
 	enforce<IOException>(playerCountValue.isInt(), "The player count is not an integer.", __FUNCTION__);
-	enforce<IOException>(winConditionsValue.isInt(), "The win conditions are not an integer/bitmask.", __FUNCTION__);
+	enforce<IOException>(winConditionsValue.isArray(), "The win conditions are not an array.", __FUNCTION__);
 	enforce<IOException>(endTimeValue.isInt(), "The end time is not an integer.", __FUNCTION__);
 	enforce<IOException>(winningScoreValue.isInt(), "The winning score is not an integer.", __FUNCTION__);
 	enforce<IOException>(gameDataValue.isObject(), "The additional game data is not an object.", __FUNCTION__);
 
-	const int rawWinConditions = winConditionsValue.asInt();
+	uint8_t winMask = 0;
 
-	enforce<IOException>(rawWinConditions >= 0 && rawWinConditions < 0xff,
-	                     "The win conditions are not a valid bitmask.",
+	enforce<IOException>(winConditionsValue.size() <= 2, "There are more win conditions than we recognize.",
 	                     __FUNCTION__);
 
+	/// \todo Fix up JSONCPP so that this works
+	/*
+	enforce<IOException>(all_of(begin(winConditionsValue), end(winConditionsValue), [](const Value& v) {
+			if (!v.isString())
+				return false;
+
+			const auto str = v.asString();
+			return str == pointsConditionValue.c_str() || str == timeConditionValue.c_str();
+		}), "Some of the win conditions are not recongized", __FUNCTION__);
+	*/
+
+	for (const Value& v : winConditionsValue) {
+		enforce<IOException>(v.isString(), "A win condition is not a string.", __FUNCTION__);
+		const auto str = v.asString();
+		bool points = str == pointsConditionValue.c_str();
+		bool time = str == timeConditionValue.c_str();
+		enforce<IOException>(points || time, "A win condition is not recognized as valid.", __FUNCTION__);
+
+		if (points)
+			winMask |= WC_POINTS;
+		if (time)
+			winMask |= WC_TIME;
+	}
+
 	return std::unique_ptr<SetupPayload>(
-		new SetupPayload((GameType)gameTypeValue.asInt(), playerCountValue.asInt(), (uint8_t)rawWinConditions,
+		new SetupPayload((GameType)gameTypeValue.asInt(), playerCountValue.asInt(), winMask,
 		                 endTimeValue.asInt(), winningScoreValue.asInt(), parseGameData(gameDataValue)));
 }
 
@@ -90,9 +117,8 @@ Json::Value SetupPayload::toJSON() const
 
 	ret[gameTypeKey] = (int)gameType;
 	ret[playerCountKey] = playerCount;
-	ret[winConditionsKey] = winConditions;
 	ret[endTimeKey] = endTime;
-	ret[winningScore] = winningScore;
+	ret[winningScoreKey] = winningScore;
 
 	Value data(objectValue);
 
@@ -101,5 +127,26 @@ Json::Value SetupPayload::toJSON() const
 
 	ret[gameDataKey] = move(data);
 
+	Value winArray(arrayValue);
+
+	if ((winConditions & WC_TIME) == WC_TIME)
+		winArray.append(timeConditionValue);
+
+	if ((winConditions & WC_POINTS) == WC_POINTS)
+		winArray.append(pointsConditionValue);
+
+	ret[winConditionsKey] = move(winArray);
+
 	return ret;
+}
+
+
+bool SetupPayload::operator==(const SetupPayload& o) const
+{
+	return gameType == o.gameType
+		&& playerCount == o.playerCount
+		&& winConditions == o.winConditions
+		&& endTime == o.endTime
+		&& winningScore == o.winningScore
+		&& gameData == o.gameData;
 }

@@ -102,13 +102,17 @@ Json::Value StatusResponsePayload::toJSON() const
 	ret[runningKey] = running;
 	ret[timeRemainingKey] = timeRemaining;
 	ret[winningScore] = winningScore;
-	
+
 	Value playerList(arrayValue);
 
-	// TODO: Continue here
+	for (const auto& player : players) {
+		Value stat(objectValue);
+		stat[scoreKey] = player.score;
+		stat[hitsKey] = player.hits;
+		playerList.append(move(stat));
+	}
 
-
-	ret[playerStatsKey] = playerList;
+	ret[playerStatsKey] = move(playerList);
 
 	return ret;
 }
