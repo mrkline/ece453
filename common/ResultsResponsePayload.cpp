@@ -131,7 +131,7 @@ std::unique_ptr<ResultsResponsePayload> ResultsResponsePayload::fromJSON(const J
 
 Json::Value ResultsResponsePayload::toJSON() const
 {
-	Value ret(objectValue);
+	Value ret = ResponsePayload::toJSON();
 
 	Value statsList(arrayValue);
 
@@ -161,12 +161,16 @@ Json::Value ResultsResponsePayload::toJSON() const
 			}
 
 			shotValue[movementKey] = move(movementValue);
+
+			shots.append(move(shotValue));
 		}
 
 		statValue[shotsKey] = move(shots);
+
+		statsList.append(move(statValue));
 	}
 
-	ret[playerStatsKey] = statsList;
+	ret[playerStatsKey] = move(statsList);
 
 	return ret;
 }

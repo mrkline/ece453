@@ -17,6 +17,8 @@ public:
 		const std::vector<Vector3> movement; ///< Provides accelerometer data leading up to the shot
 
 		Shot(bool h, int t, std::vector<Vector3>&& m) : hit(h), time(t), movement(m) { }
+
+		bool operator==(const Shot& o) const { return hit == o.hit && time == o.time && movement == o.movement; }
 	};
 
 	struct PlayerStats {
@@ -25,6 +27,8 @@ public:
 		const std::vector<Shot> shots; ///< A list of shots the player took
 
 		PlayerStats(int s, int h, std::vector<Shot>&& t) : score(s), hits(h), shots(t) { }
+
+		bool operator==(const PlayerStats& o) const { return score == o.score && hits == o.hits && shots == o.shots; }
 	};
 
 	typedef std::vector<PlayerStats> StatsList;
