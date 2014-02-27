@@ -40,7 +40,7 @@ std::unique_ptr<ResponsePayload> ResponsePayload::fromJSON(const Json::Value& ob
 
 	const int rawCode = codeValue.asInt();
 
-	enforce<IOException>(codeValue >= RC_OK && codeValue <= RC_UNSUPPORTED_REQUEST, "The response code is invalid.",
+	enforce<IOException>(rawCode >= RC_OK && rawCode <= RC_UNSUPPORTED_REQUEST, "The response code is invalid.",
 	                     __FUNCTION__);
 
 	return std::unique_ptr<ResponsePayload>(
@@ -56,4 +56,11 @@ Json::Value ResponsePayload::toJSON() const
 	ret[messageKey] = message;
 
 	return ret;
+}
+
+bool ResponsePayload::operator==(const ResponsePayload& o) const
+{
+	return respondingTo == o.respondingTo
+		&& code == o.code
+		&& message == o.message;
 }

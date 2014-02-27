@@ -31,4 +31,8 @@ public:
 	const std::string message;
 
 	virtual Type getType() const override { return PT_RESPONSE; }
+
+	bool operator==(const ResponsePayload& o) const;
+
+	bool operator!=(const ResponsePayload& o) const { return !(*this == o); }
 };

@@ -42,5 +42,6 @@ public:
 	const DataMap gameData;
 
 	bool operator==(const SetupPayload& o) const;
+
 	bool operator!=(const SetupPayload& o) const { return !(*this == o); }
 };
