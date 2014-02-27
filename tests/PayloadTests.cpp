@@ -2,6 +2,7 @@
 
 #include "SetupPayload.hpp"
 #include "ResponsePayload.hpp"
+#include "StatusResponsePayload.hpp"
 
 namespace {
 
@@ -27,6 +28,18 @@ void ResponsePayloadJSON()
 
 void StatusResponsePayloadJSON()
 {
+	StatusResponsePayload::PlayerList stats;
+	stats.emplace_back(2, 4);
+	stats.emplace_back(25, 64);
+	stats.emplace_back(33, 89);
+
+
+	StatusResponsePayload load(42, "I am a response!", true, 42, -1, std::move(stats));
+	Json::Value jrep = load.toJSON();
+	std::cout <<jrep;
+
+	auto fromJSON = StatusResponsePayload::fromJSON(jrep);
+	TEST_ASSERT(load == *fromJSON);
 }
 
 } // end anonymous namespace

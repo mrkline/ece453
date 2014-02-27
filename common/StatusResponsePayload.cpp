@@ -38,11 +38,7 @@ StatusResponsePayload::PlayerList parseStats(const Value& stats)
 		enforce<IOException>(hitsValue.isInt(), "An element of the player stats does not have an integer hits value.",
 		                    __FUNCTION__);
 
-		StatusResponsePayload::PlayerStats stat;
-		stat.score = scoreValue.asInt();
-		stat.hits = hitsValue.asInt();
-
-		ret.emplace_back(stat);
+		ret.emplace_back(scoreValue.asInt(), hitsValue.asInt());
 	}
 
 	return ret;
@@ -97,11 +93,11 @@ std::unique_ptr<StatusResponsePayload> StatusResponsePayload::fromJSON(const Jso
 
 Json::Value StatusResponsePayload::toJSON() const
 {
-	Value ret(objectValue);
+	Value ret = ResponsePayload::toJSON();
 
 	ret[runningKey] = running;
 	ret[timeRemainingKey] = timeRemaining;
-	ret[winningScore] = winningScore;
+	ret[winningScoreKey] = winningScore;
 
 	Value playerList(arrayValue);
 
@@ -115,4 +111,14 @@ Json::Value StatusResponsePayload::toJSON() const
 	ret[playerStatsKey] = move(playerList);
 
 	return ret;
+}
+
+
+bool StatusResponsePayload::operator==(const StatusResponsePayload& o) const
+{
+	return ResponsePayload::operator==(o)
+		&& running == o.running
+		&& timeRemaining == o.timeRemaining
+		&& winningScore == o.winningScore
+		&& players == o.players;
 }

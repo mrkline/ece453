@@ -10,8 +10,12 @@ class StatusResponsePayload : public ResponsePayload {
 public:
 
 	struct PlayerStats {
-		int score;
-		int hits;
+		const int score;
+		const int hits;
+
+		PlayerStats(int s, int h) : score(s), hits(h) { }
+
+		bool operator==(const PlayerStats& o) const { return score == o.score && hits == o.hits; }
 	};
 
 	typedef std::vector<PlayerStats> PlayerList;
@@ -32,4 +36,6 @@ public:
 	const int winningScore;
 
 	const PlayerList players;
+
+	bool operator==(const StatusResponsePayload& o) const;
 };
