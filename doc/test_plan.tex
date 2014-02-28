@@ -1,0 +1,61 @@
+\documentclass{article}
+\usepackage[cm]{fullpage}
+\usepackage{parskip}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor} % Provides more color options
+\usepackage[bookmarks,colorlinks,linktoc=all,linkcolor=DarkGreen,urlcolor=Blue]{hyperref}
+\usepackage{graphicx}
+\usepackage[symbol]{footmisc}
+\title{Team 2 Test Plan}
+\author{Matt Kline, James Gordon, Tyler Kuske, and Creighton Long}
+\begin{document}
+\maketitle
+
+\section*{Hardware Test Plan}
+
+\begin{enumerate}
+\item Test power rails and all signals to ensure that there are no shorts.
+\item Test individual parts such as the laser diode and photodiodes using a breadboard.
+\item Ensure the JTAG programmer for the CC430 works and that one can write software to the CC430.
+\item Test the LEDs using simple CC430 software that turns them on and off in order to determine desired brightness
+	and resistor values, ensuring that the current is low enough for the CC430 to sink.
+\item Test that serial communications can be sent and received from the CC430 via the Cypress IC.
+\item Ensure that the GPIO pins on the CC430 used for the radio are functioning using test points.
+\item Attempt to send and receive data wirelessly between two CC430s.
+\item Test the ZedBoard/FPGA link to the CC430 daughter card.
+\item Test each gun component using its CC430:
+	\begin{enumerate}
+	\item Emit a beam using the laser diode
+	\item Emit a sound using the Piezo buzer
+	\item Test LEDs
+	\item Ensure movement data is coming in through the accelerometer.
+	\end{enumerate}
+\item Test each target component using its CC430:
+	\begin{enumerate}
+	\item Ensure that the photodiodes are receiving laser signals.
+	\item Test LEDs.
+	\end{enumerate}
+\end{enumerate}
+
+\section*{Software Test Plan}
+
+The software design will take advantage dependency injection to isolate the hardware into interfaces where possible.
+This way mock hardware implementations can be used for testing and a large chunk of the software can be developed
+independently of the backing hardware.
+Portions of code that will remain relatively stable will have automated unit tests to help verify their correctness.
+For some of the more rapidly-changing portions, unit tests may be omitted since the cost-to-benefit ratio
+may not justify the time it takes to continuously adjust the tests.
+
+Tested sections will include:
+\begin{itemize}
+\item All communication protocols, including:
+	\begin{itemize}
+	\item The JSON communication protocol between our ZedBoard and UI
+	\item The serial protocol between the daughter board and the ZedBoard
+	\item The serial protocol between the daughter board and targets
+	\item The serial protocol between the daughter board and guns
+	\end{itemize}
+\item All transport layer code such as the TCP stream between the ZedBoard and UI and whatever error checking
+	 (likely CRC-based) we implement for the radio comms.
+\item The basic game state machines on the ZedBoard
+\end{itemize}
+\end{document}
