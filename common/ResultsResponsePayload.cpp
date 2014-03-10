@@ -94,7 +94,7 @@ PlayerStats parseStats(const Value& stat)
 } // end anonymous namespace
 
 ResultsResponsePayload::ResultsResponsePayload(int respTo, const std::string& message, StatsList&& playerStats) :
-	ResponsePayload(respTo, RC_OK, message), // If we're sending a results response payload back, the request was ok.
+	ResponsePayload(respTo, ResponsePayload::Code::OK, message), // If we're sending a results response payload back, the request was ok.
 	stats(move(playerStats))
 {
 	for (const auto& stat : stats) {
@@ -109,7 +109,7 @@ std::unique_ptr<ResultsResponsePayload> ResultsResponsePayload::fromJSON(const J
 {
 	const auto responseInfo = ResponsePayload::fromJSON(object); // Get the basic response info
 
-	enforce<IOException>(responseInfo->code == RC_OK, "Full results response payloads must have an OK response code.",
+	enforce<IOException>(responseInfo->code == ResponsePayload::Code::OK, "Full results response payloads must have an OK response code.",
 	                     __FUNCTION__);
 
 	enforce<IOException>(object.isMember(playerStatsKey), "Results response payload is missing player stats",

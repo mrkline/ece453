@@ -39,7 +39,7 @@ public:
 
 	Json::Value toJSON() const override;
 
-	Type getType() const override { return PT_RESULTS_RESPONSE; }
+	Type getType() const override { return Type::RESULTS_RESPONSE; }
 
 	const StatsList stats;
 };

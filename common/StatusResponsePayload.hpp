@@ -27,7 +27,7 @@ public:
 
 	Json::Value toJSON() const override;
 
-	virtual Type getType() const override { return PT_STATUS_RESPONSE; }
+	virtual Type getType() const override { return Type::STATUS_RESPONSE; }
 
 	const bool running;
 

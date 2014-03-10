@@ -38,13 +38,15 @@ std::unique_ptr<ResponsePayload> ResponsePayload::fromJSON(const Json::Value& ob
 	enforce<IOException>(codeValue.isInt(), "The response code is not an integer.", __FUNCTION__);
 	enforce<IOException>(messageValue.isString(), "The response message is not a string.", __FUNCTION__);
 
+	/* FIXME
 	const int rawCode = codeValue.asInt();
 
-	enforce<IOException>(rawCode >= RC_OK && rawCode <= RC_UNSUPPORTED_REQUEST, "The response code is invalid.",
+	enforce<IOException>(rawCode >= ResponsePayload::Code::OK && rawCode <= ResponsePayload::Code::UNSUPPORTED_REQUEST, "The response code is invalid.",
 	                     __FUNCTION__);
 
 	return std::unique_ptr<ResponsePayload>(
 		new ResponsePayload(respondingToValue.asInt(), (Code)rawCode, messageValue.asString()));
+	*/
 }
 
 Json::Value ResponsePayload::toJSON() const

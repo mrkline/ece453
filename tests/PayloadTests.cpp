@@ -11,7 +11,7 @@ namespace {
 
 void SetupPayloadJSON()
 {
-	SetupPayload load(GT_POP_UP, 2, WC_TIME, 60, -1, SetupPayload::DataMap());
+	SetupPayload load(GameType::POP_UP, 2, WC_TIME, 60, -1, SetupPayload::DataMap());
 	Json::Value jrep = load.toJSON();
 	std::cout << jrep;
 
@@ -21,7 +21,7 @@ void SetupPayloadJSON()
 
 void ResponsePayloadJSON()
 {
-	ResponsePayload load(42, ResponsePayload::RC_OK, "I am a response!");
+	ResponsePayload load(42, ResponsePayload::ResponsePayload::Code::OK, "I am a response!");
 	Json::Value jrep = load.toJSON();
 	std::cout <<jrep;
 

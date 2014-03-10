@@ -48,7 +48,8 @@ StatusResponsePayload::PlayerList parseStats(const Value& stats)
 
 StatusResponsePayload::StatusResponsePayload(int respTo, const std::string& message,
 	                                         bool isRunning, int timeLeft, int winScore, PlayerList&& playerStats) :
-	ResponsePayload(respTo, RC_OK, message), // If we're sending a full status response payload back, the request was ok.
+	// If we're sending a full status response payload back, the request was ok.
+	ResponsePayload(respTo, ResponsePayload::Code::OK, message),
 	running(isRunning),
 	timeRemaining(timeLeft),
 	winningScore(winScore),
@@ -63,7 +64,8 @@ std::unique_ptr<StatusResponsePayload> StatusResponsePayload::fromJSON(const Jso
 {
 	const auto responseInfo = ResponsePayload::fromJSON(object); // Get the basic response info
 
-	enforce<IOException>(responseInfo->code == RC_OK, "Full status response payloads must have an OK response code.",
+	enforce<IOException>(responseInfo->code == ResponsePayload::Code::OK,
+	                     "Full status response payloads must have an OK response code.",
 	                     __FUNCTION__);
 
 	enforce<IOException>(object.isMember(runningKey), "Status response payload is missing the \"running\" flag",

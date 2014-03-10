@@ -47,7 +47,7 @@ SetupPayload::SetupPayload(GameType gType, int pCount, uint8_t winConds, int tim
 {
 	enforce<ArgumentException>(playerCount > 0, "You must have at least one player.", __FUNCTION__);
 	enforce<ArgumentException>(winConditions != 0, "There are no win conditions.", __FUNCTION__);
-	enforce<ArgumentException>(((winConditions & WC_TIME) | (winConditions & WC_POINTS)) != 0,
+	enforce<ArgumentException>(((winConditions & WinCondition::WC_TIME) | (winConditions & WinCondition::WC_POINTS)) != 0,
 	                           "Invalid win condition flags", __FUNCTION__);
 	enforce<ArgumentException>(endTime >= -1, "Invalid game duration", __FUNCTION__);
 	enforce<ArgumentException>(winningScore >= -1, "Invalid winning score", __FUNCTION__);

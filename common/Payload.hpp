@@ -12,16 +12,16 @@ class Payload {
 public:
 
 	/// Different types of message payloads.
-	enum Type {
-		PT_RESPONSE, ///< A generic response
-		PT_SETUP, ///< Set up a game
-		PT_START, ///< Start a game
-		PT_STOP, ///< Stop a running game
-		PT_STATUS, ///< Get the game status
-		PT_STATUS_RESPONSE, ///< Response to a status query
-		PT_RESULTS, ///< Get the game results after a match has finished
-		PT_RESULTS_RESPONSE, ///< Response to a results query
-		PT_UNKNOWN ///< An unknown/invalid payload type
+	enum class Type {
+		RESPONSE, ///< A generic response
+		SETUP, ///< Set up a game
+		START, ///< Start a game
+		STOP, ///< Stop a running game
+		STATUS, ///< Get the game status
+		STATUS_RESPONSE, ///< Response to a status query
+		RESULTS, ///< Get the game results after a match has finished
+		RESULTS_RESPONSE, ///< Response to a results query
+		UNKNOWN ///< An unknown/invalid payload type
 	};
 
 	static Type nameToType(const std::string& name);

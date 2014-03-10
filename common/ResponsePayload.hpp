@@ -10,12 +10,12 @@ class ResponsePayload : public Payload {
 
 public:
 
-	enum Code {
-		RC_OK,
-		RC_INTERNAL_ERROR,
-		RC_UNKNOWN_REQUEST,
-		RC_INVALID_REQUEST,
-		RC_UNSUPPORTED_REQUEST
+	enum class Code {
+		OK,
+		INTERNAL_ERROR,
+		UNKNOWN_REQUEST,
+		INVALID_REQUEST,
+		UNSUPPORTED_REQUEST
 	};
 
 	ResponsePayload(int respTo, Code c, const std::string& msg);
@@ -30,7 +30,7 @@ public:
 
 	const std::string message;
 
-	virtual Type getType() const override { return PT_RESPONSE; }
+	virtual Type getType() const override { return Type::RESPONSE; }
 
 	bool operator==(const ResponsePayload& o) const;
 };

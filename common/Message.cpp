@@ -57,18 +57,18 @@ std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 	Payload::Type type = Payload::nameToType(typeValue.asString());
 
 	switch(type) {
-		case Payload::PT_RESPONSE:
-		case Payload::PT_SETUP:
-		case Payload::PT_STATUS_RESPONSE:
-		case Payload::PT_RESULTS_RESPONSE:
+		case Payload::Type::RESPONSE:
+		case Payload::Type::SETUP:
+		case Payload::Type::STATUS_RESPONSE:
+		case Payload::Type::RESULTS_RESPONSE:
 			enforce<IOException>(payloadValue.isObject(), "For this message type, a payload is required.",
 			                     __FUNCTION__);
 			break;
 
-		case Payload::PT_START:
-		case Payload::PT_STOP:
-		case Payload::PT_STATUS:
-		case Payload::PT_RESULTS:
+		case Payload::Type::START:
+		case Payload::Type::STOP:
+		case Payload::Type::STATUS:
+		case Payload::Type::RESULTS:
 			enforce<IOException>(payloadValue.isNull(), "For this message type, the payload should be null",
 			                     __FUNCTION__);
 			break;
@@ -78,19 +78,19 @@ std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 	}
 
 	switch(type) {
-		case Payload::PT_RESPONSE:
+		case Payload::Type::RESPONSE:
 			load = ResponsePayload::fromJSON(payloadValue);
 			break;
 
-		case Payload::PT_SETUP:
+		case Payload::Type::SETUP:
 			load = SetupPayload::fromJSON(payloadValue);
 			break;
 
-		case Payload::PT_STATUS_RESPONSE:
+		case Payload::Type::STATUS_RESPONSE:
 			load = StatusResponsePayload::fromJSON(payloadValue);
 			break;
 
-		case Payload::PT_RESULTS_RESPONSE:
+		case Payload::Type::RESULTS_RESPONSE:
 			load = ResultsResponsePayload::fromJSON(payloadValue);
 			break;
 

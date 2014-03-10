@@ -19,7 +19,7 @@ public:
 
 	Json::Value toJSON() const override;
 
-	Type getType() const override { return PT_SETUP; }
+	Type getType() const override { return Type::SETUP; }
 
 	/// The type of game to play
 	const GameType gameType;
@@ -27,7 +27,7 @@ public:
 	/// The number of players playing.
 	const int playerCount;
 
-	/// A bitmask of WC_TIME and/or WC_POINTS
+	/// A bitmask of TIME and/or POINTS
 	/// \see WinCondition
 	const uint8_t winConditions;
 
