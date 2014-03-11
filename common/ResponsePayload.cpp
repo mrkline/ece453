@@ -1,9 +1,21 @@
 #include "ResponsePayload.hpp"
 
+#include <unordered_map>
+
 #include "Exceptions.hpp"
 
 using namespace Json;
 using namespace Exceptions;
+using namespace std;
+
+namespace std
+{
+	// Hasher for ResponsePayload::Code
+	template<>
+	struct hash<ResponsePayload::Code> {
+		size_t operator()(ResponsePayload::Code t) const { return std::hash<int>()((int)t); }
+	};
+}
 
 namespace {
 
@@ -11,6 +23,22 @@ namespace {
 const StaticString respondingToKey("responding to");
 const StaticString codeKey("code");
 const StaticString messageKey("message");
+
+const unordered_map<string, ResponsePayload::Code> nameToCode = {
+	{"ok", ResponsePayload::Code::OK},
+	{"internal error", ResponsePayload::Code::INTERNAL_ERROR},
+	{"unknown request", ResponsePayload::Code::UNKNOWN_REQUEST},
+	{"invalid request", ResponsePayload::Code::INVALID_REQUEST},
+	{"unsupported request", ResponsePayload::Code::UNSUPPORTED_REQUEST}
+};
+
+const unordered_map<ResponsePayload::Code, StaticString> codeToName = {
+	{ResponsePayload::Code::OK, StaticString("ok")},
+	{ResponsePayload::Code::INTERNAL_ERROR, StaticString("internal error")},
+	{ResponsePayload::Code::UNKNOWN_REQUEST, StaticString("unknown request")},
+	{ResponsePayload::Code::INVALID_REQUEST, StaticString("invalid request")},
+	{ResponsePayload::Code::UNSUPPORTED_REQUEST, StaticString("unsupported request")}
+};
 
 } // End anonymous namespace
 
@@ -35,18 +63,14 @@ std::unique_ptr<ResponsePayload> ResponsePayload::fromJSON(const Json::Value& ob
 	const Value& messageValue = object[messageKey];
 
 	enforce<IOException>(respondingToValue.isInt(), "The response ID is not an integer.", __FUNCTION__);
-	enforce<IOException>(codeValue.isInt(), "The response code is not an integer.", __FUNCTION__);
+	enforce<IOException>(codeValue.isString(), "The response code is not a string.", __FUNCTION__);
 	enforce<IOException>(messageValue.isString(), "The response message is not a string.", __FUNCTION__);
 
-	/* FIXME
-	const int rawCode = codeValue.asInt();
-
-	enforce<IOException>(rawCode >= ResponsePayload::Code::OK && rawCode <= ResponsePayload::Code::UNSUPPORTED_REQUEST, "The response code is invalid.",
-	                     __FUNCTION__);
+	const auto codeIt = nameToCode.find(codeValue.asString());
+	enforce<IOException>(codeIt != end(nameToCode), "The response code is invalid.", __FUNCTION__);
 
 	return std::unique_ptr<ResponsePayload>(
-		new ResponsePayload(respondingToValue.asInt(), (Code)rawCode, messageValue.asString()));
-	*/
+		new ResponsePayload(respondingToValue.asInt(), codeIt->second, messageValue.asString()));
 }
 
 Json::Value ResponsePayload::toJSON() const
@@ -54,7 +78,7 @@ Json::Value ResponsePayload::toJSON() const
 	Value ret(objectValue);
 
 	ret[respondingToKey] = respondingTo;
-	ret[codeKey] = (int)code;
+	ret[codeKey] = codeToName.at(code);
 	ret[messageKey] = message;
 
 	return ret;
