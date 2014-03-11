@@ -70,6 +70,11 @@ void ResultsResponsePayloadJSON()
 	TEST_ASSERT(load == *fromJSON);
 }
 
+void foo()
+{
+	TEST_ASSERT_THROWN([]{ throw ArgumentException("foo", __FUNCTION__); }, ArgumentException);
+}
+
 } // end anonymous namespace
 
 
@@ -79,4 +84,5 @@ Testing::PayloadTests::PayloadTests()
 	add("ResponsePayload -> JSON", &ResponsePayloadJSON);
 	add("StatusResponsePayload -> JSON", &StatusResponsePayloadJSON);
 	add("ResultsResponsePayload -> JSON", &ResultsResponsePayloadJSON);
+	add("assertion thrown test", &foo);
 }

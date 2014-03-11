@@ -6,6 +6,7 @@
 #include "Exceptions.hpp"
 
 #define TEST_ASSERT(c) Testing::test(c, __FILE__, __LINE__)
+#define TEST_ASSERT_THROWN(e, t) Testing::testThrown<t>(e, __FILE__, __LINE__);
 
 namespace Testing {
 
@@ -25,6 +26,18 @@ inline void test(bool cond, const char* file, int line)
 {
 	if (!cond)
 		throw TestFailedException(file, line);
+}
+
+template <typename T, typename E>
+inline void testThrown(E expr, const char* file, int line)
+{
+	try { expr(); }
+	catch (const T& thrown) {
+		return;
+	}
+
+	// We didn't catch it
+	throw TestFailedException(file, line);
 }
 
 /// Represents a single test, a series of which is run by each TestUnit
