@@ -31,8 +31,29 @@ Message::Message(Payload::Type t, int ver, int idNum, std::unique_ptr<Payload>&&
 {
 	enforce<ArgumentException>(version > 0, "The version number cannot be negative.", __FUNCTION__);
 	enforce<ArgumentException>(id > 0, "The ID cannot be negative.", __FUNCTION__);
-	enforce<ArgumentException>(load == nullptr || type == load->getType(), "The type must match the payload's type.",
+	enforce<ArgumentException>(load == nullptr || type == payload->getType(), "The type must match the payload's type.",
 	                           __FUNCTION__);
+
+	switch(type) {
+		case Payload::Type::RESPONSE:
+		case Payload::Type::SETUP:
+		case Payload::Type::STATUS_RESPONSE:
+		case Payload::Type::RESULTS_RESPONSE:
+			enforce<IOException>(payload != nullptr, "For this message type, a payload is required.",
+			                     __FUNCTION__);
+			break;
+
+		case Payload::Type::START:
+		case Payload::Type::STOP:
+		case Payload::Type::STATUS:
+		case Payload::Type::RESULTS:
+			enforce<IOException>(payload == nullptr, "For this message type, the payload should be null",
+			                     __FUNCTION__);
+			break;
+
+		default:
+			throw Exception("Error in program logic: we forgot to handle some payload", __FUNCTION__);
+	}
 }
 
 std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
@@ -94,6 +115,12 @@ std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 			load = ResultsResponsePayload::fromJSON(payloadValue);
 			break;
 
+		case Payload::Type::START:
+		case Payload::Type::STOP:
+		case Payload::Type::STATUS:
+		case Payload::Type::RESULTS:
+			break; // Load stays null
+
 		default:
 			throw Exception("Error in program logic: we forgot to parse some payload", __FUNCTION__);
 	}
@@ -107,6 +134,53 @@ Json::Value Message::toJSON() const
 	ret[typeKey] = Payload::typeToName(type);
 	ret[versionKey] = version;
 	ret[idKey] = id;
-	ret[payloadKey] = payload->toJSON();
+	if (payload != nullptr)
+		ret[payloadKey] = payload->toJSON();
+	else
+		ret[payloadKey] = Value(); // A null value
 	return ret;
+}
+
+bool Message::operator==(const Message& o) const
+{
+	const bool basics = type == o.type
+		&& version == o.version
+		&& id == o.id;
+	
+	if (basics) {
+		switch(type) {
+			case Payload::Type::RESPONSE:
+				return *static_cast<ResponsePayload*>(payload.get())
+					== *static_cast<ResponsePayload*>(o.payload.get());
+				break;
+
+			case Payload::Type::SETUP:
+				return *static_cast<SetupPayload*>(payload.get())
+					== *static_cast<SetupPayload*>(o.payload.get());
+				break;
+
+			case Payload::Type::STATUS_RESPONSE:
+				return *static_cast<StatusResponsePayload*>(payload.get())
+					== *static_cast<StatusResponsePayload*>(o.payload.get());
+				break;
+
+			case Payload::Type::RESULTS_RESPONSE:
+				return *static_cast<ResultsResponsePayload*>(payload.get())
+					== *static_cast<ResultsResponsePayload*>(o.payload.get());
+				break;
+
+			case Payload::Type::START:
+			case Payload::Type::STOP:
+			case Payload::Type::STATUS:
+			case Payload::Type::RESULTS:
+				return true;
+				break;
+
+			default:
+				throw Exception("Error in program logic: we forgot to handle some payload", __FUNCTION__);
+		}
+	}
+	else {
+		return false;
+	}
 }

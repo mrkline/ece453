@@ -24,4 +24,5 @@ public:
 
 	const std::unique_ptr<Payload> payload;
 
+	bool operator==(const Message& o) const;
 };
