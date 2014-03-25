@@ -24,7 +24,6 @@ void ResponsePayloadJSON()
 {
 	auto load = makeResponsePayload();
 	Json::Value jrep = load->toJSON();
-	cout <<jrep;
 
 	auto fromJSON = ResponsePayload::fromJSON(jrep);
 	TEST_ASSERT(*load == *fromJSON);
@@ -40,7 +39,6 @@ void SetupPayloadJSON()
 {
 	auto load = makeSetupPayload();
 	Json::Value jrep = load->toJSON();
-	cout << jrep;
 
 	auto fromJSON = SetupPayload::fromJSON(jrep);
 	TEST_ASSERT(*load == *fromJSON);
@@ -61,7 +59,6 @@ void StatusResponsePayloadJSON()
 {
 	auto load = makeStatusResponsePayload();
 	Json::Value jrep = load->toJSON();
-	cout << jrep;
 
 	auto fromJSON = StatusResponsePayload::fromJSON(jrep);
 	TEST_ASSERT(*load == *fromJSON);
@@ -93,7 +90,6 @@ void ResultsResponsePayloadJSON()
 {
 	auto load = makeResultsResponsePayload();
 	Json::Value jrep = load->toJSON();
-	cout << jrep;
 
 	auto fromJSON = ResultsResponsePayload::fromJSON(jrep);
 	TEST_ASSERT(*load == *fromJSON);
@@ -103,49 +99,41 @@ void MessageJSON()
 {
 	Message response(Payload::Type::RESPONSE, 1, 1, makeResponsePayload());
 	Json::Value jresponse = response.toJSON();
-	cout << jresponse;
 	auto responseFromJSON = Message::fromJSON(jresponse);
 	TEST_ASSERT(response == *responseFromJSON);
 
 	Message setup(Payload::Type::SETUP, 1, 2, makeSetupPayload());
 	Json::Value jsetup = setup.toJSON();
-	cout << jsetup;
 	auto setupFromJSON = Message::fromJSON(jsetup);
 	TEST_ASSERT(setup == *setupFromJSON);
 
 	Message start(Payload::Type::START, 1, 3, nullptr);
 	Json::Value jstart = start.toJSON();
-	cout << jstart;
 	auto startFromJSON = Message::fromJSON(jstart);
 	TEST_ASSERT(start == *startFromJSON);
 
 	Message stop(Payload::Type::STOP, 1, 4, nullptr);
 	Json::Value jstop = stop.toJSON();
-	cout << jstop;
 	auto stopFromJSON = Message::fromJSON(jstop);
 	TEST_ASSERT(stop == *stopFromJSON);
 
 	Message status(Payload::Type::STATUS, 1, 5, nullptr);
 	Json::Value jstatus = status.toJSON();
-	cout << jstatus;
 	auto statusFromJSON = Message::fromJSON(jstatus);
 	TEST_ASSERT(status == *statusFromJSON);
 
 	Message statusResponse(Payload::Type::STATUS_RESPONSE, 1, 6, makeStatusResponsePayload());
 	Json::Value jstatusResponse = statusResponse.toJSON();
-	cout << jstatusResponse;
 	auto statusResponseFromJSON = Message::fromJSON(jstatusResponse);
 	TEST_ASSERT(statusResponse == *statusResponseFromJSON);
 
 	Message results(Payload::Type::RESULTS, 1, 7, nullptr);
 	Json::Value jresults = results.toJSON();
-	cout << jresults;
 	auto resultsFromJSON = Message::fromJSON(jresults);
 	TEST_ASSERT(results == *resultsFromJSON);
 
 	Message resultsResponse(Payload::Type::RESULTS_RESPONSE, 1, 8, makeResultsResponsePayload());
 	Json::Value jresultsResponse = resultsResponse.toJSON();
-	cout << jresultsResponse;
 	auto resultsResponseFromJSON = Message::fromJSON(jresultsResponse);
 	TEST_ASSERT(resultsResponse == *resultsResponseFromJSON);
 }
