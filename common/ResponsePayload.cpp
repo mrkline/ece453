@@ -47,27 +47,26 @@ ResponsePayload::ResponsePayload(int respTo, Code c, const std::string& msg) :
 	code(c),
 	message(msg)
 {
-	enforce<ArgumentException>(respondingTo > 0, "Responding to a negative ID does not make sense.", __FUNCTION__);
+	ENFORCE(ArgumentException, respondingTo > 0, "Responding to a negative ID does not make sense.");
 }
 
 std::unique_ptr<ResponsePayload> ResponsePayload::fromJSON(const Json::Value& object)
 {
-	enforce<IOException>(object.isMember(respondingToKey), "Response payload is missing the response ID",
-	                                     __FUNCTION__);
+	ENFORCE(IOException, object.isMember(respondingToKey), "Response payload is missing the response ID");
 
-	enforce<IOException>(object.isMember(codeKey), "Response payload is missing the code", __FUNCTION__);
-	enforce<IOException>(object.isMember(messageKey), "Response payload is missing the message", __FUNCTION__);
+	ENFORCE(IOException, object.isMember(codeKey), "Response payload is missing the code");
+	ENFORCE(IOException, object.isMember(messageKey), "Response payload is missing the message");
 
 	const Value& respondingToValue = object[respondingToKey];
 	const Value& codeValue = object[codeKey];
 	const Value& messageValue = object[messageKey];
 
-	enforce<IOException>(respondingToValue.isInt(), "The response ID is not an integer.", __FUNCTION__);
-	enforce<IOException>(codeValue.isString(), "The response code is not a string.", __FUNCTION__);
-	enforce<IOException>(messageValue.isString(), "The response message is not a string.", __FUNCTION__);
+	ENFORCE(IOException, respondingToValue.isInt(), "The response ID is not an integer.");
+	ENFORCE(IOException, codeValue.isString(), "The response code is not a string.");
+	ENFORCE(IOException, messageValue.isString(), "The response message is not a string.");
 
 	const auto codeIt = nameToCode.find(codeValue.asString());
-	enforce<IOException>(codeIt != end(nameToCode), "The response code is invalid.", __FUNCTION__);
+	ENFORCE(IOException, codeIt != end(nameToCode), "The response code is invalid.");
 
 	return std::unique_ptr<ResponsePayload>(
 		new ResponsePayload(respondingToValue.asInt(), codeIt->second, messageValue.asString()));

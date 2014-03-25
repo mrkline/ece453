@@ -18,7 +18,7 @@ public:
 
 	Json::Value toJSON() const override
 	{
-		Exceptions::enforce<Exceptions::Exception>(val.isObject(), "The value must be an object", __FUNCTION__);
+		ENFORCE(Exceptions::Exception, val.isObject(), "The value must be an object");
 		return val;
 	}
 

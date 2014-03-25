@@ -23,20 +23,16 @@ StatusResponsePayload::PlayerList parseStats(const Value& stats)
 	StatusResponsePayload::PlayerList ret;
 
 	for (const Value& obj : stats) {
-		enforce<IOException>(obj.isObject(), "An element of the player stats is not an object.", __FUNCTION__);
+		ENFORCE(IOException, obj.isObject(), "An element of the player stats is not an object.");
 
-		enforce<IOException>(obj.isMember(scoreKey), "An element of the player stats is missing the score.",
-		                     __FUNCTION__);
-		enforce<IOException>(obj.isMember(hitsKey), "An element of the player stats is missing the hits value.",
-		                     __FUNCTION__);
+		ENFORCE(IOException, obj.isMember(scoreKey), "An element of the player stats is missing the score.");
+		ENFORCE(IOException, obj.isMember(hitsKey), "An element of the player stats is missing the hits value.");
 
 		const Value& scoreValue = obj[scoreKey];
 		const Value& hitsValue = obj[hitsKey];
 
-		enforce<IOException>(scoreValue.isInt(), "An element of the player stats does not have an integer score.",
-		                     __FUNCTION__);
-		enforce<IOException>(hitsValue.isInt(), "An element of the player stats does not have an integer hits value.",
-		                    __FUNCTION__);
+		ENFORCE(IOException, scoreValue.isInt(), "An element of the player stats does not have an integer score.");
+		ENFORCE(IOException, hitsValue.isInt(), "An element of the player stats does not have an integer hits value.");
 
 		ret.emplace_back(scoreValue.asInt(), hitsValue.asInt());
 	}
@@ -55,37 +51,32 @@ StatusResponsePayload::StatusResponsePayload(int respTo, const std::string& mess
 	winningScore(winScore),
 	players(move(playerStats))
 {
-	enforce<ArgumentException>(timeRemaining >= -1, "Invalid remaining time", __FUNCTION__);
-	enforce<ArgumentException>(winningScore >= -1, "Invalid winning score", __FUNCTION__);
-	enforce<ArgumentException>(players.size() > 0, "You must have at least one player.", __FUNCTION__);
+	ENFORCE(ArgumentException, timeRemaining >= -1, "Invalid remaining time");
+	ENFORCE(ArgumentException, winningScore >= -1, "Invalid winning score");
+	ENFORCE(ArgumentException, players.size() > 0, "You must have at least one player.");
 }
 
 std::unique_ptr<StatusResponsePayload> StatusResponsePayload::fromJSON(const Json::Value& object)
 {
 	const auto responseInfo = ResponsePayload::fromJSON(object); // Get the basic response info
 
-	enforce<IOException>(responseInfo->code == ResponsePayload::Code::OK,
-	                     "Full status response payloads must have an OK response code.",
-	                     __FUNCTION__);
+	ENFORCE(IOException, responseInfo->code == ResponsePayload::Code::OK,
+	                     "Full status response payloads must have an OK response code.");
 
-	enforce<IOException>(object.isMember(runningKey), "Status response payload is missing the \"running\" flag",
-	                     __FUNCTION__);
-	enforce<IOException>(object.isMember(timeRemainingKey), "Status response payload has no time remaining",
-	                                     __FUNCTION__);
-	enforce<IOException>(object.isMember(winningScoreKey), "Status response payload has no winning score",
-	                                     __FUNCTION__);
-	enforce<IOException>(object.isMember(playerStatsKey), "Status response payload has no player statistics",
-	                     __FUNCTION__);
+	ENFORCE(IOException, object.isMember(runningKey), "Status response payload is missing the \"running\" flag");
+	ENFORCE(IOException, object.isMember(timeRemainingKey), "Status response payload has no time remaining");
+	ENFORCE(IOException, object.isMember(winningScoreKey), "Status response payload has no winning score");
+	ENFORCE(IOException, object.isMember(playerStatsKey), "Status response payload has no player statistics");
 
 	const Value& runningValue = object[runningKey];
 	const Value& timeRemainingValue = object[timeRemainingKey];
 	const Value& winningScoreValue = object[winningScoreKey];
 	const Value& playerStatsValue = object[playerStatsKey];
 
-	enforce<IOException>(runningValue.isBool(), "The \"running\" flag is not a boolean.", __FUNCTION__);
-	enforce<IOException>(timeRemainingValue.isInt(), "The time remaining value is not an integer.", __FUNCTION__);
-	enforce<IOException>(winningScoreValue.isInt(), "The winning score value is not an integer.", __FUNCTION__);
-	enforce<IOException>(playerStatsValue.isArray(), "The player stats value is not an array.", __FUNCTION__);
+	ENFORCE(IOException, runningValue.isBool(), "The \"running\" flag is not a boolean.");
+	ENFORCE(IOException, timeRemainingValue.isInt(), "The time remaining value is not an integer.");
+	ENFORCE(IOException, winningScoreValue.isInt(), "The winning score value is not an integer.");
+	ENFORCE(IOException, playerStatsValue.isArray(), "The player stats value is not an array.");
 
 	return std::unique_ptr<StatusResponsePayload>(
 		new StatusResponsePayload(responseInfo->respondingTo, responseInfo->message,

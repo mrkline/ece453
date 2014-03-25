@@ -30,10 +30,9 @@ Message::Message(Payload::Type t, int ver, int idNum, std::unique_ptr<Payload>&&
 	id(idNum),
 	payload(std::move(load))
 {
-	enforce<ArgumentException>(version > 0, "The version number cannot be negative.", __FUNCTION__);
-	enforce<ArgumentException>(id > 0, "The ID cannot be negative.", __FUNCTION__);
-	enforce<ArgumentException>(load == nullptr || type == payload->getType(), "The type must match the payload's type.",
-	                           __FUNCTION__);
+	ENFORCE(ArgumentException, version > 0, "The version number cannot be negative.");
+	ENFORCE(ArgumentException, id > 0, "The ID cannot be negative.");
+	ENFORCE(ArgumentException, load == nullptr || type == payload->getType(), "The type must match the payload's type.");
 
 	switch(type) {
 		case Payload::Type::RESPONSE:
@@ -41,40 +40,37 @@ Message::Message(Payload::Type t, int ver, int idNum, std::unique_ptr<Payload>&&
 		case Payload::Type::STATUS_RESPONSE:
 		case Payload::Type::RESULTS_RESPONSE:
 		case Payload::Type::TEST:
-			enforce<IOException>(payload != nullptr, "For this message type, a payload is required.",
-			                     __FUNCTION__);
+			ENFORCE(IOException, payload != nullptr, "For this message type, a payload is required.");
 			break;
 
 		case Payload::Type::START:
 		case Payload::Type::STOP:
 		case Payload::Type::STATUS:
 		case Payload::Type::RESULTS:
-			enforce<IOException>(payload == nullptr, "For this message type, the payload should be null",
-			                     __FUNCTION__);
+			ENFORCE(IOException, payload == nullptr, "For this message type, the payload should be null");
 			break;
 
 		default:
-			throw Exception("Error in program logic: we forgot to handle some payload", __FUNCTION__);
+			THROW(Exception, "Error in program logic: we forgot to handle some payload");
 	}
 }
 
 std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 {
-	enforce<IOException>(object.isMember(typeKey), "The message contains no type", __FUNCTION__);
-	enforce<IOException>(object.isMember(versionKey), "The message contains no version", __FUNCTION__);
-	enforce<IOException>(object.isMember(idKey), "The message contains no ID", __FUNCTION__);
-	enforce<IOException>(object.isMember(payloadKey), "The message contains no payload", __FUNCTION__);
+	ENFORCE(IOException, object.isMember(typeKey), "The message contains no type");
+	ENFORCE(IOException, object.isMember(versionKey), "The message contains no version");
+	ENFORCE(IOException, object.isMember(idKey), "The message contains no ID");
+	ENFORCE(IOException, object.isMember(payloadKey), "The message contains no payload");
 
 	const Value& typeValue = object[typeKey];
 	const Value& versionValue = object[versionKey];
 	const Value& idValue = object[idKey];
 	const Value& payloadValue = object[payloadKey];
 
-	enforce<IOException>(typeValue.isString(), "The message's type field is not a string.", __FUNCTION__);
-	enforce<IOException>(versionValue.isInt(), "The message's version field is not an integer.", __FUNCTION__);
-	enforce<IOException>(idValue.isInt(), "The message's ID field is not an integer.", __FUNCTION__);
-	enforce<IOException>(payloadValue.isNull() || payloadValue.isObject(), "The message's payload is invalid.",
-	                     __FUNCTION__);
+	ENFORCE(IOException, typeValue.isString(), "The message's type field is not a string.");
+	ENFORCE(IOException, versionValue.isInt(), "The message's version field is not an integer.");
+	ENFORCE(IOException, idValue.isInt(), "The message's ID field is not an integer.");
+	ENFORCE(IOException, payloadValue.isNull() || payloadValue.isObject(), "The message's payload is invalid.");
 
 	std::unique_ptr<Payload> load;
 	Payload::Type type = Payload::nameToType(typeValue.asString());
@@ -85,20 +81,18 @@ std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 		case Payload::Type::STATUS_RESPONSE:
 		case Payload::Type::RESULTS_RESPONSE:
 		case Payload::Type::TEST:
-			enforce<IOException>(payloadValue.isObject(), "For this message type, a payload is required.",
-			                     __FUNCTION__);
+			ENFORCE(IOException, payloadValue.isObject(), "For this message type, a payload is required.");
 			break;
 
 		case Payload::Type::START:
 		case Payload::Type::STOP:
 		case Payload::Type::STATUS:
 		case Payload::Type::RESULTS:
-			enforce<IOException>(payloadValue.isNull(), "For this message type, the payload should be null",
-			                     __FUNCTION__);
+			ENFORCE(IOException, payloadValue.isNull(), "For this message type, the payload should be null");
 			break;
 
 		default:
-			throw IOException("The message's payload type is unknown.", __FUNCTION__);
+			THROW(IOException, "The message's payload type is unknown.");
 	}
 
 	switch(type) {
@@ -128,7 +122,7 @@ std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 			break; // Load stays null
 
 		default:
-			throw Exception("Error in program logic: we forgot to parse some payload", __FUNCTION__);
+			THROW(Exception, "Error in program logic: we forgot to parse some payload");
 	}
 
 	return std::unique_ptr<Message>(new Message(type, versionValue.asInt(), idValue.asInt(), move(load)));
@@ -188,7 +182,7 @@ bool Message::operator==(const Message& o) const
 				break;
 
 			default:
-				throw Exception("Error in program logic: we forgot to handle some payload", __FUNCTION__);
+				THROW(Exception, "Error in program logic: we forgot to handle some payload");
 		}
 	}
 	else {

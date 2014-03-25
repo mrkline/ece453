@@ -16,13 +16,11 @@ void Testing::TestUnit::runUnit()
 		}
 		catch (const TestFailedException& ex) {
 			printf("FAILURE: %s test failed on %s:%d\n", currName, ex.file, ex.line);
-			if (ex.message != nullptr)
-				printf("\t%s\n", ex.message);
 			failedTests.push_back(std::move(curr));
 		}
 		catch (const Exceptions::Exception& ex) {
-			printf("FAILURE: The method %s threw an exception with the following message:\n\t%s\n",
-			       ex.callingFunction.c_str(), ex.message.c_str());
+			printf("FAILURE: An exception was thrown at %s:%d with the following message:\n\t%s\n",
+			       ex.file, ex.line, ex.message.c_str());
 		}
 		catch (const std::exception& ex) {
 			printf("FAILURE: An exception was thrown with the following message:\n\t%s\n",

@@ -28,7 +28,7 @@ SetupPayload::DataMap parseGameData(const Value& data)
 
 	for (ValueIterator it = begin(data); it != end(data); ++it) {
 		const Value& val = *it;
-		enforce<IOException>(val.isInt(), "The game data contained a value that was not an integer.", __FUNCTION__);
+		ENFORCE(IOException, val.isInt(), "The game data contained a value that was not an integer.");
 		ret[it.key().asString()] = val.asInt();
 	}
 
@@ -45,23 +45,22 @@ SetupPayload::SetupPayload(GameType gType, int pCount, uint8_t winConds, int tim
 	winningScore(score),
 	gameData(move(data))
 {
-	enforce<ArgumentException>(playerCount > 0, "You must have at least one player.", __FUNCTION__);
-	enforce<ArgumentException>(winConditions != 0, "There are no win conditions.", __FUNCTION__);
-	enforce<ArgumentException>(((winConditions & WinCondition::WC_TIME) | (winConditions & WinCondition::WC_POINTS)) != 0,
-	                           "Invalid win condition flags", __FUNCTION__);
-	enforce<ArgumentException>(endTime >= -1, "Invalid game duration", __FUNCTION__);
-	enforce<ArgumentException>(winningScore >= -1, "Invalid winning score", __FUNCTION__);
+	ENFORCE(ArgumentException, playerCount > 0, "You must have at least one player.");
+	ENFORCE(ArgumentException, winConditions != 0, "There are no win conditions.");
+	ENFORCE(ArgumentException, ((winConditions & WinCondition::WC_TIME) | (winConditions & WinCondition::WC_POINTS)) != 0,
+	                           "Invalid win condition flags");
+	ENFORCE(ArgumentException, endTime >= -1, "Invalid game duration");
+	ENFORCE(ArgumentException, winningScore >= -1, "Invalid winning score");
 }
 
 std::unique_ptr<SetupPayload> SetupPayload::fromJSON(const Json::Value& object)
 {
-	enforce<IOException>(object.isMember(gameTypeKey), "Setup payload is missing the game type", __FUNCTION__);
-	enforce<IOException>(object.isMember(playerCountKey), "Setup payload is missing the player count", __FUNCTION__);
-	enforce<IOException>(object.isMember(winConditionsKey), "Setup payload is missing the win condition(s)",
-	                     __FUNCTION__);
-	enforce<IOException>(object.isMember(endTimeKey), "Setup payload is missing the end time", __FUNCTION__);
-	enforce<IOException>(object.isMember(winningScoreKey), "Setup payload is missing the winning score", __FUNCTION__);
-	enforce<IOException>(object.isMember(gameDataKey), "Setup payload is missing additional game data", __FUNCTION__);
+	ENFORCE(IOException, object.isMember(gameTypeKey), "Setup payload is missing the game type");
+	ENFORCE(IOException, object.isMember(playerCountKey), "Setup payload is missing the player count");
+	ENFORCE(IOException, object.isMember(winConditionsKey), "Setup payload is missing the win condition(s)");
+	ENFORCE(IOException, object.isMember(endTimeKey), "Setup payload is missing the end time");
+	ENFORCE(IOException, object.isMember(winningScoreKey), "Setup payload is missing the winning score");
+	ENFORCE(IOException, object.isMember(gameDataKey), "Setup payload is missing additional game data");
 
 	const Value& gameTypeValue = object[gameTypeKey];
 	const Value& playerCountValue = object[playerCountKey];
@@ -70,35 +69,34 @@ std::unique_ptr<SetupPayload> SetupPayload::fromJSON(const Json::Value& object)
 	const Value& winningScoreValue = object[winningScoreKey];
 	const Value& gameDataValue = object[gameDataKey];
 
-	enforce<IOException>(gameTypeValue.isInt(), "The game type is not an integer.", __FUNCTION__);
-	enforce<IOException>(playerCountValue.isInt(), "The player count is not an integer.", __FUNCTION__);
-	enforce<IOException>(winConditionsValue.isArray(), "The win conditions are not an array.", __FUNCTION__);
-	enforce<IOException>(endTimeValue.isInt(), "The end time is not an integer.", __FUNCTION__);
-	enforce<IOException>(winningScoreValue.isInt(), "The winning score is not an integer.", __FUNCTION__);
-	enforce<IOException>(gameDataValue.isObject(), "The additional game data is not an object.", __FUNCTION__);
+	ENFORCE(IOException, gameTypeValue.isInt(), "The game type is not an integer.");
+	ENFORCE(IOException, playerCountValue.isInt(), "The player count is not an integer.");
+	ENFORCE(IOException, winConditionsValue.isArray(), "The win conditions are not an array.");
+	ENFORCE(IOException, endTimeValue.isInt(), "The end time is not an integer.");
+	ENFORCE(IOException, winningScoreValue.isInt(), "The winning score is not an integer.");
+	ENFORCE(IOException, gameDataValue.isObject(), "The additional game data is not an object.");
 
 	uint8_t winMask = 0;
 
-	enforce<IOException>(winConditionsValue.size() <= 2, "There are more win conditions than we recognize.",
-	                     __FUNCTION__);
+	ENFORCE(IOException, winConditionsValue.size() <= 2, "There are more win conditions than we recognize.");
 
 	/// \todo Fix up JSONCPP so that this works
 	/*
-	enforce<IOException>(all_of(begin(winConditionsValue), end(winConditionsValue), [](const Value& v) {
+	ENFORCE(IOException, all_of(begin(winConditionsValue), end(winConditionsValue), [](const Value& v) {
 			if (!v.isString())
 				return false;
 
 			const auto str = v.asString();
 			return str == pointsConditionValue.c_str() || str == timeConditionValue.c_str();
-		}), "Some of the win conditions are not recongized", __FUNCTION__);
+		}), "Some of the win conditions are not recongized");
 	*/
 
 	for (const Value& v : winConditionsValue) {
-		enforce<IOException>(v.isString(), "A win condition is not a string.", __FUNCTION__);
+		ENFORCE(IOException, v.isString(), "A win condition is not a string.");
 		const auto str = v.asString();
 		bool points = str == pointsConditionValue.c_str();
 		bool time = str == timeConditionValue.c_str();
-		enforce<IOException>(points || time, "A win condition is not recognized as valid.", __FUNCTION__);
+		ENFORCE(IOException, points || time, "A win condition is not recognized as valid.");
 
 		if (points)
 			winMask |= WC_POINTS;

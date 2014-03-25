@@ -13,13 +13,13 @@ namespace Testing {
 /// Thrown out of Test::Run() if a test fails in an anticipated manner
 class TestFailedException {
 public:
-	TestFailedException(const char* f, int l, const char* m = nullptr)
-		: file(f), line(l), message(m)
+	TestFailedException(const char* f, int l) :
+		file(f),
+		line(l)
 	{ }
 
 	const char* const file;
 	const int line;
-	const char* const message;
 };
 
 inline void test(bool cond, const char* file, int line)
