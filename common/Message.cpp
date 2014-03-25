@@ -7,6 +7,7 @@
 #include "SetupPayload.hpp"
 #include "StatusResponsePayload.hpp"
 #include "ResultsResponsePayload.hpp"
+#include "TestPayload.hpp"
 
 using namespace Exceptions;
 using namespace Json;
@@ -39,6 +40,7 @@ Message::Message(Payload::Type t, int ver, int idNum, std::unique_ptr<Payload>&&
 		case Payload::Type::SETUP:
 		case Payload::Type::STATUS_RESPONSE:
 		case Payload::Type::RESULTS_RESPONSE:
+		case Payload::Type::TEST:
 			enforce<IOException>(payload != nullptr, "For this message type, a payload is required.",
 			                     __FUNCTION__);
 			break;
@@ -82,6 +84,7 @@ std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 		case Payload::Type::SETUP:
 		case Payload::Type::STATUS_RESPONSE:
 		case Payload::Type::RESULTS_RESPONSE:
+		case Payload::Type::TEST:
 			enforce<IOException>(payloadValue.isObject(), "For this message type, a payload is required.",
 			                     __FUNCTION__);
 			break;
@@ -114,6 +117,9 @@ std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 		case Payload::Type::RESULTS_RESPONSE:
 			load = ResultsResponsePayload::fromJSON(payloadValue);
 			break;
+
+		case Payload::Type::TEST:
+			load = TestPayload::fromJSON(payloadValue);
 
 		case Payload::Type::START:
 		case Payload::Type::STOP:
@@ -167,6 +173,11 @@ bool Message::operator==(const Message& o) const
 			case Payload::Type::RESULTS_RESPONSE:
 				return *static_cast<ResultsResponsePayload*>(payload.get())
 					== *static_cast<ResultsResponsePayload*>(o.payload.get());
+				break;
+
+			case Payload::Type::TEST:
+				return *static_cast<TestPayload*>(payload.get())
+					== *static_cast<TestPayload*>(o.payload.get());
 				break;
 
 			case Payload::Type::START:

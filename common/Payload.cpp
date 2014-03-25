@@ -11,6 +11,7 @@ const std::unordered_map<Payload::Type, Json::StaticString> Payload::typeNames =
 	{Payload::Type::STATUS_RESPONSE, StaticString("status response")},
 	{Payload::Type::RESULTS, StaticString("results")},
 	{Payload::Type::RESULTS_RESPONSE, StaticString("results response")},
+	{Payload::Type::TEST, StaticString("test")},
 	{Payload::Type::UNKNOWN, StaticString("unknown")}
 };
 
@@ -23,6 +24,7 @@ const std::unordered_map<std::string, Payload::Type> Payload::typeLookup = {
 	{"status response", Payload::Type::STATUS_RESPONSE},
 	{"results", Payload::Type::RESULTS},
 	{"results response", Payload::Type::RESULTS_RESPONSE},
+	{"test", Payload::Type::TEST},
 	{"unknown", Payload::Type::UNKNOWN}
 };
 

@@ -21,6 +21,7 @@ public:
 		STATUS_RESPONSE, ///< Response to a status query
 		RESULTS, ///< Get the game results after a match has finished
 		RESULTS_RESPONSE, ///< Response to a results query
+		TEST, ///< A test payload that holds a string
 		UNKNOWN ///< An unknown/invalid payload type
 	};
 
