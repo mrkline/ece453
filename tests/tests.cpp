@@ -5,6 +5,7 @@
 #include "TestUnit.hpp"
 
 #include "PayloadTests.hpp"
+#include "MessageQueueTests.hpp"
 
 using namespace Testing;
 using namespace std;
@@ -21,6 +22,7 @@ int main()
 {
 	// Push tests here
 	testUnits.emplace(new PayloadTests);
+	testUnits.emplace(new MessageQueueTests);
 
 	while (!testUnits.empty()) {
 		const auto& curr = testUnits.front();
