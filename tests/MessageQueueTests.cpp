@@ -7,7 +7,8 @@
 #include <random>
 
 #include "MessageQueue.hpp"
-#include "TestPayload.hpp"
+#include "TestMessage.hpp"
+#include "Message.hpp"
 
 using namespace Exceptions;
 using namespace Json;
@@ -18,11 +19,10 @@ namespace {
 /// Utility function for making test messages to send
 unique_ptr<Message> makeTestMessage(int value = 0)
 {
-	unique_ptr<TestPayload> load(new TestPayload);
-	load->val["test"] = "Hi, I'm a test message!";
-	load->val["val"] = value;
-	unique_ptr<Message> ret(new Message(Payload::Type::TEST, 1, 42, move(load)));
-	return ret;
+	unique_ptr<TestMessage> ret(new TestMessage(42));
+	ret->val["test"] = "Hi, I'm a test message!";
+	ret->val["val"] = value;
+	return move(ret);
 }
 
 void singleThread()

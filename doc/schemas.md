@@ -6,19 +6,17 @@ This is terribly incomplete. Additions will be made as the design is fleshed out
 
 All messages in this protocol will be encapsulated in a JSON object with the following fields:
 
-- "type" - The type of message being sent. Used to determine what parser to use for the payload
+- "type" - The type of message being sent.
 
 - "version" - An integer representing the version of this protocol. This version is 1.
 
 - "id" - An ID/sequence number for the message. Each ID must be a sequentially increasing value compared to other
   messages sent by a given sender (i.e. the UI or the system).
 
-- "payload" - The information being sent, in the form of one of the objects below
-
 ## Response
 
 A general response from the controller to the UI, unless otherwise specified below, will be of type "response"
-and contain a payload object with the following fields:
+and contain the following additional fields:
 
 - "responding to" - The ID of the message that this one is a response to
 
@@ -40,7 +38,7 @@ and contain a payload object with the following fields:
 
 ## Setup
 
-To set up a game, a message with type "setup" and a payload object with the following fields will be sent to the system:
+To set up a game, a message with type "setup" with the following additional fields will be sent to the system:
 
 - "game type" - One of the following:
 
@@ -74,28 +72,27 @@ To set up a game, a message with type "setup" and a payload object with the foll
 
 ## Start
 
-To start the game, a message with type "start" is sent to the system with an empty payload object.
+To start the game, a message with type "start" is sent to the system.
 
 
 ## Stop
 
-To stop a running game, a message with type "stop" is sent to the system with an empty payload object.
+To stop a running game, a message with type "stop" is sent to the system.
 
 ## Status
 
-To get the status of the system, a message of type "get status" is sent to the system with an empty payload object.
-Future versions of the protocol may have this request contain a payload indicating which fields to fetch
+To get the status of the system, a message of type "get status" is sent to the system.
+Future versions of the protocol may have this request contain a field indicating what data to fetch
 instead of mandating a monolithic update.
 
 ## Status response
 
 Instead of the usual response (see above), status requests will be met with a message of type "status response"
-with the following payload:
+with the following additional fields:
 
-- As a subclass of response, this payload will contain all the members a normal response payload contains.
+- As a subclass of response, this message will contain all the members a normal response message contains.
 
-- "running" - A boolean indicating whether the game is currently running. If this value is false,
-              no other fields will be contained in the payload.
+- "running" - A boolean indicating whether the game is currently running.
 
 - "time remaining" - An integer indicating the number of remaining seconds, or -1 if the current game has no time limit.
 
@@ -109,17 +106,17 @@ with the following payload:
 
 ## Results
 
-To get the detailed results of a match, a message of type "get results" is sent to the system with an empty payload.
+To get the detailed results of a match, a message of type "get results" is sent to the system.
 This must be done _after_ a match has been run.
-Future versions of the protocol may have this request contain a payload indicating which fields to fetch
+Future versions of the protocol may have this request contain a field indicating which data to fetch
 instead of mandating a monolithic update.
 
 ## Results response
 
 Instead of the usual response (see above), results requests will be met with a message of type "results response"
-with the following payload:
+with the following additional fields:
 
-- As a subclass of a response, this payload will contain all the members a normal response payload contains.
+- As a subclass of a response, this message will contain all the members a normal response message contains.
 
 - "player stats" - An array of objects containing the following fields:
 

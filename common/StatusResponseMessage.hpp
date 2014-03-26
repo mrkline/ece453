@@ -3,9 +3,9 @@
 #include <memory>
 #include <vector>
 
-#include "ResponsePayload.hpp"
+#include "ResponseMessage.hpp"
 
-class StatusResponsePayload : public ResponsePayload {
+class StatusResponseMessage : public ResponseMessage {
 
 public:
 
@@ -20,10 +20,10 @@ public:
 
 	typedef std::vector<PlayerStats> PlayerList;
 
-	StatusResponsePayload(int respTo, const std::string& message,
+	StatusResponseMessage(int id, int respTo, const std::string& message,
 	                      bool isRunning, int timeLeft, int winScore, PlayerList&& playerStats);
 
-	static std::unique_ptr<StatusResponsePayload> fromJSON(const Json::Value& object);
+	static std::unique_ptr<StatusResponseMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
 
@@ -37,5 +37,5 @@ public:
 
 	const PlayerList players;
 
-	bool operator==(const StatusResponsePayload& o) const;
+	bool operator==(const Message& o) const override;
 };

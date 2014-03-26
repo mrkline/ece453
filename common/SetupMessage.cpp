@@ -1,4 +1,4 @@
-#include "SetupPayload.hpp"
+#include "SetupMessage.hpp"
 
 #include <algorithm>
 #include <utility>
@@ -22,9 +22,9 @@ const StaticString gameDataKey("game data");
 const StaticString timeConditionValue("time");
 const StaticString pointsConditionValue("points");
 
-SetupPayload::DataMap parseGameData(const Value& data)
+SetupMessage::DataMap parseGameData(const Value& data)
 {
-	SetupPayload::DataMap ret;
+	SetupMessage::DataMap ret;
 
 	for (ValueIterator it = begin(data); it != end(data); ++it) {
 		const Value& val = *it;
@@ -37,7 +37,8 @@ SetupPayload::DataMap parseGameData(const Value& data)
 
 } // End anonymous namespace
 
-SetupPayload::SetupPayload(GameType gType, int pCount, uint8_t winConds, int time, int score, DataMap&& data) :
+SetupMessage::SetupMessage(int id, GameType gType, int pCount, uint8_t winConds, int time, int score, DataMap&& data) :
+	Message(id),
 	gameType(gType),
 	playerCount(pCount),
 	winConditions(winConds),
@@ -53,14 +54,16 @@ SetupPayload::SetupPayload(GameType gType, int pCount, uint8_t winConds, int tim
 	ENFORCE(ArgumentException, winningScore >= -1, "Invalid winning score");
 }
 
-std::unique_ptr<SetupPayload> SetupPayload::fromJSON(const Json::Value& object)
+std::unique_ptr<SetupMessage> SetupMessage::fromJSON(const Json::Value& object)
 {
-	ENFORCE(IOException, object.isMember(gameTypeKey), "Setup payload is missing the game type");
-	ENFORCE(IOException, object.isMember(playerCountKey), "Setup payload is missing the player count");
-	ENFORCE(IOException, object.isMember(winConditionsKey), "Setup payload is missing the win condition(s)");
-	ENFORCE(IOException, object.isMember(endTimeKey), "Setup payload is missing the end time");
-	ENFORCE(IOException, object.isMember(winningScoreKey), "Setup payload is missing the winning score");
-	ENFORCE(IOException, object.isMember(gameDataKey), "Setup payload is missing additional game data");
+	auto msg = Message::fromJSON(object);
+
+	ENFORCE(IOException, object.isMember(gameTypeKey), "Setup message is missing the game type");
+	ENFORCE(IOException, object.isMember(playerCountKey), "Setup message is missing the player count");
+	ENFORCE(IOException, object.isMember(winConditionsKey), "Setup message is missing the win condition(s)");
+	ENFORCE(IOException, object.isMember(endTimeKey), "Setup message is missing the end time");
+	ENFORCE(IOException, object.isMember(winningScoreKey), "Setup message is missing the winning score");
+	ENFORCE(IOException, object.isMember(gameDataKey), "Setup message is missing additional game data");
 
 	const Value& gameTypeValue = object[gameTypeKey];
 	const Value& playerCountValue = object[playerCountKey];
@@ -104,14 +107,15 @@ std::unique_ptr<SetupPayload> SetupPayload::fromJSON(const Json::Value& object)
 			winMask |= WC_TIME;
 	}
 
-	return std::unique_ptr<SetupPayload>(
-		new SetupPayload((GameType)gameTypeValue.asInt(), playerCountValue.asInt(), winMask,
+	return std::unique_ptr<SetupMessage>(
+		new SetupMessage(msg->id,
+		                 (GameType)gameTypeValue.asInt(), playerCountValue.asInt(), winMask,
 		                 endTimeValue.asInt(), winningScoreValue.asInt(), parseGameData(gameDataValue)));
 }
 
-Json::Value SetupPayload::toJSON() const
+Json::Value SetupMessage::toJSON() const
 {
-	Value ret(objectValue);
+	Value ret = Message::toJSON();
 
 	ret[gameTypeKey] = (int)gameType;
 	ret[playerCountKey] = playerCount;
@@ -139,12 +143,20 @@ Json::Value SetupPayload::toJSON() const
 }
 
 
-bool SetupPayload::operator==(const SetupPayload& o) const
+bool SetupMessage::operator==(const Message& o) const
 {
-	return gameType == o.gameType
-		&& playerCount == o.playerCount
-		&& winConditions == o.winConditions
-		&& endTime == o.endTime
-		&& winningScore == o.winningScore
-		&& gameData == o.gameData;
+	if (!Message::operator==(o))
+		return false;
+
+	auto sm = dynamic_cast<const SetupMessage*>(&o);
+
+	if (sm == nullptr)
+		return false;
+
+	return gameType == sm->gameType
+		&& playerCount == sm->playerCount
+		&& winConditions == sm->winConditions
+		&& endTime == sm->endTime
+		&& winningScore == sm->winningScore
+		&& gameData == sm->gameData;
 }

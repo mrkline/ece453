@@ -3,10 +3,10 @@
 #include <memory>
 #include <vector>
 
-#include "ResponsePayload.hpp"
+#include "ResponseMessage.hpp"
 #include "Vector3.hpp"
 
-class ResultsResponsePayload : public ResponsePayload {
+class ResultsResponseMessage : public ResponseMessage {
 
 public:
 
@@ -33,13 +33,15 @@ public:
 
 	typedef std::vector<PlayerStats> StatsList;
 
-	ResultsResponsePayload(int respTo, const std::string& message, StatsList&& playerStats);
+	ResultsResponseMessage(int id, int respTo, const std::string& message, StatsList&& playerStats);
 
-	static std::unique_ptr<ResultsResponsePayload> fromJSON(const Json::Value& object);
+	static std::unique_ptr<ResultsResponseMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
 
 	Type getType() const override { return Type::RESULTS_RESPONSE; }
+
+	bool operator==(const Message& o) const override;
 
 	const StatsList stats;
 };

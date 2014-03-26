@@ -4,7 +4,7 @@
 #include "Test.hpp"
 #include "TestUnit.hpp"
 
-#include "PayloadTests.hpp"
+#include "MessageTests.hpp"
 #include "MessageQueueTests.hpp"
 
 using namespace Testing;
@@ -21,7 +21,7 @@ queue<UnitPtr> testUnits;
 int main()
 {
 	// Push tests here
-	testUnits.emplace(new PayloadTests);
+	testUnits.emplace(new MessageTests);
 	testUnits.emplace(new MessageQueueTests);
 
 	while (!testUnits.empty()) {

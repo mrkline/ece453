@@ -1,4 +1,4 @@
-#include "StatusResponsePayload.hpp"
+#include "StatusResponseMessage.hpp"
 
 #include <utility>
 
@@ -18,9 +18,9 @@ const StaticString playerStatsKey("player stats");
 const StaticString scoreKey("score");
 const StaticString hitsKey("hits");
 
-StatusResponsePayload::PlayerList parseStats(const Value& stats)
+StatusResponseMessage::PlayerList parseStats(const Value& stats)
 {
-	StatusResponsePayload::PlayerList ret;
+	StatusResponseMessage::PlayerList ret;
 
 	for (const Value& obj : stats) {
 		ENFORCE(IOException, obj.isObject(), "An element of the player stats is not an object.");
@@ -42,10 +42,10 @@ StatusResponsePayload::PlayerList parseStats(const Value& stats)
 
 } // End anonymous namespace
 
-StatusResponsePayload::StatusResponsePayload(int respTo, const std::string& message,
+StatusResponseMessage::StatusResponseMessage(int id, int respTo, const std::string& message,
 	                                         bool isRunning, int timeLeft, int winScore, PlayerList&& playerStats) :
-	// If we're sending a full status response payload back, the request was ok.
-	ResponsePayload(respTo, ResponsePayload::Code::OK, message),
+	// If we're sending a full status response message back, the request was ok.
+	ResponseMessage(id, respTo, ResponseMessage::Code::OK, message),
 	running(isRunning),
 	timeRemaining(timeLeft),
 	winningScore(winScore),
@@ -56,17 +56,17 @@ StatusResponsePayload::StatusResponsePayload(int respTo, const std::string& mess
 	ENFORCE(ArgumentException, players.size() > 0, "You must have at least one player.");
 }
 
-std::unique_ptr<StatusResponsePayload> StatusResponsePayload::fromJSON(const Json::Value& object)
+std::unique_ptr<StatusResponseMessage> StatusResponseMessage::fromJSON(const Json::Value& object)
 {
-	const auto responseInfo = ResponsePayload::fromJSON(object); // Get the basic response info
+	const auto responseInfo = ResponseMessage::fromJSON(object); // Get the basic response info
 
-	ENFORCE(IOException, responseInfo->code == ResponsePayload::Code::OK,
-	                     "Full status response payloads must have an OK response code.");
+	ENFORCE(IOException, responseInfo->code == ResponseMessage::Code::OK,
+	                     "Full status response messages must have an OK response code.");
 
-	ENFORCE(IOException, object.isMember(runningKey), "Status response payload is missing the \"running\" flag");
-	ENFORCE(IOException, object.isMember(timeRemainingKey), "Status response payload has no time remaining");
-	ENFORCE(IOException, object.isMember(winningScoreKey), "Status response payload has no winning score");
-	ENFORCE(IOException, object.isMember(playerStatsKey), "Status response payload has no player statistics");
+	ENFORCE(IOException, object.isMember(runningKey), "Status response message is missing the \"running\" flag");
+	ENFORCE(IOException, object.isMember(timeRemainingKey), "Status response message has no time remaining");
+	ENFORCE(IOException, object.isMember(winningScoreKey), "Status response message has no winning score");
+	ENFORCE(IOException, object.isMember(playerStatsKey), "Status response message has no player statistics");
 
 	const Value& runningValue = object[runningKey];
 	const Value& timeRemainingValue = object[timeRemainingKey];
@@ -78,15 +78,15 @@ std::unique_ptr<StatusResponsePayload> StatusResponsePayload::fromJSON(const Jso
 	ENFORCE(IOException, winningScoreValue.isInt(), "The winning score value is not an integer.");
 	ENFORCE(IOException, playerStatsValue.isArray(), "The player stats value is not an array.");
 
-	return std::unique_ptr<StatusResponsePayload>(
-		new StatusResponsePayload(responseInfo->respondingTo, responseInfo->message,
+	return std::unique_ptr<StatusResponseMessage>(
+		new StatusResponseMessage(responseInfo->id, responseInfo->respondingTo, responseInfo->message,
 		                          runningValue.asBool(), timeRemainingValue.asInt(), winningScoreValue.asInt(),
 		                          parseStats(playerStatsValue)));
 }
 
-Json::Value StatusResponsePayload::toJSON() const
+Json::Value StatusResponseMessage::toJSON() const
 {
-	Value ret = ResponsePayload::toJSON();
+	Value ret = ResponseMessage::toJSON();
 
 	ret[runningKey] = running;
 	ret[timeRemainingKey] = timeRemaining;
@@ -107,11 +107,18 @@ Json::Value StatusResponsePayload::toJSON() const
 }
 
 
-bool StatusResponsePayload::operator==(const StatusResponsePayload& o) const
+bool StatusResponseMessage::operator==(const Message& o) const
 {
-	return ResponsePayload::operator==(o)
-		&& running == o.running
-		&& timeRemaining == o.timeRemaining
-		&& winningScore == o.winningScore
-		&& players == o.players;
+	if (!ResponseMessage::operator==(o))
+		return false;
+
+	auto srm = dynamic_cast<const StatusResponseMessage*>(&o);
+
+	if (srm == nullptr)
+		return false;
+
+	return  running == srm->running
+		&& timeRemaining == srm->timeRemaining
+		&& winningScore == srm->winningScore
+		&& players == srm->players;
 }

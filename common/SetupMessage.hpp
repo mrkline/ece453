@@ -3,19 +3,19 @@
 #include <memory>
 #include <unordered_map>
 
-#include "Payload.hpp"
+#include "Message.hpp"
 #include "GameTypes.hpp"
 
-/// A payload for setup messages
-class SetupPayload : public Payload {
+/// A setup message
+class SetupMessage : public Message {
 
 public:
 
 	typedef std::unordered_map<std::string, int> DataMap;
 
-	SetupPayload(GameType gType, int pCount, uint8_t winConds, int time, int score, DataMap&& data);
+	SetupMessage(int id, GameType gType, int pCount, uint8_t winConds, int time, int score, DataMap&& data);
 
-	static std::unique_ptr<SetupPayload> fromJSON(const Json::Value& object);
+	static std::unique_ptr<SetupMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
 
@@ -41,5 +41,5 @@ public:
 
 	const DataMap gameData;
 
-	bool operator==(const SetupPayload& o) const;
+	bool operator==(const Message& o) const override;
 };

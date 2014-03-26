@@ -3,10 +3,10 @@
 #include <memory>
 #include <string>
 
-#include "Payload.hpp"
+#include "Message.hpp"
 
 /// A response payload for a message
-class ResponsePayload : public Payload {
+class ResponseMessage : public Message {
 
 public:
 
@@ -18,9 +18,9 @@ public:
 		UNSUPPORTED_REQUEST
 	};
 
-	ResponsePayload(int respTo, Code c, const std::string& msg);
+	ResponseMessage(int idNum, int respTo, Code c, const std::string& msg);
 
-	static std::unique_ptr<ResponsePayload> fromJSON(const Json::Value& object);
+	static std::unique_ptr<ResponseMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
 
@@ -32,5 +32,5 @@ public:
 
 	virtual Type getType() const override { return Type::RESPONSE; }
 
-	bool operator==(const ResponsePayload& o) const;
+	bool operator==(const Message& o) const override;
 };

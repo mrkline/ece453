@@ -1,4 +1,4 @@
-#include "ResultsResponsePayload.hpp"
+#include "ResultsResponseMessage.hpp"
 
 #include <utility>
 
@@ -20,8 +20,8 @@ const StaticString timeKey("time");
 const StaticString movementKey("movement");
 
 // For laziness
-typedef ResultsResponsePayload::Shot Shot;
-typedef ResultsResponsePayload::PlayerStats PlayerStats;
+typedef ResultsResponseMessage::Shot Shot;
+typedef ResultsResponseMessage::PlayerStats PlayerStats;
 
 std::vector<Vector3> parseMovement(const Value& moves)
 {
@@ -91,8 +91,9 @@ PlayerStats parseStats(const Value& stat)
 
 } // end anonymous namespace
 
-ResultsResponsePayload::ResultsResponsePayload(int respTo, const std::string& message, StatsList&& playerStats) :
-	ResponsePayload(respTo, ResponsePayload::Code::OK, message), // If we're sending a results response payload back, the request was ok.
+ResultsResponseMessage::ResultsResponseMessage(int id, int respTo, const std::string& message, StatsList&& playerStats) :
+	// If we're sending a results response payload back, the request was ok.
+	ResponseMessage(id, respTo, ResponseMessage::Code::OK, message),
 	stats(move(playerStats))
 {
 	for (const auto& stat : stats) {
@@ -103,11 +104,11 @@ ResultsResponsePayload::ResultsResponsePayload(int respTo, const std::string& me
 	}
 }
 
-std::unique_ptr<ResultsResponsePayload> ResultsResponsePayload::fromJSON(const Json::Value& object)
+std::unique_ptr<ResultsResponseMessage> ResultsResponseMessage::fromJSON(const Json::Value& object)
 {
-	const auto responseInfo = ResponsePayload::fromJSON(object); // Get the basic response info
+	const auto responseInfo = ResponseMessage::fromJSON(object); // Get the basic response info
 
-	ENFORCE(IOException, responseInfo->code == ResponsePayload::Code::OK,
+	ENFORCE(IOException, responseInfo->code == ResponseMessage::Code::OK,
 	        "Full results response payloads must have an OK response code.");
 
 	ENFORCE(IOException, object.isMember(playerStatsKey), "Results response payload is missing player stats");
@@ -122,13 +123,14 @@ std::unique_ptr<ResultsResponsePayload> ResultsResponsePayload::fromJSON(const J
 		playerStats.emplace_back(parseStats(stat));
 	}
 
-	return std::unique_ptr<ResultsResponsePayload>(
-		new ResultsResponsePayload(responseInfo->respondingTo, responseInfo->message, move(playerStats)));
+	return std::unique_ptr<ResultsResponseMessage>(
+		new ResultsResponseMessage(responseInfo->id, responseInfo->respondingTo, responseInfo->message,
+		                           move(playerStats)));
 }
 
-Json::Value ResultsResponsePayload::toJSON() const
+Json::Value ResultsResponseMessage::toJSON() const
 {
-	Value ret = ResponsePayload::toJSON();
+	Value ret = ResponseMessage::toJSON();
 
 	Value statsList(arrayValue);
 
@@ -170,4 +172,17 @@ Json::Value ResultsResponsePayload::toJSON() const
 	ret[playerStatsKey] = move(statsList);
 
 	return ret;
+}
+
+bool ResultsResponseMessage::operator==(const Message& o) const
+{
+	if (!ResponseMessage::operator==(o))
+		return false;
+
+	auto rrm = dynamic_cast<const ResultsResponseMessage*>(&o);
+
+	if (rrm == nullptr)
+		return false;
+
+	return stats == rrm->stats;
 }
