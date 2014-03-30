@@ -5,7 +5,11 @@
 #include "Exceptions.hpp"
 #include "ResponseMessage.hpp"
 #include "SetupMessage.hpp"
+#include "StartMessage.hpp"
+#include "StopMessage.hpp"
+#include "StatusMessage.hpp"
 #include "StatusResponseMessage.hpp"
+#include "ResultsMessage.hpp"
 #include "ResultsResponseMessage.hpp"
 #include "TestMessage.hpp"
 
@@ -90,24 +94,38 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 	
 	ENFORCE(IOException, it != end(typeLookup), "The JSON object's type field is unknown");
 
+	using Type = Message::Type;
+
 	switch (it->second) {
 
-		case Message::Type::EMPTY:
+		case Type::EMPTY:
 			return Message::fromJSON(object);
 
-		case Message::Type::RESPONSE:
+		case Type::RESPONSE:
 			return ResponseMessage::fromJSON(object);
 
-		case Message::Type::SETUP:
+		case Type::SETUP:
 			return SetupMessage::fromJSON(object);
 
-		case Message::Type::STATUS_RESPONSE:
+		case Type::START:
+			return StartMessage::fromJSON(object);
+
+		case Type::STOP:
+			return StopMessage::fromJSON(object);
+
+		case Type::STATUS:
+			return StatusMessage::fromJSON(object);
+
+		case Type::STATUS_RESPONSE:
 			return StatusResponseMessage::fromJSON(object);
 
-		case Message::Type::RESULTS_RESPONSE:
+		case Type::RESULTS:
+			return ResultsMessage::fromJSON(object);
+
+		case Type::RESULTS_RESPONSE:
 			return ResultsResponseMessage::fromJSON(object);
 
-		case Message::Type::TEST:
+		case Type::TEST:
 			return TestMessage::fromJSON(object);
 
 		default:

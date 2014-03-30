@@ -2,9 +2,13 @@
 
 #include <random>
 
-#include "SetupMessage.hpp"
 #include "ResponseMessage.hpp"
+#include "SetupMessage.hpp"
+#include "StartMessage.hpp"
+#include "StopMessage.hpp"
+#include "StatusMessage.hpp"
 #include "StatusResponseMessage.hpp"
+#include "ResultsMessage.hpp"
 #include "ResultsResponseMessage.hpp"
 #include "Message.hpp"
 
@@ -14,36 +18,32 @@ using namespace std;
 
 namespace {
 
+template <typename M = Message>
+unique_ptr<M> makeMessage()
+{
+	return unique_ptr<M>(new M(42));
+}
+
+void check(const unique_ptr<Message>& load, Message::Type t)
+{
+	Json::Value jrep = load->toJSON();
+
+	auto fromJSON = JSONToMessage(jrep);
+	TEST_ASSERT(fromJSON->getType() == load->getType());
+	TEST_ASSERT(load->getType() == t); // To make sure we don't forget to override getType()
+	TEST_ASSERT(*load == *fromJSON);
+}
+
 unique_ptr<ResponseMessage> makeResponseMessage()
 {
 	return unique_ptr<ResponseMessage>(
 		new ResponseMessage(42, 25, ResponseMessage::ResponseMessage::Code::OK, "I am a response!"));
 }
 
-void ResponseMessageJSON()
-{
-	auto load = makeResponseMessage();
-	Json::Value jrep = load->toJSON();
-
-	auto fromJSON = JSONToMessage(jrep);
-	TEST_ASSERT(fromJSON->getType() == load->getType());
-	TEST_ASSERT(*load == *fromJSON);
-}
-
 unique_ptr<SetupMessage> makeSetupMessage()
 {
 	return unique_ptr<SetupMessage>(
 		new SetupMessage(42, GameType::POP_UP, 2, WC_TIME, 60, -1, SetupMessage::DataMap()));
-}
-
-void SetupMessageJSON()
-{
-	auto load = makeSetupMessage();
-	Json::Value jrep = load->toJSON();
-
-	auto fromJSON = JSONToMessage(jrep);
-	TEST_ASSERT(fromJSON->getType() == load->getType());
-	TEST_ASSERT(*load == *fromJSON);
 }
 
 unique_ptr<StatusResponseMessage> makeStatusResponseMessage()
@@ -55,16 +55,6 @@ unique_ptr<StatusResponseMessage> makeStatusResponseMessage()
 
 	return unique_ptr<StatusResponseMessage>(
 		new StatusResponseMessage(42, 56, "I am a response!", true, 42, -1, move(stats)));
-}
-
-void StatusResponseMessageJSON()
-{
-	auto load = makeStatusResponseMessage();
-	Json::Value jrep = load->toJSON();
-
-	auto fromJSON = JSONToMessage(jrep);
-	TEST_ASSERT(fromJSON->getType() == load->getType());
-	TEST_ASSERT(*load == *fromJSON);
 }
 
 unique_ptr<ResultsResponseMessage> makeResultsResponseMessage()
@@ -89,23 +79,19 @@ unique_ptr<ResultsResponseMessage> makeResultsResponseMessage()
 		new ResultsResponseMessage(42, 21, "I'm some results!", vector<PlayerStats>({stat})));
 }
 
-void ResultsResponseMessageJSON()
-{
-	auto load = makeResultsResponseMessage();
-	Json::Value jrep = load->toJSON();
-
-	auto fromJSON = JSONToMessage(jrep);
-	TEST_ASSERT(fromJSON->getType() == load->getType());
-	TEST_ASSERT(*load == *fromJSON);
-}
-
 } // end anonymous namespace
-
 
 Testing::MessageTests::MessageTests()
 {
-	add("ResponseMessage -> JSON", &ResponseMessageJSON);
-	add("SetupMessage -> JSON", &SetupMessageJSON);
-	add("StatusResponseMessage -> JSON", &StatusResponseMessageJSON);
-	add("ResultsResponseMessage -> JSON", &ResultsResponseMessageJSON);
+	using Type = Message::Type;
+
+	add("Message -> JSON", []{ check(makeMessage(), Type::EMPTY); });
+	add("ResponseMessage -> JSON", []{ check(makeResponseMessage(), Type::RESPONSE); });
+	add("SetupMessage -> JSON", []{ check(makeSetupMessage(), Type::SETUP); });
+	add("StartMessage -> JSON", []{ check(makeMessage<StartMessage>(), Type::START); });
+	add("StopMessage -> JSON", []{ check(makeMessage<StopMessage>(), Type::STOP); });
+	add("StatusMessage -> JSON", []{ check(makeMessage<StatusMessage>(), Type::STATUS); });
+	add("StatusResponseMessage -> JSON", []{ check(makeStatusResponseMessage(), Type::STATUS_RESPONSE); });
+	add("ResultsMessage -> JSON", []{ check(makeMessage<ResultsMessage>(), Type::RESULTS); });
+	add("ResultsResponseMessage -> JSON", []{ check(makeResultsResponseMessage(), Type::RESULTS_RESPONSE); });
 }
