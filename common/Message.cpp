@@ -1,5 +1,6 @@
 #include "Message.hpp"
 
+#include <cassert>
 #include <unordered_map>
 
 #include "Exceptions.hpp"
@@ -129,6 +130,6 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 			return TestMessage::fromJSON(object);
 
 		default:
-			THROW(Exception, "Code error: Forgot to parse a message type");
+			assert(false);
 	}
 }
