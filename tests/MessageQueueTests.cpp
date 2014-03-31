@@ -6,6 +6,7 @@
 #include <memory>
 #include <random>
 
+#include "Test.hpp"
 #include "MessageQueue.hpp"
 #include "TestMessage.hpp"
 #include "Message.hpp"
@@ -87,11 +88,11 @@ void timeout()
 
 } // end anonymous namespace
 
-
-Testing::MessageQueueTests::MessageQueueTests()
+void Testing::MessageQueueTests()
 {
-	add("Single thread", &singleThread);
-	add("Multiple threads", &multipleThreads);
-	add("Priority", &priority);
-	add("Timeout", &timeout);
+	beginUnit("MessageQueue");
+	test("Single thread", &singleThread);
+	test("Multiple threads", &multipleThreads);
+	test("Priority", &priority);
+	test("Timeout", &timeout);
 }

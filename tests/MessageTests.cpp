@@ -2,6 +2,7 @@
 
 #include <random>
 
+#include "Test.hpp"
 #include "ResponseMessage.hpp"
 #include "SetupMessage.hpp"
 #include "StartMessage.hpp"
@@ -82,18 +83,19 @@ unique_ptr<ResultsResponseMessage> makeResultsResponseMessage()
 
 } // end anonymous namespace
 
-Testing::MessageTests::MessageTests()
+void Testing::MessageTests()
 {
 	using Type = Message::Type;
 
-	add("Message -> JSON", []{ check(makeMessage(), Type::EMPTY); });
-	add("ResponseMessage -> JSON", []{ check(makeResponseMessage(), Type::RESPONSE); });
-	add("SetupMessage -> JSON", []{ check(makeSetupMessage(), Type::SETUP); });
-	add("StartMessage -> JSON", []{ check(makeMessage<StartMessage>(), Type::START); });
-	add("StopMessage -> JSON", []{ check(makeMessage<StopMessage>(), Type::STOP); });
-	add("StatusMessage -> JSON", []{ check(makeMessage<StatusMessage>(), Type::STATUS); });
-	add("StatusResponseMessage -> JSON", []{ check(makeStatusResponseMessage(), Type::STATUS_RESPONSE); });
-	add("ResultsMessage -> JSON", []{ check(makeMessage<ResultsMessage>(), Type::RESULTS); });
-	add("ResultsResponseMessage -> JSON", []{ check(makeResultsResponseMessage(), Type::RESULTS_RESPONSE); });
-	add("ExitMessage -> JSON", []{ check(makeMessage<ExitMessage>(), Type::EXIT); });
+	beginUnit("Message");
+	test("Message -> JSON", []{ check(makeMessage(), Type::EMPTY); });
+	test("ResponseMessage -> JSON", []{ check(makeResponseMessage(), Type::RESPONSE); });
+	test("SetupMessage -> JSON", []{ check(makeSetupMessage(), Type::SETUP); });
+	test("StartMessage -> JSON", []{ check(makeMessage<StartMessage>(), Type::START); });
+	test("StopMessage -> JSON", []{ check(makeMessage<StopMessage>(), Type::STOP); });
+	test("StatusMessage -> JSON", []{ check(makeMessage<StatusMessage>(), Type::STATUS); });
+	test("StatusResponseMessage -> JSON", []{ check(makeStatusResponseMessage(), Type::STATUS_RESPONSE); });
+	test("ResultsMessage -> JSON", []{ check(makeMessage<ResultsMessage>(), Type::RESULTS); });
+	test("ResultsResponseMessage -> JSON", []{ check(makeResultsResponseMessage(), Type::RESULTS_RESPONSE); });
+	test("ExitMessage -> JSON", []{ check(makeMessage<ExitMessage>(), Type::EXIT); });
 }

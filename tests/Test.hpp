@@ -2,6 +2,7 @@
 #define __MKB_TEST_HPP__
 
 #include <cassert>
+#include <cstdio>
 #include <functional>
 
 #include "Exceptions.hpp"
@@ -20,20 +21,21 @@ inline void testThrown(E expr, const char* file, int line)
 	assert(false);
 }
 
-/// Represents a single test, a series of which is run by each TestUnit
-class Test {
-public:
-	const char* name;
-	std::function<void()> testProc;
+/// Just prints a "starting test unit Foo"
+inline void beginUnit(const char* unitName)
+{
+	printf("\nStarting test unit %s\n", unitName);
+}
 
-	template <typename P>
-	Test(const char* n, P proc) : name(n), testProc(std::forward<P>(proc)) { }
-
-	Test(Test&&) = default;
-
-	Test(const Test&) = delete;
-	Test& operator=(const Test&) = delete;
-};
+/// Runs a test and prints the success message
+template <typename T>
+inline void test(const char* testName, T theTest)
+{
+	theTest();
+	// Since tests are assumed to fail an assert() and core dump if they fail,
+	// yay! We made it if we get this far.
+	printf("SUCCESS: %s test succeeded\n", testName);
+}
 
 } // end namespace Testing
 
