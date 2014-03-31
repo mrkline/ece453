@@ -16,7 +16,7 @@ namespace Testing {
  */
 class TestUnit {
 public:
-	TestUnit() : unrunTests(), succeededTests(), failedTests() { }
+	TestUnit() : unrunTests() { }
 
 	/// Returns this unit's name
 	virtual const char* getUnitName() const = 0;
@@ -30,10 +30,6 @@ protected:
 	/// Convenience function to add to unrun tests
 	template <typename P>
 	void add(const char* testName, P proc) { unrunTests.emplace(testName, proc); }
-
-private:
-	std::list<Test> succeededTests;
-	std::list<Test> failedTests;
 };
 
 } // end namespace Testing

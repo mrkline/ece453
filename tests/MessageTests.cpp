@@ -29,9 +29,9 @@ void check(const unique_ptr<Message>& load, Message::Type t)
 	Json::Value jrep = load->toJSON();
 
 	auto fromJSON = JSONToMessage(jrep);
-	TEST_ASSERT(fromJSON->getType() == load->getType());
-	TEST_ASSERT(load->getType() == t); // To make sure we don't forget to override getType()
-	TEST_ASSERT(*load == *fromJSON);
+	assert(fromJSON->getType() == load->getType());
+	assert(load->getType() == t); // To make sure we don't forget to override getType()
+	assert(*load == *fromJSON);
 }
 
 unique_ptr<ResponseMessage> makeResponseMessage()

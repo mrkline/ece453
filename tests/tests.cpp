@@ -27,7 +27,7 @@ int main()
 	while (!testUnits.empty()) {
 		const auto& curr = testUnits.front();
 		try {
-			printf("Beginning test unit %s...\n\n", curr->getUnitName());
+			printf("\nBeginning test unit %s...\n", curr->getUnitName());
 			curr->runUnit();
 		}
 		catch (...) {

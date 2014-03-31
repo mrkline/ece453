@@ -33,7 +33,7 @@ void singleThread()
 		q.send(makeTestMessage(msgNum));
 
 	for (int msgNum = 0; msgNum < 5; ++msgNum)
-		TEST_ASSERT(*q.receive() == *makeTestMessage(msgNum));
+		assert(*q.receive() == *makeTestMessage(msgNum));
 
 }
 
@@ -43,7 +43,7 @@ void multipleThreads()
 
 	thread receivingThread([&q] {
 		for (int msgNum = 0; msgNum < 5; ++msgNum)
-			TEST_ASSERT(*q.receive() == *makeTestMessage(msgNum));
+			assert(*q.receive() == *makeTestMessage(msgNum));
 	});
 
 	this_thread::yield(); // Give the receiving thread a chance to take off
@@ -64,8 +64,8 @@ void priority()
 	q.send(makeTestMessage(1));
 	q.prioritySend(makeTestMessage(-1));
 
-	TEST_ASSERT(*q.receive() == *makeTestMessage(-1));
-	TEST_ASSERT(*q.receive() == *makeTestMessage(1));
+	assert(*q.receive() == *makeTestMessage(-1));
+	assert(*q.receive() == *makeTestMessage(1));
 }
 
 void timeout()
@@ -77,10 +77,10 @@ void timeout()
 		q.send(makeTestMessage());
 	});
 
-	TEST_ASSERT(q.receive(chrono::milliseconds(10)) == nullptr);
+	assert(q.receive(chrono::milliseconds(10)) == nullptr);
 
 	this_thread::sleep_for(chrono::milliseconds(50));
-	TEST_ASSERT(*q.receive(chrono::milliseconds(10)) == *makeTestMessage());
+	assert(*q.receive(chrono::milliseconds(10)) == *makeTestMessage());
 
 	sendingThread.join();
 }
