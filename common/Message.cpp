@@ -12,6 +12,7 @@
 #include "StatusResponseMessage.hpp"
 #include "ResultsMessage.hpp"
 #include "ResultsResponseMessage.hpp"
+#include "ExitMessage.hpp"
 #include "TestMessage.hpp"
 
 using namespace Exceptions;
@@ -56,6 +57,7 @@ Json::Value Message::toJSON() const
 		{Type::STATUS_RESPONSE, StaticString("status response")},
 		{Type::RESULTS, StaticString("results")},
 		{Type::RESULTS_RESPONSE, StaticString("results response")},
+		{Type::EXIT, StaticString("exit")},
 		{Type::TEST, StaticString("test")}
 		// {Message::Type::UNKNOWN, "unknown"}
 	};
@@ -85,6 +87,7 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 		{"status response", Type::STATUS_RESPONSE},
 		{"results", Type::RESULTS},
 		{"results response", Type::RESULTS_RESPONSE},
+		{"exit", Type::EXIT},
 		{"test", Type::TEST}
 		// {"unknown", Message::Type::UNKNOWN}
 	};
@@ -129,6 +132,9 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 
 		case Type::RESULTS_RESPONSE:
 			return ResultsResponseMessage::fromJSON(object);
+
+		case Type::EXIT:
+			return ExitMessage::fromJSON(object);
 
 		case Type::TEST:
 			return TestMessage::fromJSON(object);

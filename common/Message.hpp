@@ -19,6 +19,7 @@ public:
 		STATUS_RESPONSE, ///< Response to a status query
 		RESULTS, ///< Get the game results after a match has finished
 		RESULTS_RESPONSE, ///< Response to a results query
+		EXIT, ///< The entity receiving this message should exit/finish
 		TEST, ///< A test payload that holds a string
 		UNKNOWN ///< An unknown/invalid payload type
 	};

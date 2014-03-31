@@ -10,6 +10,7 @@
 #include "StatusResponseMessage.hpp"
 #include "ResultsMessage.hpp"
 #include "ResultsResponseMessage.hpp"
+#include "ExitMessage.hpp"
 #include "Message.hpp"
 
 using namespace Exceptions;
@@ -94,4 +95,5 @@ Testing::MessageTests::MessageTests()
 	add("StatusResponseMessage -> JSON", []{ check(makeStatusResponseMessage(), Type::STATUS_RESPONSE); });
 	add("ResultsMessage -> JSON", []{ check(makeMessage<ResultsMessage>(), Type::RESULTS); });
 	add("ResultsResponseMessage -> JSON", []{ check(makeResultsResponseMessage(), Type::RESULTS_RESPONSE); });
+	add("ExitMessage -> JSON", []{ check(makeMessage<ExitMessage>(), Type::EXIT); });
 }
