@@ -1,9 +1,13 @@
 #include "MessageQueue.hpp"
 
+#include "Exceptions.hpp"
+
 using namespace std;
 
 void MessageQueue::send(std::unique_ptr<Message>&& toSend)
 {
+	ENFORCE(Exceptions::ArgumentException, toSend != nullptr, "You can not enqueue a null message.");
+
 	lock_guard<mutex> lock(qMutex);
 	q.emplace_back(std::move(toSend));
 
@@ -13,6 +17,8 @@ void MessageQueue::send(std::unique_ptr<Message>&& toSend)
 
 void MessageQueue::prioritySend(std::unique_ptr<Message>&& toSend)
 {
+	ENFORCE(Exceptions::ArgumentException, toSend != nullptr, "You can not enqueue a null message.");
+
 	lock_guard<mutex> lock(qMutex);
 	q.emplace_front(std::move(toSend));
 
