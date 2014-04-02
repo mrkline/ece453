@@ -99,7 +99,7 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 	ENFORCE(IOException, typeVal.isString(), "The JSON object's type field is not a string");
 
 	auto it = typeLookup.find(typeVal.asString());
-	
+
 	ENFORCE(IOException, it != end(typeLookup), "The JSON object's type field is unknown");
 
 	using Type = Message::Type;

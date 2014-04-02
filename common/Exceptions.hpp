@@ -235,7 +235,7 @@ namespace Exceptions
 		{ }
 
 		IOException(const IOException&) = default;
-		
+
 		IOException& operator=(const IOException&) = delete;
 
 		virtual ~IOException() noexcept { }

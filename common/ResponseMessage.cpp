@@ -96,7 +96,7 @@ bool ResponseMessage::operator==(const Message& o) const
 
 	if (rm == nullptr)
 		return false;
-	
+
 	return respondingTo == rm->respondingTo
 		&& code == rm->code
 		&& message == rm->message;
