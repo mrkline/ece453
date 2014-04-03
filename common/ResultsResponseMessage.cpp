@@ -15,59 +15,16 @@ const StaticString playerStatsKey("player stats");
 const StaticString scoreKey("score");
 const StaticString hitsKey("hits");
 const StaticString shotsKey("shots");
-const StaticString hitKey("hit");
-const StaticString timeKey("time");
-const StaticString movementKey("movement");
 
 // For laziness
-typedef ResultsResponseMessage::Shot Shot;
 typedef ResultsResponseMessage::PlayerStats PlayerStats;
 
-std::vector<Vector3> parseMovement(const Value& moves)
+std::vector<ShotWithMovement> parseShots(const Value& shots)
 {
-	std::vector<Vector3> ret;
+	std::vector<ShotWithMovement> ret;
 
-	for (const Value& move : moves) {
-
-		ENFORCE(IOException, move.isArray() && move.size() == 3, "A movement is not a three-element array");
-
-		// Apparently the compiler can't figure out if 0, 1, and 2 are chars or ints. Help it along.
-		const Value& xVal = move[0U];
-		const Value& yVal = move[1U];
-		const Value& zVal = move[2U];
-
-		ENFORCE(IOException, xVal.isDouble(), "A movement value is not a decimal type.");
-		ENFORCE(IOException, yVal.isDouble(), "A movement value is not a decimal type.");
-		ENFORCE(IOException, zVal.isDouble(), "A movement value is not a decimal type.");
-
-		ret.emplace_back(xVal.asDouble(), yVal.asDouble(), zVal.asDouble());
-	}
-
-	return ret;
-}
-
-std::vector<Shot> parseShots(const Value& shots)
-{
-	std::vector<Shot> ret;
-
-	for (const Value& shot : shots) {
-
-		ENFORCE(IOException, shot.isObject(), "An item in the shots array of a player's results is not an object.");
-
-		ENFORCE(IOException, shot.isMember(hitKey), "A shot is missing its hit indicator.");
-		ENFORCE(IOException, shot.isMember(timeKey), "A shot is missing its timestamp.");
-		ENFORCE(IOException, shot.isMember(movementKey), "A shot is missing its movement history.");
-
-		const Value& hitValue = shot[hitKey];
-		const Value& timeValue = shot[timeKey];
-		const Value& movementValue = shot[movementKey];
-
-		ENFORCE(IOException, hitValue.isBool(), "A shot's hit indicator is not a boolean.");
-		ENFORCE(IOException, timeValue.isInt(), "A shot's timestamp is not an integer.");
-		ENFORCE(IOException, movementValue.isArray(), "A shot's movement history is not an array.");
-
-		ret.emplace_back(hitValue.asBool(), timeValue.asInt(), parseMovement(movementValue));
-	}
+	for (const Value& shot : shots)
+		ret.emplace_back(ShotWithMovement::fromJSON(shot));
 
 	return ret;
 }
@@ -98,9 +55,6 @@ ResultsResponseMessage::ResultsResponseMessage(int id, int respTo, const std::st
 {
 	for (const auto& stat : stats) {
 		ENFORCE(ArgumentException, stat.hits >= 0, "A player cannot have negative hits.");
-
-		for (const auto& shot : stat.shots)
-			ENFORCE(ArgumentException, shot.time >= 0, "A shot cannot happen before the game starts.");
 	}
 }
 
@@ -142,27 +96,8 @@ Json::Value ResultsResponseMessage::toJSON() const
 
 		Value shots(arrayValue);
 
-		for (const auto& shot : stat.shots) {
-			Value shotValue(objectValue);
-
-			shotValue[hitKey] = shot.hit;
-			shotValue[timeKey] = shot.time;
-
-			Value movementValue(arrayValue);
-
-			for (const auto& vec : shot.movement) {
-				Value vecArray(arrayValue);
-				vecArray.append(vec.x);
-				vecArray.append(vec.y);
-				vecArray.append(vec.z);
-
-				movementValue.append(move(vecArray));
-			}
-
-			shotValue[movementKey] = move(movementValue);
-
-			shots.append(move(shotValue));
-		}
+		for (const auto& shot : stat.shots)
+			shots.append(shot.toJSON());
 
 		statValue[shotsKey] = move(shots);
 

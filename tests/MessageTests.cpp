@@ -61,7 +61,6 @@ unique_ptr<StatusResponseMessage> makeStatusResponseMessage()
 
 unique_ptr<ResultsResponseMessage> makeResultsResponseMessage()
 {
-	typedef ResultsResponseMessage::Shot Shot;
 	typedef ResultsResponseMessage::PlayerStats PlayerStats;
 
 	random_device rd;
@@ -73,9 +72,9 @@ unique_ptr<ResultsResponseMessage> makeResultsResponseMessage()
 	for (int i = 0; i < 10; ++i)
 		fakeMovement.emplace_back(genFloat(), genFloat(), genFloat());
 
-	Shot aShot(false, 240, move(fakeMovement));
+	ShotWithMovement aShot(2, 4, 240, move(fakeMovement));
 
-	PlayerStats stat(20, 1, vector<Shot>({aShot}));
+	PlayerStats stat(20, 1, vector<ShotWithMovement>({aShot}));
 
 	return unique_ptr<ResultsResponseMessage>(
 		new ResultsResponseMessage(42, 21, "I'm some results!", vector<PlayerStats>({stat})));
