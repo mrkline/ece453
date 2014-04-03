@@ -11,11 +11,11 @@ class ResponseMessage : public Message {
 public:
 
 	enum class Code {
-		OK,
-		INTERNAL_ERROR,
-		UNKNOWN_REQUEST,
-		INVALID_REQUEST,
-		UNSUPPORTED_REQUEST
+		OK, ///< Everything went as expected.
+		INTERNAL_ERROR, ///< Something went wrong inside the system.
+		UNKNOWN_REQUEST, ///< The system couldn't make sense of the request.
+		INVALID_REQUEST, ///< The request was valid but was given at an inappropriate time.
+		UNSUPPORTED_REQUEST ///< The request was valid but the system could not fulfill it.
 	};
 
 	ResponseMessage(int idNum, int respTo, Code c, const std::string& msg);
