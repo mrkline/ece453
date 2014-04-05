@@ -3,10 +3,12 @@
 #include "Exceptions.hpp"
 
 using namespace std;
+using namespace Exceptions;
 
 void MessageQueue::send(std::unique_ptr<Message>&& toSend)
 {
-	ENFORCE(Exceptions::ArgumentException, toSend != nullptr, "You can not enqueue a null message.");
+	ENFORCE(ArgumentException, toSend != nullptr, "You can not enqueue a null message.");
+	ENFORCE(InvalidOperationException, !closed, "The queue has been closed. You cannot send until it is reset.");
 
 	lock_guard<mutex> lock(qMutex);
 	q.emplace_back(std::move(toSend));
@@ -17,7 +19,8 @@ void MessageQueue::send(std::unique_ptr<Message>&& toSend)
 
 void MessageQueue::prioritySend(std::unique_ptr<Message>&& toSend)
 {
-	ENFORCE(Exceptions::ArgumentException, toSend != nullptr, "You can not enqueue a null message.");
+	ENFORCE(ArgumentException, toSend != nullptr, "You can not enqueue a null message.");
+	ENFORCE(InvalidOperationException, !closed, "The queue has been closed. You cannot send until it is reset.");
 
 	lock_guard<mutex> lock(qMutex);
 	q.emplace_front(std::move(toSend));
@@ -50,8 +53,14 @@ std::unique_ptr<Message> MessageQueue::receive(const std::chrono::milliseconds& 
 	}
 }
 
-void MessageQueue::clear()
+void MessageQueue::close()
+{
+	closed = true;
+}
+
+void MessageQueue::reset()
 {
 	lock_guard<mutex> lock(qMutex);
 	q.clear();
+	closed = false;
 }

@@ -3,7 +3,9 @@
 #include <memory>
 
 #include "MessageQueue.hpp"
+#include "ResponseMessage.hpp"
 #include "StatusResponseMessage.hpp"
+#include "ResultsResponseMessage.hpp"
 
 void runGame(MessageQueue& in, MessageQueue& out);
 
@@ -19,21 +21,27 @@ public:
 		Player() : hits(0), score(0) { }
 	};
 
-	enum class Status {
+	enum class State {
 		SETUP,
 		RUNNING,
 		OVER
 	};
 
-	bool isRunning() { return gameStatus == Status::RUNNING; }
+	bool isRunning() { return gameState == State::RUNNING; }
 
-	bool isOver() { return gameStatus == Status::OVER; }
+	bool isOver() { return gameState == State::OVER; }
 
-	Status getStatus() { return gameStatus; }
+	State getState() { return gameState; }
 
-	virtual std::unique_ptr<StatusResponseMessage> getStatusResponse() = 0;
+	virtual std::unique_ptr<ResponseMessage> start(int repsonseID, int respondingTo);
 
-private:
+	virtual std::unique_ptr<ResponseMessage> stop(int responseID, int respondingTo);
 
-	Status gameStatus;
+	virtual std::unique_ptr<StatusResponseMessage> getStatusResponse(int responseID, int respondingTo) = 0;
+
+	virtual std::unique_ptr<ResultsResponseMessage> getResultsResponse(int responseID, int respondingTo) = 0;
+
+protected:
+
+	State gameState;
 };

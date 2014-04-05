@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <memory>
@@ -13,7 +14,7 @@ class MessageQueue {
 
 public:
 
-	MessageQueue() : q(), qMutex(), notifier() { }
+	MessageQueue() : q(), qMutex(), closed(false), notifier() { }
 
 	/**
 	 * \brief Places a message at the back of the queue
@@ -41,8 +42,15 @@ public:
 	 */
 	std::unique_ptr<Message> receive(const std::chrono::milliseconds& timeout);
 
-	/// Clears the queue
-	void clear();
+	/// Closes the message queue from further insertions until it is reset
+	void close();
+
+	bool isClosed() const { return closed; }
+
+	bool isOpen() const {return !closed; }
+
+	/// Resets the queue - clears it and uncloses it
+	void reset();
 
 	// Disallow copy and assign
 	MessageQueue(const MessageQueue&) = delete;
@@ -52,5 +60,6 @@ private:
 
 	std::deque<std::unique_ptr<Message>> q;
 	std::mutex qMutex;
+	std::atomic_bool closed;
 	std::condition_variable notifier;
 };
