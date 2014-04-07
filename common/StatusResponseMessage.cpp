@@ -53,7 +53,9 @@ StatusResponseMessage::StatusResponseMessage(int id, int respTo, const std::stri
 {
 	ENFORCE(ArgumentException, timeRemaining >= -1, "Invalid remaining time");
 	ENFORCE(ArgumentException, winningScore >= -1, "Invalid winning score");
-	ENFORCE(ArgumentException, players.size() > 0, "You must have at least one player.");
+
+	if (running)
+		ENFORCE(ArgumentException, players.size() > 0, "You must have at least one player.");
 }
 
 std::unique_ptr<StatusResponseMessage> StatusResponseMessage::fromJSON(const Json::Value& object)

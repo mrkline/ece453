@@ -53,6 +53,12 @@ std::unique_ptr<Message> MessageQueue::receive(const std::chrono::milliseconds& 
 	}
 }
 
+bool MessageQueue::empty()
+{
+	unique_lock<mutex> lock(qMutex);
+	return q.empty();
+}
+
 void MessageQueue::close()
 {
 	closed = true;

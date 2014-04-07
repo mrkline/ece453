@@ -30,7 +30,7 @@ const StaticString Message::typeKey("type");
 Message::Message(int idNum) :
 	id(idNum)
 {
-	ENFORCE(ArgumentException, id > 0, "The ID cannot be negative.");
+	ENFORCE(ArgumentException, id >= 0, "The ID cannot be negative.");
 }
 
 std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)

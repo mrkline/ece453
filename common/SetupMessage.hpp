@@ -13,7 +13,7 @@ public:
 
 	typedef std::unordered_map<std::string, int> DataMap;
 
-	SetupMessage(int id, GameType gType, int pCount, uint8_t winConds, int time, int score, DataMap&& data);
+	SetupMessage(int id, GameType gType, int pCount, uint8_t winConds, int time, int score, DataMap&& data = DataMap());
 
 	static std::unique_ptr<SetupMessage> fromJSON(const Json::Value& object);
 

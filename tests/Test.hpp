@@ -10,7 +10,7 @@
 namespace Testing {
 
 template <typename T, typename E>
-inline void testThrown(E expr, const char* file, int line)
+inline void testThrown(E expr)
 {
 	try { expr(); }
 	catch (const T& thrown) {

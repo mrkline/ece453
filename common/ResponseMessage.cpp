@@ -48,7 +48,7 @@ ResponseMessage::ResponseMessage(int idNum, int respTo, Code c, const std::strin
 	code(c),
 	message(msg)
 {
-	ENFORCE(ArgumentException, respondingTo > 0, "Responding to a negative ID does not make sense.");
+	ENFORCE(ArgumentException, respondingTo >= 0, "Responding to a negative ID does not make sense.");
 }
 
 std::unique_ptr<ResponseMessage> ResponseMessage::fromJSON(const Json::Value& object)

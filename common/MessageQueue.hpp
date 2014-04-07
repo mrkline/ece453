@@ -42,6 +42,9 @@ public:
 	 */
 	std::unique_ptr<Message> receive(const std::chrono::milliseconds& timeout);
 
+	/// Returns true if the queue is empty
+	bool empty();
+
 	/// Closes the message queue from further insertions until it is reset
 	void close();
 
