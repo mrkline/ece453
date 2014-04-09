@@ -12,6 +12,8 @@
 #include "StatusResponseMessage.hpp"
 #include "ResultsMessage.hpp"
 #include "ResultsResponseMessage.hpp"
+#include "ShotMessage.hpp"
+#include "MovementMessage.hpp"
 #include "ExitMessage.hpp"
 #include "TestMessage.hpp"
 
@@ -57,6 +59,8 @@ Json::Value Message::toJSON() const
 		{Type::STATUS_RESPONSE, StaticString("status response")},
 		{Type::RESULTS, StaticString("results")},
 		{Type::RESULTS_RESPONSE, StaticString("results response")},
+		{Type::SHOT, StaticString("shot")},
+		{Type::MOVEMENT, StaticString("movement")},
 		{Type::EXIT, StaticString("exit")},
 		{Type::TEST, StaticString("test")}
 		// {Message::Type::UNKNOWN, "unknown"}
@@ -87,6 +91,8 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 		{"status response", Type::STATUS_RESPONSE},
 		{"results", Type::RESULTS},
 		{"results response", Type::RESULTS_RESPONSE},
+		{"shot", Type::SHOT},
+		{"movement", Type::MOVEMENT},
 		{"exit", Type::EXIT},
 		{"test", Type::TEST}
 		// {"unknown", Message::Type::UNKNOWN}
@@ -132,6 +138,12 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 
 		case Type::RESULTS_RESPONSE:
 			return ResultsResponseMessage::fromJSON(object);
+
+		case Type::SHOT:
+			return ShotMessage::fromJSON(object);
+
+		case Type::MOVEMENT:
+			return MovementMessage::fromJSON(object);
 
 		case Type::EXIT:
 			return ExitMessage::fromJSON(object);

@@ -11,6 +11,8 @@
 #include "StatusResponseMessage.hpp"
 #include "ResultsMessage.hpp"
 #include "ResultsResponseMessage.hpp"
+#include "ShotMessage.hpp"
+#include "MovementMessage.hpp"
 #include "ExitMessage.hpp"
 #include "Message.hpp"
 
@@ -59,25 +61,43 @@ unique_ptr<StatusResponseMessage> makeStatusResponseMessage()
 		new StatusResponseMessage(42, 56, "I am a response!", true, 42, -1, move(stats)));
 }
 
-unique_ptr<ResultsResponseMessage> makeResultsResponseMessage()
+Movement makeMovement()
 {
-	typedef ResultsResponseMessage::PlayerStats PlayerStats;
-
 	random_device rd;
 	mt19937 gen(rd());
 	uniform_real_distribution<float> dis(-1, 1);
 	auto genFloat = [&]() { return dis(gen); };
 
-	vector<Vector3> fakeMovement;
+	Movement fakeMovement;
 	for (int i = 0; i < 10; ++i)
 		fakeMovement.emplace_back(genFloat(), genFloat(), genFloat());
 
-	ShotWithMovement aShot(2, 4, 240, move(fakeMovement));
+	return fakeMovement;
+}
+
+unique_ptr<ResultsResponseMessage> makeResultsResponseMessage()
+{
+	typedef ResultsResponseMessage::PlayerStats PlayerStats;
+
+
+	ShotWithMovement aShot(2, 4, 240, makeMovement());
 
 	PlayerStats stat(20, 1, vector<ShotWithMovement>({aShot}));
 
 	return unique_ptr<ResultsResponseMessage>(
 		new ResultsResponseMessage(42, 21, "I'm some results!", vector<PlayerStats>({stat})));
+}
+
+unique_ptr<ShotMessage> makeShotMessage()
+{
+	return unique_ptr<ShotMessage>(
+		new ShotMessage(42, Shot(2, 4, 240)));
+}
+
+unique_ptr<MovementMessage> makeMovementMessage()
+{
+	return unique_ptr<MovementMessage>(
+		new MovementMessage(42, makeMovement()));
 }
 
 } // end anonymous namespace
@@ -96,5 +116,7 @@ void Testing::MessageTests()
 	test("StatusResponseMessage -> JSON", []{ check(makeStatusResponseMessage(), Type::STATUS_RESPONSE); });
 	test("ResultsMessage -> JSON", []{ check(makeMessage<ResultsMessage>(), Type::RESULTS); });
 	test("ResultsResponseMessage -> JSON", []{ check(makeResultsResponseMessage(), Type::RESULTS_RESPONSE); });
+	test("ShotMessage -> JSON", []{ check(makeShotMessage(), Type::SHOT); });
+	test("MovementMessage -> JSON", [] { check(makeMovementMessage(), Type::MOVEMENT); });
 	test("ExitMessage -> JSON", []{ check(makeMessage<ExitMessage>(), Type::EXIT); });
 }

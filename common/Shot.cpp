@@ -1,5 +1,7 @@
 #include "Shot.hpp"
 
+#include <limits>
+
 #include "Exceptions.hpp"
 
 using namespace std;
@@ -13,32 +15,9 @@ const StaticString targetKey("target ID");
 const StaticString timeKey("time");
 const StaticString movementKey("movement");
 
-std::vector<Vector3> parseMovement(const Value& moves)
-{
-	std::vector<Vector3> ret;
-
-	for (const Value& move : moves) {
-
-		ENFORCE(IOException, move.isArray() && move.size() == 3, "A movement is not a three-element array");
-
-		// Apparently the compiler can't figure out if 0, 1, and 2 are chars or ints. Help it along.
-		const Value& xVal = move[0U];
-		const Value& yVal = move[1U];
-		const Value& zVal = move[2U];
-
-		ENFORCE(IOException, xVal.isDouble(), "A movement value is not a decimal type.");
-		ENFORCE(IOException, yVal.isDouble(), "A movement value is not a decimal type.");
-		ENFORCE(IOException, zVal.isDouble(), "A movement value is not a decimal type.");
-
-		ret.emplace_back(xVal.asDouble(), yVal.asDouble(), zVal.asDouble());
-	}
-
-	return ret;
-}
-
 } // end anonymous namespace
 
-Shot::Shot(char p, char tar, int time) :
+Shot::Shot(int8_t p, int8_t tar, int time) :
 	player(p),
 	target(tar),
 	time(time)
@@ -98,20 +77,7 @@ ShotWithMovement::ShotWithMovement(char p, char tar, int time, std::vector<Vecto
 Json::Value ShotWithMovement::toJSON() const
 {
 	Value shotValue = Shot::toJSON();
-
-	Value movementValue(arrayValue);
-
-	for (const auto& vec : movement) {
-		Value vecArray(arrayValue);
-		vecArray.append(vec.x);
-		vecArray.append(vec.y);
-		vecArray.append(vec.z);
-
-		movementValue.append(move(vecArray));
-	}
-
-	shotValue[movementKey] = move(movementValue);
-
+	shotValue[movementKey] = movementToJSON(movement);
 	return shotValue;
 }
 
@@ -123,7 +89,7 @@ ShotWithMovement ShotWithMovement::fromJSON(const Json::Value& value)
 	const Value& movementValue = value[movementKey];
 	ENFORCE(IOException, movementValue.isArray(), "A shot's movement history is not an array.");
 
-	return ShotWithMovement(plain.player, plain.target, plain.time, parseMovement(movementValue));
+	return ShotWithMovement(plain.player, plain.target, plain.time, movementFromJSON(movementValue));
 }
 
 bool ShotWithMovement::operator==(const Shot& o) const
@@ -136,4 +102,43 @@ bool ShotWithMovement::operator==(const Shot& o) const
 		return false;
 
 	return movement == swm->movement;
+}
+
+Movement movementFromJSON(const Json::Value& moves)
+{
+	Movement ret;
+
+	for (const Value& move : moves) {
+
+		ENFORCE(IOException, move.isArray() && move.size() == 3, "A movement is not a three-element array");
+
+		// Apparently the compiler can't figure out if 0, 1, and 2 are chars or ints. Help it along.
+		const Value& xVal = move[0U];
+		const Value& yVal = move[1U];
+		const Value& zVal = move[2U];
+
+		ENFORCE(IOException, xVal.isDouble(), "A movement value is not a decimal type.");
+		ENFORCE(IOException, yVal.isDouble(), "A movement value is not a decimal type.");
+		ENFORCE(IOException, zVal.isDouble(), "A movement value is not a decimal type.");
+
+		ret.emplace_back(xVal.asDouble(), yVal.asDouble(), zVal.asDouble());
+	}
+
+	return ret;
+}
+
+Json::Value movementToJSON(const Movement moves)
+{
+	Value movementValue(arrayValue);
+
+	for (const auto& vec : moves) {
+		Value vecArray(arrayValue);
+		vecArray.append(vec.x);
+		vecArray.append(vec.y);
+		vecArray.append(vec.z);
+
+		movementValue.append(move(vecArray));
+	}
+
+	return movementValue;
 }
