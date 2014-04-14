@@ -119,8 +119,11 @@ std::unique_ptr<ResponseMessage> GameStateMachine::start(int responseID, int res
 			                    "A game is already started."));
 	}
 
-	// Child implmementations will pick up from here
-	return nullptr;
+	// TODO Init here
+
+	return unique_ptr<ResponseMessage>(
+		new ResponseMessage(responseID, respondingTo, ResponseMessage::Code::OK,
+		                    "The game has been successfully started"));
 }
 
 std::unique_ptr<ResponseMessage> GameStateMachine::stop(int responseID, int respondingTo)
@@ -131,6 +134,9 @@ std::unique_ptr<ResponseMessage> GameStateMachine::stop(int responseID, int resp
 			                    "There is no running game to stop."));
 	}
 
-	// Child implementations will pick up from here
-	return nullptr;
+	// TODO: Shutdown here
+
+	return unique_ptr<ResponseMessage>(
+		new ResponseMessage(responseID, respondingTo, ResponseMessage::Code::OK,
+		                    "The game has been successfully started"));
 }
