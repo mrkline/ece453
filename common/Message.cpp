@@ -14,6 +14,7 @@
 #include "ResultsResponseMessage.hpp"
 #include "ShotMessage.hpp"
 #include "MovementMessage.hpp"
+#include "TargetControlMessage.hpp"
 #include "ExitMessage.hpp"
 #include "TestMessage.hpp"
 
@@ -61,6 +62,7 @@ Json::Value Message::toJSON() const
 		{Type::RESULTS_RESPONSE, StaticString("results response")},
 		{Type::SHOT, StaticString("shot")},
 		{Type::MOVEMENT, StaticString("movement")},
+		{Type::TARGET_CONTROL, StaticString("target control")},
 		{Type::EXIT, StaticString("exit")},
 		{Type::TEST, StaticString("test")}
 		// {Message::Type::UNKNOWN, "unknown"}
@@ -93,6 +95,7 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 		{"results response", Type::RESULTS_RESPONSE},
 		{"shot", Type::SHOT},
 		{"movement", Type::MOVEMENT},
+		{"target control", Type::TARGET_CONTROL},
 		{"exit", Type::EXIT},
 		{"test", Type::TEST}
 		// {"unknown", Message::Type::UNKNOWN}
@@ -144,6 +147,9 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 
 		case Type::MOVEMENT:
 			return MovementMessage::fromJSON(object);
+
+		case Type::TARGET_CONTROL:
+			return TargetControlMessage::fromJSON(object);
 
 		case Type::EXIT:
 			return ExitMessage::fromJSON(object);

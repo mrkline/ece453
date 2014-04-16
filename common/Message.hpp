@@ -21,6 +21,7 @@ public:
 		RESULTS_RESPONSE, ///< Response to a results query
 		SHOT, ///< Represents a shot fired
 		MOVEMENT, ///< Carries the motion of a previously-reported shot
+		TARGET_CONTROL, ///< A message to set target lights on or off
 		EXIT, ///< The entity receiving this message should exit/finish
 		TEST, ///< A test payload that holds a string
 		UNKNOWN ///< An unknown/invalid payload type

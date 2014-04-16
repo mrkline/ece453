@@ -13,6 +13,7 @@
 #include "ResultsResponseMessage.hpp"
 #include "ShotMessage.hpp"
 #include "MovementMessage.hpp"
+#include "TargetControlMessage.hpp"
 #include "ExitMessage.hpp"
 #include "Message.hpp"
 
@@ -100,6 +101,13 @@ unique_ptr<MovementMessage> makeMovementMessage()
 		new MovementMessage(42, makeMovement()));
 }
 
+unique_ptr<TargetControlMessage> makeTargetControlMessage()
+{
+	return unique_ptr<TargetControlMessage>(
+		new TargetControlMessage(42, TargetControlMessage::CommandList({TargetCommand(1, true),
+		                                                                TargetCommand(3, false)})));
+}
+
 } // end anonymous namespace
 
 void Testing::MessageTests()
@@ -118,5 +126,6 @@ void Testing::MessageTests()
 	test("ResultsResponseMessage -> JSON", []{ check(makeResultsResponseMessage(), Type::RESULTS_RESPONSE); });
 	test("ShotMessage -> JSON", []{ check(makeShotMessage(), Type::SHOT); });
 	test("MovementMessage -> JSON", [] { check(makeMovementMessage(), Type::MOVEMENT); });
+	test("TargetControlMessage -> JSON", [] { check(makeTargetControlMessage(), Type::TARGET_CONTROL); });
 	test("ExitMessage -> JSON", []{ check(makeMessage<ExitMessage>(), Type::EXIT); });
 }
