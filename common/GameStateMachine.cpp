@@ -34,39 +34,39 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 		// Setup a new state machine, or complain if now is not the time to do so.
 		const auto doSetup = [&] {
 			if (machine != nullptr && !machine->isRunning()) {
-				return unique_ptr<ResponseMessage>(
+				out.send(unique_ptr<ResponseMessage>(
 					new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
-					                    "You cannot setup a new game while one is in progress"));
+					                    "You cannot setup a new game while one is in progress")));
 			}
 			else {
 				// Do game setup
 
-				return unique_ptr<ResponseMessage>(
-					new ResponseMessage(uid++, msg->id, Code::OK, "Game set up."));
+				out.send(unique_ptr<ResponseMessage>(
+					new ResponseMessage(uid++, msg->id, Code::OK, "Game set up.")));
 			}
 		};
 
 		// Start the state machine, or complain if now is not the time to do so.
 		const auto start = [&] {
 			if (machine == nullptr) {
-				return unique_ptr<ResponseMessage>(
+				out.send(unique_ptr<ResponseMessage>(
 					new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
-					                    "You must set up a game before starting it."));
+					                    "You must set up a game before starting it.")));
 			}
 			else {
-				return machine->start(uid++, msg->id);
+				out.send(machine->start(uid++, msg->id));
 			}
 		};
 
 		// Stop the state machine, or complain if now is not the time to do so.
 		const auto stop = [&] {
 			if (machine == nullptr) {
-				return unique_ptr<ResponseMessage>(
+				out.send(unique_ptr<ResponseMessage>(
 					new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
-					                    "A game has not even been setup yet. There is nothing to stop."));
+					                    "A game has not even been setup yet. There is nothing to stop.")));
 			}
 			else {
-				return machine->stop(uid++, msg->id);
+				out.send(machine->stop(uid++, msg->id));
 			}
 		};
 
@@ -74,20 +74,20 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 		// or return our own if there is not a state machine to ask.
 		const auto getStatus = [&] {
 			if (machine == nullptr) {
-				return unique_ptr<StatusResponseMessage>(
+				out.send(unique_ptr<StatusResponseMessage>(
 					new StatusResponseMessage(uid++, msg->id, "No game has been setup yet.",
-					                          false, -1, -1, StatusResponseMessage::PlayerList()));
+					                          false, -1, -1, StatusResponseMessage::PlayerList())));
 			}
 			else {
-				return machine->getStatusResponse(++uid, msg->id);
+				out.send(machine->getStatusResponse(++uid, msg->id));
 			}
 		};
 
 		// Respond to invalid requests.
 		const auto wat = [&] {
-			return unique_ptr<ResponseMessage>(
+			out.send(unique_ptr<ResponseMessage>(
 				new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
-				                    "The request is invalid."));
+				                    "The request is invalid.")));
 		};
 
 
@@ -110,23 +110,23 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 				switch (msg->getType()) {
 
 					case Type::SETUP:
-						out.send(doSetup());
+						doSetup();
 						break;
 
 					case Type::START:
-						out.send(start());
+						start();
 						break;
 
 					case Type::STOP:
-						out.send(stop());
+						stop();
 						break;
 
 					case Type::STATUS:
-						out.send(getStatus());
+						getStatus();
 						break;
 
 					default: // We don't know what this is.
-						out.send(wat());
+						wat();
 						break;
 				}
 			}
