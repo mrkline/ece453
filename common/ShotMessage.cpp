@@ -21,7 +21,7 @@ ShotMessage::ShotMessage(int id, const Shot& s) :
 std::unique_ptr<ShotMessage> ShotMessage::fromJSON(const Json::Value& object)
 {
 	auto msg = Message::fromJSON(object);
-	
+
 	ENFORCE(IOException, object.isMember(shotKey), "Shot message is missing its shot");
 
 	const Value& shotValue = object[shotKey];

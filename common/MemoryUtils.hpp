@@ -18,7 +18,7 @@ std::unique_ptr<DST> unique_dynamic_cast(std::unique_ptr<SRC>&& from)
 {
 	if (from == nullptr)
 		return std::unique_ptr<DST>();
-	
+
 	DST* casted = dynamic_cast<DST*>(from.get());
 	if (casted == nullptr)
 		return std::unique_ptr<DST>();

@@ -1,7 +1,11 @@
 #include "GameStateMachine.hpp"
 
+#include <sstream>
+
 #include "Exceptions.hpp"
+#include "MemoryUtils.hpp"
 #include "TargetControlMessage.hpp"
+#include "ShotMessage.hpp"
 
 using namespace std;
 using namespace Exceptions;
@@ -83,6 +87,18 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 			}
 		};
 
+		// Respond to a shot message
+		const auto onShot = [&](const ShotMessage& shot) {
+			if (machine == nullptr) {
+				out.send(unique_ptr<ResponseMessage>(
+					new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
+					                    "A game has not been set up. A shot message should not be arriving now.")));
+			}
+			else {
+				out.send(machine->onShot(uid++, shot));
+			}
+		};
+
 		// Get the status from the state machine,
 		// or return our own if there is not a state machine to ask.
 		const auto getStatus = [&] {
@@ -145,6 +161,10 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 
 					case Type::STOP:
 						stop();
+						break;
+
+					case Type::SHOT:
+						onShot(*unique_dynamic_cast<ShotMessage>(move(msg)));
 						break;
 
 					case Type::STATUS:
@@ -226,6 +246,23 @@ std::unique_ptr<ResponseMessage> GameStateMachine::stop(int responseID, int resp
 		                    "The game has been successfully stopped"));
 }
 
+
+std::unique_ptr<ResponseMessage> GameStateMachine::onShot(int responseID, const ShotMessage& shot)
+{
+	if (gameState == State::SETUP) {
+		return unique_ptr<ResponseMessage>(
+			new ResponseMessage(responseID, shot.id, ResponseMessage::Code::INVALID_REQUEST,
+			                    "Shots cannot be registered before the game even starts."));
+	}
+
+	shotsWithoutMovement.emplace(shot);
+
+	stringstream ss;
+	ss << "Shot fired at " << shot.shot.time << " registered";
+
+	return unique_ptr<ResponseMessage>(
+		new ResponseMessage(responseID, shot.id, ResponseMessage::Code::OK, ss.str()));
+}
 
 std::unique_ptr<Message> GameStateMachine::onTick(int)
 {

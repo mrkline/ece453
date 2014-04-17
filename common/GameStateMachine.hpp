@@ -7,6 +7,10 @@
 #include "StatusResponseMessage.hpp"
 #include "ResultsResponseMessage.hpp"
 
+// Forward declaration. We don't need to include the hearder because we just have a reference to it here.
+// We'll include the header in the .cpp file
+class ShotMessage;
+
 /**
  * \brief Runs a game via a game state machine
  * \param in The MessageQueue on which the machine will receive messages
@@ -84,6 +88,14 @@ public:
 	std::unique_ptr<ResponseMessage> stop(int responseID, int respondingTo);
 
 	/**
+	 * \brief Responds to a ShotMessage and records the shot
+	 * \param responseID an ID for the returning acknowledgement
+	 * \param shot The shot message
+	 * \returns An acknowledgement for the shot message
+	 */
+	std::unique_ptr<ResponseMessage> onShot(int responseID, const ShotMessage& shot);
+
+	/**
 	 * \brief Responds to a StatusMessage
 	 * \param responseID An ID for the returning message
 	 * \param respondingTo The ID of the StatusMessage
@@ -120,4 +132,7 @@ protected:
 	const std::chrono::seconds duration;
 
 	const int winningScore;
+
+	/// When we receive a shot, it is put here until its corresponding movement arrives.
+	std::unordered_set<Shot> shotsWithoutMovement;
 };

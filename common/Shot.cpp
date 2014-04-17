@@ -71,7 +71,12 @@ bool Shot::operator==(const Shot& o) const
 
 ShotWithMovement::ShotWithMovement(char p, char tar, int time, std::vector<Vector3>&& m) :
 	Shot(p, tar, time),
-	movement(m)
+	movement(move(m))
+{ }
+
+ShotWithMovement::ShotWithMovement(ShotWithMovement&& o) :
+	Shot(o),
+	movement(move(o.movement))
 { }
 
 Json::Value ShotWithMovement::toJSON() const

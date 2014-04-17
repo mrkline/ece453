@@ -10,7 +10,7 @@ class MovementMessage : public Message {
 
 public:
 
-	MovementMessage(int id, Movement&& m);
+	MovementMessage(int id, ShotWithMovement&& m);
 
 	static std::unique_ptr<MovementMessage> fromJSON(const Json::Value& object);
 
@@ -20,5 +20,8 @@ public:
 
 	bool operator==(const Message& o) const override;
 
-	Movement movement;
+	/// We carry the shot, not just the movement,
+	/// as we use the shot info as a unique ID for the movement,
+	/// matching it to our already recorded shot.
+	ShotWithMovement movement;
 };

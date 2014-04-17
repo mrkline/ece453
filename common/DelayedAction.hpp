@@ -41,7 +41,7 @@ public:
 		std::lock_guard<std::mutex> guard(mtx);
 		return over;
 	}
-	
+
 private:
 
 	void threadProc()

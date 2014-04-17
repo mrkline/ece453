@@ -24,9 +24,28 @@ public:
 	const int time; ///< The timestamp of the shot, in milliseconds since the game started
 };
 
+namespace std {
+
+/// Hash function for a Shot
+template<>
+struct hash<Shot> {
+	size_t operator()(const Shot& s) const
+	{
+		return (size_t)s.time
+			^ ((size_t)s.target << ((sizeof(size_t) - 1) * 8))
+			^ ((size_t)s.player << ((sizeof(size_t) - 2) * 8));
+	}
+};
+
+} // end namespace std
+
 class ShotWithMovement : public Shot {
 public:
 	ShotWithMovement(char p, char tar, int time, Movement&& m);
+
+	ShotWithMovement(const ShotWithMovement& o);
+
+	ShotWithMovement(ShotWithMovement&& o);
 
 	Json::Value toJSON() const override;
 
