@@ -12,11 +12,13 @@
  * \param in The MessageQueue on which the machine will receive messages
  * \param out The MessageQueue the machine will use to talk to the UI and hardware.
  *            It is assumed that the two destinations will be multiplexed elsewhere for simplicity here.
+ * \param numberTargets The number of targets we currently have up in our hardware setup.
+ * \param numberPlayers The number of guns we currently have in our hardware setup.
  *
  * Start this function in another thread, and use the message queues to interface it
  * with our UI and hardware.
  */
-void runGame(MessageQueue& in, MessageQueue& out);
+void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberPlayers);
 
 /// A base class for a game state machine.
 /// Each game type should derive a state machine class from this one.
@@ -55,7 +57,8 @@ public:
 	 *                     Pass std::chrono::seconds::max for infinite (ish) duration.
 	 * \param scoreToWin The winning score. Pass a negative value for no winning score
 	 */
-	GameStateMachine(int numPlayers, const std::chrono::seconds& gameDuration, int scoreToWin);
+	GameStateMachine(int numTargets, int numPlayers,
+	                 const std::chrono::seconds& gameDuration, int scoreToWin);
 
 	/// Returns true if the game is running
 	bool isRunning() { return gameState == State::RUNNING; }
@@ -107,6 +110,8 @@ public:
 protected:
 
 	State gameState = State::SETUP;
+
+	const int targetCount;
 
 	std::vector<Player> players;
 

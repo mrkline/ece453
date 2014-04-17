@@ -17,7 +17,7 @@ using namespace std;
 /// Macro to quickly set up a test environment for the game state machine(s)
 #define MACHINE_ENVIRONMENT \
 	MessageQueue in, out; \
-	thread stateThread(&runGame, ref(in), ref(out));
+	thread stateThread(&runGame, ref(in), ref(out), 2, 2);
 
 /// Tests that the output queue from MACHINE_ENVIRONMENT is empty
 #define ASSERT_EMPTY_OUT \

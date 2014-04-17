@@ -1,9 +1,15 @@
 #include "GameStateMachine.hpp"
 
-using namespace std;
+#include "Exceptions.hpp"
 
-void runGame(MessageQueue& in, MessageQueue& out)
+using namespace std;
+using namespace Exceptions;
+
+void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberPlayers)
 {
+	ENFORCE(ArgumentException, numberTargets > 0, "You must have at least one target.");
+	ENFORCE(ArgumentException, numberPlayers > 0, "You must have at least one player.");
+
 	using Code = ResponseMessage::Code;
 
 	// A pointer to the state machine running the game
@@ -141,12 +147,16 @@ void runGame(MessageQueue& in, MessageQueue& out)
 	}
 }
 
-GameStateMachine::GameStateMachine(int numPlayers, const std::chrono::seconds& gameDuration, int scoreToWin) :
+GameStateMachine::GameStateMachine(int numTargets, int numPlayers,
+	                               const std::chrono::seconds& gameDuration, int scoreToWin) :
+	targetCount(numTargets),
 	players(numPlayers),
 	gameEndTime(),
 	duration(gameDuration),
 	winningScore(scoreToWin)
 {
+	ENFORCE(ArgumentException, numTargets > 0, "You must have at least one target.");
+	ENFORCE(ArgumentException, numPlayers > 0, "You must have at least one player.");
 }
 
 std::unique_ptr<ResponseMessage> GameStateMachine::start(int responseID, int respondingTo)
