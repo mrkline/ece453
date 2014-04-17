@@ -48,7 +48,7 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 			if (machine != nullptr && !machine->isRunning()) {
 				out.send(unique_ptr<ResponseMessage>(
 					new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
-					                    "You cannot setup a new game while one is in progress")));
+					                    "You cannot set up a new game while one is in progress")));
 			}
 			else {
 				// Do game setup
@@ -75,7 +75,7 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 			if (machine == nullptr) {
 				out.send(unique_ptr<ResponseMessage>(
 					new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
-					                    "A game has not even been setup yet. There is nothing to stop.")));
+					                    "A game has not even been set up yet. There is nothing to stop.")));
 			}
 			else {
 				out.send(machine->stop(uid++, msg->id));
@@ -88,7 +88,7 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 		const auto getStatus = [&] {
 			if (machine == nullptr) {
 				out.send(unique_ptr<StatusResponseMessage>(
-					new StatusResponseMessage(uid++, msg->id, "No game has been setup yet.",
+					new StatusResponseMessage(uid++, msg->id, "No game has been set up yet.",
 					                          false, -1, -1, StatusResponseMessage::PlayerList())));
 			}
 			else {
