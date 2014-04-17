@@ -1,6 +1,7 @@
 #include "GameStateMachine.hpp"
 
 #include "Exceptions.hpp"
+#include "TargetControlMessage.hpp"
 
 using namespace std;
 using namespace Exceptions;
@@ -30,6 +31,17 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 		msg = in.receiveBefore(nextTick)) {
 
 		// These are just convenience lambda functions so the switch statement below is less cluttered
+
+		// Shut off all target LEDs. Useful at the stop point.
+		const auto lightsOut = [&] {
+			TargetControlMessage::CommandList cl;
+
+			for (int i = 0; i < numberTargets; ++i)
+				cl.emplace_back(i, false);
+
+			out.send(unique_ptr<TargetControlMessage>(
+				new TargetControlMessage(uid++, move(cl))));
+		};
 
 		// Setup a new state machine, or complain if now is not the time to do so.
 		const auto doSetup = [&] {
@@ -67,6 +79,7 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 			}
 			else {
 				out.send(machine->stop(uid++, msg->id));
+				lightsOut();
 			}
 		};
 
