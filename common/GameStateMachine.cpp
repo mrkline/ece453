@@ -96,6 +96,19 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 			}
 		};
 
+		// Gets the results from the state machine,
+		// or return our own if there is no state machine to ask.
+		const auto getResults = [&] {
+			if (machine == nullptr) {
+				out.send(unique_ptr<ResponseMessage>(
+					new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
+					                    "A game has not been set up. There are no results to get.")));
+			}
+			else {
+				out.send(machine->getResultsResponse(uid++, msg->id));
+			}
+		};
+
 		// Respond to invalid requests.
 		const auto wat = [&] {
 			out.send(unique_ptr<ResponseMessage>(
@@ -136,6 +149,10 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 
 					case Type::STATUS:
 						getStatus();
+						break;
+
+					case Type::RESULTS:
+						getResults();
 						break;
 
 					default: // We don't know what this is.
