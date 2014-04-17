@@ -6,16 +6,26 @@ void runGame(MessageQueue& in, MessageQueue& out)
 {
 	using Code = ResponseMessage::Code;
 
+	// A pointer to the state machine running the game
 	unique_ptr<GameStateMachine> machine;
 
+	// A unique ID we can use for sending messages (each message must have its own unique ID)
 	int uid = 0;
 
-	// Do we want a timeout?
-	for (unique_ptr<Message> msg = in.receive();
-	     msg->getType() != Message::Type::EXIT;
-	     msg = in.receive()) {
+	// The interval in which we should call the state machine's onTick if there are no unprocessed messages.
+	static const auto tickInterval = chrono::milliseconds(100);
 
-		// Some convenience lambdas so the switch statement below is less cluttered
+	// The next time at which we should call onTick
+	auto nextTick = chrono::steady_clock::now() + tickInterval;
+
+	// Receive messages as they come in until we get an exit message,
+	// and tick in the meantime if we don't receive one.
+	for (unique_ptr<Message> msg; msg == nullptr || msg->getType() != Message::Type::EXIT;
+		msg = in.receiveBefore(nextTick)) {
+
+		// These are just convenience lambda functions so the switch statement below is less cluttered
+
+		// Setup a new state machine, or complain if now is not the time to do so.
 		const auto doSetup = [&] {
 			if (machine != nullptr && !machine->isRunning()) {
 				return unique_ptr<ResponseMessage>(
@@ -30,6 +40,7 @@ void runGame(MessageQueue& in, MessageQueue& out)
 			}
 		};
 
+		// Start the state machine, or complain if now is not the time to do so.
 		const auto start = [&] {
 			if (machine == nullptr) {
 				return unique_ptr<ResponseMessage>(
@@ -41,6 +52,7 @@ void runGame(MessageQueue& in, MessageQueue& out)
 			}
 		};
 
+		// Stop the state machine, or complain if now is not the time to do so.
 		const auto stop = [&] {
 			if (machine == nullptr) {
 				return unique_ptr<ResponseMessage>(
@@ -52,6 +64,8 @@ void runGame(MessageQueue& in, MessageQueue& out)
 			}
 		};
 
+		// Get the status from the state machine,
+		// or return our own if there is not a state machine to ask.
 		const auto getStatus = [&] {
 			if (machine == nullptr) {
 				return unique_ptr<StatusResponseMessage>(
@@ -63,36 +77,50 @@ void runGame(MessageQueue& in, MessageQueue& out)
 			}
 		};
 
+		// Respond to invalid requests.
 		const auto wat = [&] {
 			return unique_ptr<ResponseMessage>(
 				new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
 				                    "The request is invalid."));
 		};
 
-		using Type = Message::Type;
 
 		try {
-			switch (msg->getType()) {
+			// If there is no message, that means we need to tick.
+			if (msg == nullptr) {
+				auto toSend = machine->onTick(uid++);
+				if (toSend != nullptr)
+					out.send(move(toSend));
 
-				case Type::SETUP:
-					out.send(doSetup());
-					break;
+				// Bump up the next tick
+				while (chrono::steady_clock::now() > nextTick)
+					nextTick += tickInterval;
+			}
+			else {
+				// Respond to messages. See the lambda functions above.
+				using Type = Message::Type;
+				switch (msg->getType()) {
 
-				case Type::START:
-					out.send(start());
-					break;
+					case Type::SETUP:
+						out.send(doSetup());
+						break;
 
-				case Type::STOP:
-					out.send(stop());
-					break;
+					case Type::START:
+						out.send(start());
+						break;
 
-				case Type::STATUS:
-					out.send(getStatus());
-					break;
+					case Type::STOP:
+						out.send(stop());
+						break;
 
-				default: // We don't know what this is.
-					out.send(wat());
-					break;
+					case Type::STATUS:
+						out.send(getStatus());
+						break;
+
+					default: // We don't know what this is.
+						out.send(wat());
+						break;
+				}
 			}
 		}
 		catch (const std::exception& e) {
@@ -111,6 +139,14 @@ void runGame(MessageQueue& in, MessageQueue& out)
 	}
 }
 
+GameStateMachine::GameStateMachine(int numPlayers, const std::chrono::seconds& gameDuration, int scoreToWin) :
+	players(numPlayers),
+	gameEndTime(),
+	duration(gameDuration),
+	winningScore(scoreToWin)
+{
+}
+
 std::unique_ptr<ResponseMessage> GameStateMachine::start(int responseID, int respondingTo)
 {
 	if (isRunning()) {
@@ -119,7 +155,14 @@ std::unique_ptr<ResponseMessage> GameStateMachine::start(int responseID, int res
 			                    "A game is already started."));
 	}
 
-	// TODO Init here
+	// Zero player info
+	for (auto& player : players)
+		player = Player();
+
+	// Set the game's end time
+	gameEndTime = Clock::now() + duration;
+	// And we're off!
+	gameState = State::RUNNING;
 
 	return unique_ptr<ResponseMessage>(
 		new ResponseMessage(responseID, respondingTo, ResponseMessage::Code::OK,
@@ -134,9 +177,21 @@ std::unique_ptr<ResponseMessage> GameStateMachine::stop(int responseID, int resp
 			                    "There is no running game to stop."));
 	}
 
-	// TODO: Shutdown here
+	gameState = State::OVER;
 
 	return unique_ptr<ResponseMessage>(
 		new ResponseMessage(responseID, respondingTo, ResponseMessage::Code::OK,
-		                    "The game has been successfully started"));
+		                    "The game has been successfully stopped"));
+}
+
+
+std::unique_ptr<Message> GameStateMachine::onTick(int)
+{
+	if (any_of(begin(players), end(players), [this](const Player& p) { return p.score >= winningScore; }))
+		gameState = State::OVER;
+
+	if (Clock::now() >= gameEndTime)
+		gameState = State::OVER;
+
+	return nullptr;
 }
