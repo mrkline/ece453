@@ -88,9 +88,11 @@ void runGame(MessageQueue& in, MessageQueue& out)
 		try {
 			// If there is no message, that means we need to tick.
 			if (msg == nullptr) {
-				auto toSend = machine->onTick(uid++);
-				if (toSend != nullptr)
-					out.send(move(toSend));
+				if (machine != nullptr) {
+					auto toSend = machine->onTick(uid++);
+					if (toSend != nullptr)
+						out.send(move(toSend));
+				}
 
 				// Bump up the next tick
 				while (chrono::steady_clock::now() > nextTick)
