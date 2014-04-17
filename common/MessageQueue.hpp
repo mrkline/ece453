@@ -42,6 +42,9 @@ public:
 	 */
 	std::unique_ptr<Message> receive(const std::chrono::milliseconds& timeout);
 
+
+	std::unique_ptr<Message> receiveBefore(const std::chrono::time_point<std::chrono::steady_clock>& time);
+
 	/// Returns true if the queue is empty
 	bool empty();
 

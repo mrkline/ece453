@@ -69,7 +69,7 @@ void priority()
 	assert(*q.receive() == *makeTestMessage(1));
 }
 
-void timeout()
+void timeoutFor()
 {
 	MessageQueue q;
 
@@ -86,6 +86,26 @@ void timeout()
 	sendingThread.join();
 }
 
+void timeoutUntil()
+{
+	MessageQueue q;
+
+	auto earlier = chrono::steady_clock::now() + chrono::milliseconds(10);
+	auto later = earlier + chrono::milliseconds(40);
+	auto evenLater = later + chrono::milliseconds(10);
+
+	thread sendingThread([&q, later] {
+		this_thread::sleep_until(later);
+		q.send(makeTestMessage());
+	});
+
+	assert(q.receiveBefore(earlier) == nullptr);
+
+	assert(*q.receiveBefore(evenLater) == *makeTestMessage());
+
+	sendingThread.join();
+}
+
 } // end anonymous namespace
 
 void Testing::MessageQueueTests()
@@ -94,5 +114,6 @@ void Testing::MessageQueueTests()
 	test("Single thread", &singleThread);
 	test("Multiple threads", &multipleThreads);
 	test("Priority", &priority);
-	test("Timeout", &timeout);
+	test("\"wait for\" Timeout", &timeoutFor);
+	test("\"wait until\" Timeout", &timeoutUntil);
 }
