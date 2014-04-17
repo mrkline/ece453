@@ -53,7 +53,7 @@ public:
 	 *                   so that should be checked elsewhere.
 	 * \param gameDuration The duration of the game, in seconds.
 	 *                     Pass std::chrono::seconds::max for infinite (ish) duration.
-	 * \param socreToWin The winning score. Pass a negative value for no winning score
+	 * \param scoreToWin The winning score. Pass a negative value for no winning score
 	 */
 	GameStateMachine(int numPlayers, const std::chrono::seconds& gameDuration, int scoreToWin);
 
@@ -70,7 +70,7 @@ public:
 	 * \param respondingTo The ID of the StartMessage
 	 * \returns A ResponseMessage indicating if the game was succesfully started or not.
 	 */
-	std::unique_ptr<ResponseMessage> start(int repsonseID, int respondingTo);
+	std::unique_ptr<ResponseMessage> start(int responseID, int respondingTo);
 
 	/**
 	 * \brief Responds to a StopMessage to stop the game
