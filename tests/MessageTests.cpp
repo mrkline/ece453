@@ -4,30 +4,18 @@
 
 #include "Test.hpp"
 #include "ResponseMessage.hpp"
-#include "SetupMessage.hpp"
 #include "StartMessage.hpp"
 #include "StopMessage.hpp"
 #include "StatusMessage.hpp"
-#include "StatusResponseMessage.hpp"
 #include "ResultsMessage.hpp"
-#include "ResultsResponseMessage.hpp"
-#include "ShotMessage.hpp"
-#include "MovementMessage.hpp"
-#include "TargetControlMessage.hpp"
 #include "ExitMessage.hpp"
-#include "Message.hpp"
 
 using namespace Exceptions;
 using namespace Json;
 using namespace std;
 
-namespace {
 
-template <typename M = Message>
-unique_ptr<M> makeMessage()
-{
-	return unique_ptr<M>(new M(42));
-}
+namespace {
 
 void check(const unique_ptr<Message>& load, Message::Type t)
 {
@@ -39,19 +27,23 @@ void check(const unique_ptr<Message>& load, Message::Type t)
 	assert(*load == *fromJSON);
 }
 
-unique_ptr<ResponseMessage> makeResponseMessage()
+} // end anonymous namespace
+
+namespace Testing {
+
+std::unique_ptr<ResponseMessage> makeResponseMessage()
 {
 	return unique_ptr<ResponseMessage>(
-		new ResponseMessage(42, 25, ResponseMessage::ResponseMessage::Code::OK, "I am a response!"));
+		new ResponseMessage(0, 25, ResponseMessage::ResponseMessage::Code::OK, "I am a response!"));
 }
 
-unique_ptr<SetupMessage> makeSetupMessage()
+std::unique_ptr<SetupMessage> makeSetupMessage()
 {
 	return unique_ptr<SetupMessage>(
-		new SetupMessage(42, GameType::POP_UP, 2, WC_TIME, 60, -1, SetupMessage::DataMap()));
+		new SetupMessage(0, GameType::POP_UP, 2, WC_TIME, 60, -1, SetupMessage::DataMap()));
 }
 
-unique_ptr<StatusResponseMessage> makeStatusResponseMessage()
+std::unique_ptr<StatusResponseMessage> makeStatusResponseMessage()
 {
 	StatusResponseMessage::PlayerList stats;
 	stats.emplace_back(2, 4);
@@ -59,7 +51,7 @@ unique_ptr<StatusResponseMessage> makeStatusResponseMessage()
 	stats.emplace_back(33, 89);
 
 	return unique_ptr<StatusResponseMessage>(
-		new StatusResponseMessage(42, 56, "I am a response!", true, 42, -1, move(stats)));
+		new StatusResponseMessage(0, 56, "I am a response!", true, 42, -1, move(stats)));
 }
 
 Movement makeMovement()
@@ -76,7 +68,7 @@ Movement makeMovement()
 	return fakeMovement;
 }
 
-unique_ptr<ResultsResponseMessage> makeResultsResponseMessage()
+std::unique_ptr<ResultsResponseMessage> makeResultsResponseMessage()
 {
 	typedef ResultsResponseMessage::PlayerStats PlayerStats;
 
@@ -86,31 +78,29 @@ unique_ptr<ResultsResponseMessage> makeResultsResponseMessage()
 	PlayerStats stat(20, 1, vector<ShotWithMovement>({aShot}));
 
 	return unique_ptr<ResultsResponseMessage>(
-		new ResultsResponseMessage(42, 21, "I'm some results!", vector<PlayerStats>({stat})));
+		new ResultsResponseMessage(0, 21, "I'm some results!", vector<PlayerStats>({stat})));
 }
 
-unique_ptr<ShotMessage> makeShotMessage()
+std::unique_ptr<ShotMessage> makeShotMessage()
 {
 	return unique_ptr<ShotMessage>(
-		new ShotMessage(42, Shot(2, 4, 240)));
+		new ShotMessage(0, Shot(2, 4, 240)));
 }
 
-unique_ptr<MovementMessage> makeMovementMessage()
+std::unique_ptr<MovementMessage> makeMovementMessage()
 {
 	return unique_ptr<MovementMessage>(
-		new MovementMessage(42, makeMovement()));
+		new MovementMessage(0, ShotWithMovement(2, 4, 240, makeMovement())));
 }
 
-unique_ptr<TargetControlMessage> makeTargetControlMessage()
+std::unique_ptr<TargetControlMessage> makeTargetControlMessage()
 {
 	return unique_ptr<TargetControlMessage>(
-		new TargetControlMessage(42, TargetControlMessage::CommandList({TargetCommand(1, true),
+		new TargetControlMessage(0, TargetControlMessage::CommandList({TargetCommand(1, true),
 		                                                                TargetCommand(3, false)})));
 }
 
-} // end anonymous namespace
-
-void Testing::MessageTests()
+void MessageTests()
 {
 	using Type = Message::Type;
 
@@ -129,3 +119,5 @@ void Testing::MessageTests()
 	test("TargetControlMessage -> JSON", [] { check(makeTargetControlMessage(), Type::TARGET_CONTROL); });
 	test("ExitMessage -> JSON", []{ check(makeMessage<ExitMessage>(), Type::EXIT); });
 }
+
+} // end namespace Testing
