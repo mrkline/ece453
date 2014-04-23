@@ -35,10 +35,12 @@ public:
 
 	/// Tracks the hit count and score of a player.
 	struct Player {
-		int hits;
 		int score;
+		int hits;
 
-		Player() : hits(0), score(0) { }
+		Player() : score(0), hits(0) { }
+
+		Player(int s, int h) : score(s), hits(h) { }
 	};
 
 	/// The game's overall state
@@ -96,7 +98,7 @@ public:
 	 * \param shot The shot message
 	 * \returns An acknowledgement for the shot message
 	 */
-	std::unique_ptr<ResponseMessage> onShot(int responseID, const ShotMessage& shot);
+	virtual std::unique_ptr<ResponseMessage> onShot(int responseID, const ShotMessage& shot);
 
 	/**
 	 * \brief Responds to a MovementMessage and matches the movement to the shot
@@ -112,7 +114,7 @@ public:
 	 * \param respondingTo The ID of the StatusMessage
 	 * \returns A StatusResponseMessage indicating the game's current status
 	 */
-	virtual std::unique_ptr<StatusResponseMessage> getStatusResponse(int responseID, int respondingTo) = 0;
+	std::unique_ptr<StatusResponseMessage> getStatusResponse(int responseID, int respondingTo);
 
 	/**
 	 * \brief Responds to a ResultsMessage
@@ -121,7 +123,7 @@ public:
 	 * \returns A ResultsResponseMessage indicating the game's results,
 	 *          or a ResponseMessage if the game is not at a point to return results.
 	 */
-	virtual std::unique_ptr<ResponseMessage> getResultsResponse(int responseID, int respondingTo) = 0;
+	std::unique_ptr<ResponseMessage> getResultsResponse(int responseID, int respondingTo);
 
 	/**
 	 * \brief Called on a fairly short (100 ms range) periodic interval to allow the state machine to update.

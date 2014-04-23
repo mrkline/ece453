@@ -9,6 +9,7 @@
 #include "GameStateMachine.hpp"
 #include "SetupMessage.hpp"
 #include "StatusMessage.hpp"
+#include "ResultsMessage.hpp"
 #include "StartMessage.hpp"
 #include "StopMessage.hpp"
 #include "ShotMessage.hpp"
@@ -116,6 +117,19 @@ void earlyStatus()
 	ASSERT_EMPTY_OUT;
 }
 
+void earlyResults()
+{
+	MACHINE_ENVIRONMENT;
+	SEND(makeMessage<ResultsMessage>());
+	auto ack = unique_dynamic_cast<ResponseMessage>(out.receive());
+	// We can't get results until after a game
+	assert(ack != nullptr);
+	assert(ack->code == Code::INVALID_REQUEST);
+	assert(ack->respondingTo == id);
+	EXIT;
+	ASSERT_EMPTY_OUT;
+}
+
 void setup()
 {
 	MACHINE_ENVIRONMENT;
@@ -138,5 +152,6 @@ void Testing::GameStateMachineTests()
 	test("Early stop", &earlyStop);
 	test("Early shot", &earlyShot);
 	test("Early status", &earlyStatus);
+	test("Early results", &earlyResults);
 	test("Setup", &setup);
 }

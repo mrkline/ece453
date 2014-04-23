@@ -315,6 +315,75 @@ std::unique_ptr<ResponseMessage> GameStateMachine::onMovement(int responseID, co
 		new ResponseMessage(responseID, movement.id, ResponseMessage::Code::OK, ss.str()));
 }
 
+std::unique_ptr<StatusResponseMessage> GameStateMachine::getStatusResponse(int responseID, int respondingTo)
+{
+	StatusResponseMessage::PlayerList statsList;
+	for (const auto& player : players)
+		statsList.emplace_back(player.score, player.hits);
+
+	string response;
+
+	switch (gameState) {
+		case State::SETUP:
+			response = "Game has been set up but not started.";
+			break;
+
+		case State::RUNNING:
+			response = "The game is running.";
+			break;
+
+		case State::OVER:
+			response = "The game is over.";
+			break;
+	}
+
+	const chrono::seconds remaining = chrono::duration_cast<chrono::seconds>(gameEndTime - Clock::now());
+
+	return unique_ptr<StatusResponseMessage>(
+		new StatusResponseMessage(responseID, respondingTo, response, gameState == State::RUNNING,
+		                          remaining.count(), winningScore,
+		                          move(statsList)));
+}
+
+std::unique_ptr<ResponseMessage> GameStateMachine::getResultsResponse(int responseID, int respondingTo)
+{
+	if (gameState != State::OVER) {
+		return unique_ptr<ResponseMessage>(
+			new ResponseMessage(responseID, respondingTo, ResponseMessage::Code::INVALID_REQUEST,
+			                    "You can only get results once the game is over."));
+	}
+
+	// An array of shots for each player
+	std::vector<std::vector<ShotWithMovement>> shotsByPlayer(players.size());
+
+	// Go through our shots and sort them into our player lists
+	for (const auto& shot : shotsWithMovement)
+		shotsByPlayer[shot.player].emplace_back(shot);
+
+	// Also do do this for shots that never got their movement.
+	///TODO: Do we want to do this or return a "not ready" message?
+	for (const auto& shot : shotsWithoutMovement)
+		shotsByPlayer[shot.player].emplace_back(ShotWithMovement(shot, Movement()));
+
+	// Sort all the shots by time.
+	// This is unnecessary if we choose not to add the shots without movement
+	// (see the TODO above)
+	for (auto playerShots : shotsByPlayer) {
+		sort(begin(playerShots), end(playerShots), [](const ShotWithMovement& swm1, const ShotWithMovement& swm2) {
+			return swm1.time < swm2.time;
+		});
+	}
+
+	ResultsResponseMessage::StatsList resList;
+
+	for (size_t i = 0; i < players.size(); ++i) {
+		resList.emplace_back(players[i].score, players[i].hits, move(shotsByPlayer[i]));
+	}
+
+	return unique_ptr<ResponseMessage>(
+		new ResultsResponseMessage(responseID, respondingTo, "Game results:", move(resList)));
+}
+
 std::unique_ptr<Message> GameStateMachine::onTick(int)
 {
 	if (any_of(begin(players), end(players), [this](const Player& p) { return p.score >= winningScore; }))
