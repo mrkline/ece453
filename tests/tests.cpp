@@ -7,6 +7,7 @@
 #include "MessageTests.hpp"
 #include "MessageQueueTests.hpp"
 #include "GameStateMachineTests.hpp"
+#include "PopUpStateMachineTests.hpp"
 
 using namespace Testing;
 
@@ -16,5 +17,6 @@ int main()
 	MessageTests();
 	MessageQueueTests();
 	GameStateMachineTests();
+	PopUpStateMachineTests();
 	return 0;
 }

@@ -33,11 +33,13 @@ private:
 		SHUTOFF ///< Shut off the target after it has been hit
 	};
 
-	void duringStartup();
-
 	std::unique_ptr<Message> duringDelay(int messageID);
 
+	void duringUp();
+
 	std::unique_ptr<Message> duringShutoff(int messageID);
+
+	void transitionToDelay();
 
 	/// A pseusdo-random number generator for creating delay times;
 	std::mt19937 rng;

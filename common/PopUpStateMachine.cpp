@@ -2,9 +2,11 @@
 
 #include <cassert>
 
+#include "ShotMessage.hpp"
 #include "TargetControlMessage.hpp"
 
 using namespace std;
+using namespace std::chrono;
 
 PopUpStateMachine::PopUpStateMachine(int numTargets, int numPlayers,
                                      const std::chrono::seconds& gameDuration, int scoreToWin) :
@@ -27,10 +29,21 @@ std::unique_ptr<ResponseMessage> PopUpStateMachine::onShot(int responseID, const
 	if (msg->code == ResponseMessage::Code::INVALID_REQUEST)
 		return msg;
 
-	// TODO: Pick up here
 	// If we're in the up state and the right target is hit,
-	// award a score to the player who hit it first. Something like milliseconds / 10.
-	// Ignore hits from before our target went up
+	if (state == PopUpState::UP && shot.shot.target == whichTarget) {
+		// Award a score to the player who hit it first. Something like remaining milliseconds / 10.
+		// TODO: We don't have to worry about hit messages arriving out of order, do we?
+		//       For now, just make the winner the first hit we see.
+		auto& roundWinner = players[shot.shot.player];
+		++roundWinner.hits;
+		// On the off-chance that due to some timing fluke, this arrives after the transition time,
+		// Award at least 10 points. This is probably unnecessary, but it doesn't hurt to be sure.
+		const int score = duration_cast<milliseconds>(transitionTime - Clock::now()).count() / 10;
+		roundWinner.score += max(10, score);
+		state = PopUpState::SHUTOFF;
+	}
+
+	return msg;
 }
 
 std::unique_ptr<Message> PopUpStateMachine::onTick(int messageID)
@@ -39,38 +52,45 @@ std::unique_ptr<Message> PopUpStateMachine::onTick(int messageID)
 	auto msg = GameStateMachine::onTick(messageID);
 	assert(msg == nullptr);
 
-	// We have nothing special to do if the game isn't running or we're not finishing up
-	if (gameState != State::RUNNING && state != PopUpState::UP)
+	// We have nothing special to do if the game isn't running or we're not finishing up.
+	// We fall back to startup when we're all done.
+	if (gameState != State::RUNNING && state == PopUpState::STARTUP)
 		return msg;
 
 	switch (state) {
 		case PopUpState::STARTUP:
-			duringStartup();
+			// The startup state does nothing but switch us to DELAY
+			transitionToDelay();
 			return nullptr;
 
 		case PopUpState::DELAY:
 			return duringDelay(messageID);
 
 		case PopUpState::UP:
-			// Do nothing. Whil up, we're handled by onShot
+			duringUp();
 			return nullptr;
+
+		case PopUpState::SHUTOFF:
+			return duringShutoff(messageID);
 	}
+
+	// Should be unreachable
+	return msg;
 }
 
-
-void PopUpStateMachine::duringStartup()
-{
-	state = PopUpState::DELAY;
-	transitionTime = Clock::now() + chrono::seconds(delayDistribution(rng));
-}
 
 std::unique_ptr<Message> PopUpStateMachine::duringDelay(int messageID)
 {
+	// The time the target will stay up before going back down
+	static const seconds targetWindow(5);
+
 	if (Clock::now() >= transitionTime) {
 		// Pick a target
 		whichTarget = targetDistribution(rng);
 		// Update our state
-		gameState = PopUpState::UP;
+		state = PopUpState::UP;
+		// If nobody shoots this target in five seconds, drop back down
+		transitionTime = Clock::now() + targetWindow;
 		// Remember when we brought up the target for scoring purposes
 		targetUp = Clock::now();
 		// Actually turn the target on
@@ -82,8 +102,28 @@ std::unique_ptr<Message> PopUpStateMachine::duringDelay(int messageID)
 	}
 }
 
+void PopUpStateMachine::duringUp()
+{
+	// If nobody has shot the target in the five seconds it's been up, shut it down.
+	if (Clock::now() >= transitionTime)
+		state = PopUpState::SHUTOFF;
+}
+
 std::unique_ptr<Message> PopUpStateMachine::duringShutoff(int messageID)
 {
-	// TODO: Pick up here. Switch to delay, set the transitionTime,
-	// and send a shutoff command to the target we lit last time
+	// If the game is over, fall back to startup. Otherwise, back to delay
+	if (isOver())
+		state = PopUpState::STARTUP;
+	else
+		transitionToDelay();
+
+	// Shut the target off
+	return unique_ptr<Message>(
+		new TargetControlMessage(messageID, TargetCommand(whichTarget, false)));
+}
+
+void PopUpStateMachine::transitionToDelay()
+{
+	state = PopUpState::DELAY;
+	transitionTime = Clock::now() + seconds(delayDistribution(rng));
 }
