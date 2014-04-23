@@ -19,6 +19,9 @@ public:
 
 	virtual bool operator==(const Shot& o) const;
 
+	// Allow us to sort via time
+	bool operator<(const Shot& o) const { return time < o.time; }
+
 	const int8_t player; ///< The ID of the player that took the shot
 	const int8_t target; ///< The ID of the target that was hit. -1 if it was a miss
 	const int time; ///< The timestamp of the shot, in milliseconds since the game started
@@ -43,7 +46,7 @@ class ShotWithMovement : public Shot {
 public:
 	ShotWithMovement(char p, char tar, int time, Movement&& m);
 
-	ShotWithMovement(const ShotWithMovement& o);
+	ShotWithMovement(const ShotWithMovement&) = default;
 
 	ShotWithMovement(ShotWithMovement&& o);
 

@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "Test.hpp"
+#include "MessageTests.hpp"
 #include "MemoryUtils.hpp"
 #include "MessageQueue.hpp"
 #include "GameStateMachine.hpp"
@@ -10,6 +11,8 @@
 #include "StatusMessage.hpp"
 #include "StartMessage.hpp"
 #include "StopMessage.hpp"
+#include "ShotMessage.hpp"
+#include "MovementMessage.hpp"
 #include "ExitMessage.hpp"
 
 using namespace std;
@@ -23,18 +26,22 @@ using namespace std;
 #define ASSERT_EMPTY_OUT \
 	assert(out.empty());
 
+/// Macro to send a thread to the input queue from MACHINE_ENVIRONMENT
+#define SEND(msg) \
+	auto toSend = msg; \
+	const auto id = toSend->id; \
+	in.send(move(msg));
+
 /// Macro to join the thread from MACHINE_ENVIRONMENT to exit
 #define EXIT \
 	in.send(unique_ptr<Message>(new ExitMessage(1))); \
 	stateThread.join();
 
-/// Macro to send a thread to the input queue from MACHINE_ENVIRONMENT
-#define SEND(msg) \
-	in.send(unique_ptr<Message>(msg));
-
 namespace {
 
 using Code = ResponseMessage::Code;
+
+using namespace Testing;
 
 void sanity()
 {
@@ -46,12 +53,12 @@ void sanity()
 void earlyStart()
 {
 	MACHINE_ENVIRONMENT;
-	SEND(new StartMessage(0));
+	SEND(makeMessage<StartMessage>())
 	auto ack = unique_dynamic_cast<ResponseMessage>(out.receive());
 	assert(ack != nullptr);
 	// We shouldn't be able to start before actually setting up.
 	assert(ack->code == Code::INVALID_REQUEST);
-	assert(ack->respondingTo == 0);
+	assert(ack->respondingTo == id);
 	EXIT;
 	ASSERT_EMPTY_OUT;
 }
@@ -59,12 +66,38 @@ void earlyStart()
 void earlyStop()
 {
 	MACHINE_ENVIRONMENT;
-	SEND(new StopMessage(0));
+	SEND(makeMessage<StopMessage>());
 	auto ack = unique_dynamic_cast<ResponseMessage>(out.receive());
 	assert(ack != nullptr);
 	// We shouldn't be able to stop before actually setting up and starting.
 	assert(ack->code == Code::INVALID_REQUEST);
-	assert(ack->respondingTo == 0);
+	assert(ack->respondingTo == id);
+	EXIT;
+	ASSERT_EMPTY_OUT;
+}
+
+void earlyShot()
+{
+	MACHINE_ENVIRONMENT;
+	SEND(makeShotMessage());
+	auto ack = unique_dynamic_cast<ResponseMessage>(out.receive());
+	assert(ack != nullptr);
+	// We shouldn't be able to shoot before actually setting up and starting
+	assert(ack->code == Code::INVALID_REQUEST);
+	assert(ack->respondingTo == id);
+	EXIT;
+	ASSERT_EMPTY_OUT;
+}
+
+void earlyMovement()
+{
+	MACHINE_ENVIRONMENT;
+	SEND(makeMovementMessage());
+	auto ack = unique_dynamic_cast<ResponseMessage>(out.receive());
+	assert(ack != nullptr);
+	// We shouldn't be able to send a message before actually setting up and starting
+	assert(ack->code == Code::INVALID_REQUEST);
+	assert(ack->respondingTo == id);
 	EXIT;
 	ASSERT_EMPTY_OUT;
 }
@@ -72,12 +105,12 @@ void earlyStop()
 void earlyStatus()
 {
 	MACHINE_ENVIRONMENT;
-	SEND(new StatusMessage(0));
+	SEND(makeMessage<StatusMessage>());
 	auto ack = unique_dynamic_cast<StatusResponseMessage>(out.receive());
 	// Status should be not running
 	assert(ack != nullptr);
 	assert(ack->code == Code::OK);
-	assert(ack->respondingTo == 0);
+	assert(ack->respondingTo == id);
 	assert(!ack->running);
 	EXIT;
 	ASSERT_EMPTY_OUT;
@@ -86,11 +119,11 @@ void earlyStatus()
 void setup()
 {
 	MACHINE_ENVIRONMENT;
-	SEND(new SetupMessage(0, GameType::POP_UP, 1, WinCondition::WC_TIME, 60, -1));
+	SEND(makeSetupMessage());
 	auto ack = unique_dynamic_cast<ResponseMessage>(out.receive());
 	assert(ack != nullptr);
 	assert(ack->code == Code::OK);
-	assert(ack->respondingTo == 0);
+	assert(ack->respondingTo == id);
 	EXIT;
 	ASSERT_EMPTY_OUT;
 }
@@ -103,6 +136,7 @@ void Testing::GameStateMachineTests()
 	test("Sanity", &sanity);
 	test("Early start", &earlyStart);
 	test("Early stop", &earlyStop);
+	test("Early shot", &earlyShot);
 	test("Early status", &earlyStatus);
 	test("Setup", &setup);
 }

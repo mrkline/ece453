@@ -6,6 +6,7 @@
 #include "MemoryUtils.hpp"
 #include "TargetControlMessage.hpp"
 #include "ShotMessage.hpp"
+#include "MovementMessage.hpp"
 
 using namespace std;
 using namespace Exceptions;
@@ -91,11 +92,23 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 		const auto onShot = [&](const ShotMessage& shot) {
 			if (machine == nullptr) {
 				out.send(unique_ptr<ResponseMessage>(
-					new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
+					new ResponseMessage(uid++, shot.id, Code::INVALID_REQUEST,
 					                    "A game has not been set up. A shot message should not be arriving now.")));
 			}
 			else {
 				out.send(machine->onShot(uid++, shot));
+			}
+		};
+
+		// Respond to a movement message
+		const auto onMovement = [&](const MovementMessage& movement) {
+			if (machine == nullptr) {
+				out.send(unique_ptr<ResponseMessage>(
+					new ResponseMessage(uid++, movement.id, Code::INVALID_REQUEST,
+					                    "A game has not been set up. A movement message should not be arriving now.")));
+			}
+			else {
+				out.send(machine->onMovement(uid++, movement));
 			}
 		};
 
@@ -167,6 +180,9 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 						onShot(*unique_dynamic_cast<ShotMessage>(move(msg)));
 						break;
 
+					case Type::MOVEMENT:
+						onMovement(*unique_dynamic_cast<MovementMessage>(move(msg)));
+
 					case Type::STATUS:
 						getStatus();
 						break;
@@ -203,7 +219,9 @@ GameStateMachine::GameStateMachine(int numTargets, int numPlayers,
 	players(numPlayers),
 	gameEndTime(),
 	duration(gameDuration),
-	winningScore(scoreToWin)
+	winningScore(scoreToWin),
+	shotsWithoutMovement(),
+	shotsWithMovement()
 {
 	ENFORCE(ArgumentException, numTargets > 0, "You must have at least one target.");
 	ENFORCE(ArgumentException, numPlayers > 0, "You must have at least one player.");
@@ -220,6 +238,10 @@ std::unique_ptr<ResponseMessage> GameStateMachine::start(int responseID, int res
 	// Zero player info
 	for (auto& player : players)
 		player = Player();
+
+	// Zero shots
+	shotsWithoutMovement.clear();
+	shotsWithMovement.clear();
 
 	// Set the game's end time
 	gameEndTime = Clock::now() + duration;
@@ -255,13 +277,42 @@ std::unique_ptr<ResponseMessage> GameStateMachine::onShot(int responseID, const 
 			                    "Shots cannot be registered before the game even starts."));
 	}
 
-	shotsWithoutMovement.emplace(shot);
+	shotsWithoutMovement.emplace(shot.shot);
 
 	stringstream ss;
 	ss << "Shot fired at " << shot.shot.time << " registered";
 
 	return unique_ptr<ResponseMessage>(
 		new ResponseMessage(responseID, shot.id, ResponseMessage::Code::OK, ss.str()));
+}
+
+std::unique_ptr<ResponseMessage> GameStateMachine::onMovement(int responseID, const MovementMessage& movement)
+{
+	if (gameState == State::SETUP) {
+		return unique_ptr<ResponseMessage>(
+			new ResponseMessage(responseID, movement.id, ResponseMessage::Code::INVALID_REQUEST,
+			                    "Movement cannot be registered before the game even starts."));
+	}
+
+	auto it = shotsWithoutMovement.find(movement.movement);
+
+	if (it == end(shotsWithoutMovement)) {
+		return unique_ptr<ResponseMessage>(
+			new ResponseMessage(responseID, movement.id, ResponseMessage::Code::INVALID_REQUEST,
+			                    "The movement's shot was never seen before."));
+	}
+
+	// Take the shot out of the "without movement" set
+	shotsWithoutMovement.erase(it);
+
+	// Place it into the set of shots with recorded movement.
+	shotsWithMovement.emplace(movement.movement);
+
+	stringstream ss;
+	ss << "Movement for shot fired at " << movement.movement.time << " registered";
+
+	return unique_ptr<ResponseMessage>(
+		new ResponseMessage(responseID, movement.id, ResponseMessage::Code::OK, ss.str()));
 }
 
 std::unique_ptr<Message> GameStateMachine::onTick(int)
