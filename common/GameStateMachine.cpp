@@ -386,7 +386,8 @@ std::unique_ptr<ResponseMessage> GameStateMachine::getResultsResponse(int respon
 
 std::unique_ptr<Message> GameStateMachine::onTick(int)
 {
-	if (any_of(begin(players), end(players), [this](const Player& p) { return p.score >= winningScore; }))
+	if (winningScore > 0
+		&& any_of(begin(players), end(players), [this](const Player& p) { return p.score >= winningScore; }))
 		gameState = State::OVER;
 
 	if (Clock::now() >= gameEndTime)
