@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Demonstrating a change for Git.
+
 #define  PACKET_LEN         (0x05)			// PACKET_LEN <= 61
 #define  RSSI_IDX           (PACKET_LEN)    // Index of appended RSSI
 #define  CRC_LQI_IDX        (PACKET_LEN+1)  // Index of appended LQI, checksum
