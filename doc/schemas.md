@@ -53,13 +53,6 @@ To set up a game, a message with type "setup" with the following additional fiel
 
 - "player count" - The number of players for the game
 
-- "win conditions" - An array containing one or both of the following
-  (in which case the game ends when the first of the two is reached):
-
-  - "time" - End the game after a given amount of time
-
-  - "points" - End the game after a user has scored a given number of points
-
 - "end time" - If time is a win condition, this field gives the maximum game length, in seconds.
                If time is not a win condition, this field contains -1.
 

@@ -40,7 +40,7 @@ std::unique_ptr<ResponseMessage> makeResponseMessage()
 std::unique_ptr<SetupMessage> makeSetupMessage()
 {
 	return unique_ptr<SetupMessage>(
-		new SetupMessage(0, GameType::POP_UP, 2, WC_TIME, 60, -1, SetupMessage::DataMap()));
+		new SetupMessage(0, GameType::POP_UP, 2, 60, -1, SetupMessage::DataMap()));
 }
 
 std::unique_ptr<StatusResponseMessage> makeStatusResponseMessage()

@@ -12,8 +12,3 @@ enum class GameType {
 	/// A target flashes and players must shoot the target a given number of times.
 	DUMP
 };
-
-enum WinCondition : uint8_t {
-	WC_TIME = 0x01, ///< End the game after a given amount of time.
-	WC_POINTS = 0x03 ///< End the game after a user has scored a given number of points.
-};
