@@ -3,7 +3,6 @@
 #include <thread>
 
 #include "GameStateMachine.hpp"
-#include "PopUpStateMachine.hpp"
 #include "ExitMessage.hpp"
 #include "Test.hpp"
 
@@ -36,6 +35,13 @@ using Code = ResponseMessage::Code;
 using namespace Testing;
 
 void sanity()
+{
+	MACHINE_ENVIRONMENT;
+	EXIT;
+	ASSERT_EMPTY_OUT;
+}
+
+void setup()
 {
 	MACHINE_ENVIRONMENT;
 	EXIT;

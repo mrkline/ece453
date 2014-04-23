@@ -1,12 +1,15 @@
 #include "GameStateMachine.hpp"
 
+#include <cassert>
 #include <sstream>
 
 #include "Exceptions.hpp"
 #include "MemoryUtils.hpp"
+#include "SetupMessage.hpp"
 #include "TargetControlMessage.hpp"
 #include "ShotMessage.hpp"
 #include "MovementMessage.hpp"
+#include "PopUpStateMachine.hpp"
 
 using namespace std;
 using namespace Exceptions;
@@ -56,10 +59,38 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 					                    "You cannot set up a new game while one is in progress")));
 			}
 			else {
-				// Do game setup
+				auto setupMessage = unique_dynamic_cast<SetupMessage>(move(msg));
+				// There should be no way it has a SETUP type and is not a setup message.
+				// See the switch statement below
+				assert(setupMessage != nullptr);
+
+				// Ensure we are not requesting more players than we actually support
+				if (setupMessage->playerCount > numberPlayers) {
+					out.send(unique_ptr<ResponseMessage>(
+						new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
+						                    "The setup request asked for more players than the game has.")));
+					return;
+				}
+
+				const auto gameDuration = setupMessage->endTime <= 0 ?
+					chrono::seconds::max() : chrono::seconds(setupMessage->endTime);
+
+				// TODO: Be able to pass game data into the state machines
+				switch(setupMessage->gameType) {
+					case GameType::POP_UP:
+						machine.reset(new PopUpStateMachine(numberTargets, setupMessage->playerCount,
+						                                         gameDuration, setupMessage->winningScore));
+						break;
+
+					default:
+						out.send(unique_ptr<ResponseMessage>(
+							new ResponseMessage(uid++, setupMessage->id, Code::UNSUPPORTED_REQUEST,
+							                    "This game mode is not supported yet.")));
+						return;
+				}
 
 				out.send(unique_ptr<ResponseMessage>(
-					new ResponseMessage(uid++, msg->id, Code::OK, "Game set up.")));
+					new ResponseMessage(uid++, setupMessage->id, Code::OK, "Game set up.")));
 			}
 		};
 
