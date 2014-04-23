@@ -42,6 +42,12 @@ TargetControlMessage::TargetControlMessage(int id, CommandList&& comms) :
 {
 }
 
+TargetControlMessage::TargetControlMessage(int id, const TargetCommand& comm) :
+	Message(id),
+	commands({comm})
+{
+}
+
 std::unique_ptr<TargetControlMessage> TargetControlMessage::fromJSON(const Json::Value& object)
 {
 	auto msg = Message::fromJSON(object);

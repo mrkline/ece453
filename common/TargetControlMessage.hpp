@@ -27,6 +27,8 @@ public:
 
 	TargetControlMessage(int id, CommandList&& comms);
 
+	TargetControlMessage(int id, const TargetCommand& comm);
+
 	static std::unique_ptr<TargetControlMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
