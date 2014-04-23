@@ -74,6 +74,11 @@ ShotWithMovement::ShotWithMovement(char p, char tar, int time, std::vector<Vecto
 	movement(move(m))
 { }
 
+ShotWithMovement::ShotWithMovement(const Shot& s, Movement&& m) :
+	Shot(s),
+	movement(move(m))
+{ }
+
 ShotWithMovement::ShotWithMovement(ShotWithMovement&& o) :
 	Shot(o),
 	movement(move(o.movement))

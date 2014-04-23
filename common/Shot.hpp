@@ -13,6 +13,8 @@ class Shot {
 public:
 	Shot(int8_t p, int8_t tar, int time);
 
+	Shot(const Shot&) = default;
+
 	virtual Json::Value toJSON() const;
 
 	static Shot fromJSON(const Json::Value& value);
@@ -22,9 +24,9 @@ public:
 	// Allow us to sort via time
 	bool operator<(const Shot& o) const { return time < o.time; }
 
-	const int8_t player; ///< The ID of the player that took the shot
-	const int8_t target; ///< The ID of the target that was hit. -1 if it was a miss
-	const int time; ///< The timestamp of the shot, in milliseconds since the game started
+	int8_t player; ///< The ID of the player that took the shot
+	int8_t target; ///< The ID of the target that was hit. -1 if it was a miss
+	int time; ///< The timestamp of the shot, in milliseconds since the game started
 };
 
 namespace std {
@@ -46,6 +48,8 @@ class ShotWithMovement : public Shot {
 public:
 	ShotWithMovement(char p, char tar, int time, Movement&& m);
 
+	ShotWithMovement(const Shot&, Movement&& m);
+
 	ShotWithMovement(const ShotWithMovement&) = default;
 
 	ShotWithMovement(ShotWithMovement&& o);
@@ -56,8 +60,12 @@ public:
 
 	bool operator==(const Shot& o) const override;
 
+	ShotWithMovement& operator=(ShotWithMovement&&) = default;
+
+	ShotWithMovement& operator=(const ShotWithMovement&) = default;
+
 	// A vector of vectors. Surely this will cause no confusion.
-	const Movement movement; ///< Provides accelerometer data leading up to the shot
+	Movement movement; ///< Provides accelerometer data leading up to the shot
 };
 
 Movement movementFromJSON(const Json::Value& moves);
