@@ -12,7 +12,7 @@ PopUpStateMachine::PopUpStateMachine(int numTargets, int numPlayers,
                                      const std::chrono::seconds& gameDuration, int scoreToWin) :
 	GameStateMachine(numTargets, numPlayers, gameDuration, scoreToWin),
 	rng(std::random_device()()),
-	delayDistribution(5, 10),
+	delayDistribution(3, 6),
 	targetDistribution(0, numTargets - 1),
 	state(PopUpState::STARTUP),
 	transitionTime(),

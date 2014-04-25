@@ -36,7 +36,7 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 	// Receive messages as they come in until we get an exit message,
 	// and tick in the meantime if we don't receive one.
 	for (unique_ptr<Message> msg; msg == nullptr || msg->getType() != Message::Type::EXIT;
-		msg = in.receiveBefore(nextTick)) {
+		msg = in.receiveUntil(nextTick)) {
 
 		// These are just convenience lambda functions so the switch statement below is less cluttered
 

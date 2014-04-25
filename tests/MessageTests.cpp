@@ -37,10 +37,10 @@ std::unique_ptr<ResponseMessage> makeResponseMessage()
 		new ResponseMessage(0, 25, ResponseMessage::ResponseMessage::Code::OK, "I am a response!"));
 }
 
-std::unique_ptr<SetupMessage> makeSetupMessage()
+std::unique_ptr<SetupMessage> makeSetupMessage(int gameLength, int maxScore)
 {
 	return unique_ptr<SetupMessage>(
-		new SetupMessage(0, GameType::POP_UP, 2, 60, -1, SetupMessage::DataMap()));
+		new SetupMessage(0, GameType::POP_UP, 2, gameLength, maxScore, SetupMessage::DataMap()));
 }
 
 std::unique_ptr<StatusResponseMessage> makeStatusResponseMessage()

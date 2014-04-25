@@ -99,9 +99,9 @@ void timeoutUntil()
 		q.send(makeTestMessage());
 	});
 
-	assert(q.receiveBefore(earlier) == nullptr);
+	assert(q.receiveUntil(earlier) == nullptr);
 
-	assert(*q.receiveBefore(evenLater) == *makeTestMessage());
+	assert(*q.receiveUntil(evenLater) == *makeTestMessage());
 
 	sendingThread.join();
 }
