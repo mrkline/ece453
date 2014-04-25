@@ -21,7 +21,7 @@ volatile unsigned char info;
 //volatile unsigned int transmit_flag;
 
 unsigned int buzz;
-unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0x00};
+//unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0x00};
 unsigned char RxBuffer[PACKET_LEN+2];
 unsigned char RxBufferLength = 0;
 
@@ -30,6 +30,8 @@ unsigned char receiving = 0;
 unsigned char gunID;
 unsigned char numShots = 0;
 unsigned char rounds;
+
+const unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
 
 void uart_putc(unsigned char c);
 void uart_puts(const char *str);
@@ -176,6 +178,7 @@ __interrupt void CC1101_ISR(void)
     case 20:                                // RFIFG9
       if(receiving)			    // RX end of packet
       {
+    	  P2OUT &= 0xF7;		//Light the diode
         // Read the length byte from the FIFO
         RxBufferLength = ReadSingleReg( RXBYTES );
         ReadBurstReg(RF_RXFIFORD, RxBuffer, RxBufferLength);
@@ -189,6 +192,7 @@ __interrupt void CC1101_ISR(void)
       }
       else if(transmitting)		    // TX end of packet
       {
+    	  P2OUT &= 0xF7;		//Light the diode
         RF1AIE &= ~BIT9;                    // Disable TX end-of-packet interrupt
         //P2OUT &= ~BIT7;                     // Turn off LED after Transmit
         transmitting = 0;
@@ -250,8 +254,17 @@ void main(void) {
     P2IES &= 0xFD;    	//P2IES -> Select interrupt edge: 0 = L to H, 1 = H to L -> Check this with schematic tomorrow
     P2IE |= 0x02;		//P2IE  -> Enable/Disable Interrupt: 0 = disabled, 1 = enabled
 
-   	P2OUT &= 0xF7;
-   	while(1);
+   	//P2OUT &= 0xF7;		//Light the diode
+   	P2OUT |= 0x08;		//Darken the diode
+   	ReceiveOff();
+   	receiving = 0;
+
+   	transmitting = 1;
+   	Transmit( (unsigned char*)TxBuffer, sizeof TxBuffer);  			//In order to transmit
+
+
+   	P2OUT |= 0x08;		//Darken the diode
+   //while(1);
   /*  while(1)
     {
     	numShots = 0;			//Reset value of number of shots

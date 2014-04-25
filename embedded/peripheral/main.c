@@ -24,7 +24,7 @@ unsigned char targets;
 unsigned char rounds;
 unsigned char gunIDs[2];
 unsigned char targetIDs[3];
-
+unsigned char *string = "HELLO";
 
 void uart_putc(unsigned char c)
 {
@@ -59,6 +59,7 @@ void Transmit(unsigned char *buffer, unsigned char length)
 	RF1AIES |= BIT9;
 	RF1AIFG &= ~BIT9;                         // Clear pending interrupts
 	RF1AIE |= BIT9;                           // Enable TX end-of-packet interrupt
+	P2OUT |= 0x02;							//Turn on the diode
 
 	WriteBurstReg(RF_TXFIFOWR, buffer, length);
 
@@ -149,7 +150,7 @@ __interrupt void CC1101_ISR(void)
       else if(transmitting)		    // TX end of packet
       {
         RF1AIE &= ~BIT9;                    // Disable TX end-of-packet interrupt
-        P2OUT &= ~BIT7;                     // Turn off LED after Transmit
+        //P2OUT &= ~BIT7;                     // Turn off LED after Transmit
         transmitting = 0;
       }
       else while(1); 			    // trap
@@ -188,6 +189,9 @@ void main(void) {
       P1DIR |= BIT6;                            // Set P1.6 as TX output
       P1SEL |= BIT5 + BIT6;                     // Select P1.5 & P1.6 to UART function
 
+      P2DIR |= 0x02;							//COnfigure the buffer
+      P2SEL &= 0xFD;
+
       UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
       UCA0CTL1 |= UCSSEL_1;                     // CLK = ACLK
       UCA0BR0 = 0x03;                           // 32kHz/9600=3.41 (see User's Guide)
@@ -200,14 +204,16 @@ void main(void) {
       uart_puts((char *)"***************\n\r\n\r");
 
       //Strobe sends commands to our antenna
-      Strobe( RF_SIDLE );				//Exit receive mode on the antenna
-      Strobe(RF_SRX);					//Enable receive mode on the antenna
+//      Strobe( RF_SIDLE );				//Exit receive mode on the antenna
+     // Strobe(RF_SRX);					//Enable receive mode on the antenna
 
       __bis_SR_register(GIE);
       __no_operation();                         // For debugger
 
-
-      while(1)
+     Transmit(string, 5);			//In order to transmit
+     transmitting = 1;
+     while(1);
+  /*    while(1)
       {
     	  //Check field for # of guns & targets - get each id and store into seperate array
     	  //Send a packet of game information to peripheral - number of targets used, rounds
@@ -234,7 +240,7 @@ void main(void) {
     	  	 //Leave while loop when game is completed
     	  }
     	  //Tell guns & targets game is over
-      }
+      }*/
 
    }
 

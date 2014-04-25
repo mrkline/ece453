@@ -155,6 +155,57 @@ __interrupt void USCI_A0_ISR(void)
   }
 }
 
+#pragma vector=CC1101_VECTOR
+__interrupt void CC1101_ISR(void)
+{
+  switch(__even_in_range(RF1AIV,32))        // Prioritizing Radio Core Interrupt
+  {
+    case  0: break;                         // No RF core interrupt pending
+    case  2: break;                         // RFIFG0
+    case  4: break;                         // RFIFG1
+    case  6: break;                         // RFIFG2
+    case  8: break;                         // RFIFG3
+    case 10: break;                         // RFIFG4
+    case 12: break;                         // RFIFG5
+    case 14: break;                         // RFIFG6
+    case 16: break;                         // RFIFG7
+    case 18: break;                         // RFIFG8
+    case 20:                                // RFIFG9
+      if(receiving)			    // RX end of packet
+      {
+    	  P2OUT &= 0xF7;		//Turn off the red LEDs
+    	  P2OUT |= 0x40;		//Turn on blue LEDs
+        // Read the length byte from the FIFO
+        RxBufferLength = ReadSingleReg( RXBYTES );
+        ReadBurstReg(RF_RXFIFORD, RxBuffer, RxBufferLength);
+
+        // Stop here to see contents of RxBuffer
+        __no_operation();
+
+        // Check the CRC results
+        /*if(RxBuffer[CRC_LQI_IDX] & CRC_OK)
+          P2OUT ^= BIT6;                    // Toggle LED1*/
+      }
+      else if(transmitting)		    // TX end of packet
+      {
+    	  P2OUT &= 0xF7;		//Light the diode
+        RF1AIE &= ~BIT9;                    // Disable TX end-of-packet interrupt
+        //P2OUT &= ~BIT7;                     // Turn off LED after Transmit
+        transmitting = 0;
+      }
+      else while(1); 			    // trap
+      break;
+    case 22: break;                         // RFIFG10
+    case 24: break;                         // RFIFG11
+    case 26: break;                         // RFIFG12
+    case 28: break;                         // RFIFG13
+    case 30: break;                         // RFIFG14
+    case 32: break;                         // RFIFG15
+  }
+  __bic_SR_register_on_exit(LPM3_bits);
+}
+
+
 /*
  * main.c
  */
@@ -168,6 +219,11 @@ void main(void) {
     InitRadio();		//Set up the antenna for 915 MHz
     active = 0;			//Target starts as inactive
 
+    PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
+    P1MAP5 = PM_UCA0RXD;                      // Map UCA0RXD output to P1.5
+    P1MAP6 = PM_UCA0TXD;                      // Map UCA0TXD output to P1.6
+    PMAPPWD = 0;                              // Lock port mapping registers
+
     //Set up GPIO pins for LEDs and Sensors
     P2DIR &= 0xFB;				//Set Sensors GPIO to an input
     P2DIR |= 0x3A;				//Set LEDs GPIO to outputs
@@ -176,7 +232,7 @@ void main(void) {
 
     //P2OUT &= 0x00;
     //P2OUT |= 0x02;				//Turn on the test LED to see if we made it this far
-    //while(1);
+
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
     UCA0CTL1 |= UCSSEL_1;                     // CLK = ACLK
     UCA0BR0 = 0x03;                           // 32kHz/9600=3.41 (see User's Guide)
@@ -185,23 +241,32 @@ void main(void) {
     UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
     UCA0IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
 
-   // uart_puts((char *)"TEST STRING");
+   Strobe( RF_SIDLE );				//Exit receive mode on the antenna
+   Strobe(RF_SRX);					//Enable receive mode on the antenna
 
     //Set up an interrupt on the sensors when they detect light
     P2IES &= 0xFB;    	//P2IES -> Select interrupt edge: 0 = L to H, 1 = H to L -> Check this with schematic tomorrow
     P2IE |= 0x04;		//P2IE  -> Enable/Disable Interrupt: 0 = disabled, 1 = enabled
     count = 0;
+
+    P2OUT |= 0x08;		//Turn LEDs red
+
     while(1)
     {
-    	while(count < 10)
-    	{
-    		count++;
-    		P2OUT &= 0xC7;
+       	ReceiveOn();					//To receive
+       	receiving = 1;
 
-    	}
-    	P2OUT |= 0x10;
-    	count = 0;
+       /*	if(PM_UCA0RXD == "HELLO")
+       	{
+       		while(count < 10)
+       		{
+       			count++;
+       			P2OUT &= 0xC7;
+       		}
 
+       		P2OUT |= 0x10;
+       		count = 0;
+       	}*/
     }
  /*   while(1)
     {
