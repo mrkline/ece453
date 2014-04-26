@@ -22,6 +22,7 @@ SOURCES += main.cpp \
 RangeUI.cpp \
 ../common/*.cpp
 
-HEADERS  += RangeUI.hpp
+HEADERS  += RangeUI.hpp \
+../common/*.hpp
 
 FORMS    += RangeUI.ui
