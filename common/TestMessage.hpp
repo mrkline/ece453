@@ -1,3 +1,5 @@
+#ifdef WITH_JSON
+
 #pragma once
 
 #include "Message.hpp"
@@ -19,3 +21,5 @@ public:
 
 	Json::Value val;
 };
+
+#endif

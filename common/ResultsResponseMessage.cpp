@@ -6,19 +6,25 @@
 
 using namespace std;
 using namespace Exceptions;
+
+#ifdef WITH_JSON
 using namespace Json;
+#endif
 
 namespace {
 
+#ifdef WITH_JSON
 // Using StaticString allows JSONCPP to make some optimzations because it knows the strings are static.
 const StaticString playerStatsKey("player stats");
 const StaticString scoreKey("score");
 const StaticString hitsKey("hits");
 const StaticString shotsKey("shots");
+#endif
 
 // For laziness
 typedef ResultsResponseMessage::PlayerStats PlayerStats;
 
+#ifdef WITH_JSON
 std::vector<ShotWithMovement> parseShots(const Value& shots)
 {
 	std::vector<ShotWithMovement> ret;
@@ -45,6 +51,7 @@ PlayerStats parseStats(const Value& stat)
 
 	return PlayerStats(scoreValue.asInt(), hitsValue.asInt(), parseShots(shotsValue));
 }
+#endif
 
 } // end anonymous namespace
 
@@ -59,6 +66,7 @@ ResultsResponseMessage::ResultsResponseMessage(uint16_t id, uint16_t respTo,
 	}
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<ResultsResponseMessage> ResultsResponseMessage::fromJSON(const Json::Value& object)
 {
 	const auto responseInfo = ResponseMessage::fromJSON(object); // Get the basic response info
@@ -109,6 +117,7 @@ Json::Value ResultsResponseMessage::toJSON() const
 
 	return ret;
 }
+#endif
 
 bool ResultsResponseMessage::operator==(const Message& o) const
 {

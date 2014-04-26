@@ -15,9 +15,11 @@ public:
 
 	SetupMessage(uint16_t id, GameType gType, int pCount, int time, int score, DataMap&& data = DataMap());
 
+#ifdef WITH_JSON
 	static std::unique_ptr<SetupMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
+#endif
 
 	Type getType() const override { return Type::SETUP; }
 

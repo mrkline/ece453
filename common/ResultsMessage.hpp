@@ -8,10 +8,12 @@ public:
 
 	ResultsMessage(uint16_t id) : Message(id) { }
 
+#ifdef WITH_JSON
 	static std::unique_ptr<ResultsMessage> fromJSON(const Json::Value& object)
 	{
 		return std::unique_ptr<ResultsMessage>(new ResultsMessage(Message::fromJSON(object)->id));
 	}
+#endif
 
 	Type getType() const override { return Type::RESULTS; }
 

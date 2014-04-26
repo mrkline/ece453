@@ -4,11 +4,16 @@
 
 using namespace std;
 using namespace Exceptions;
+
+#ifdef WITH_JSON
 using namespace Json;
+#endif
 
 namespace {
 
+#ifdef WITH_JSON
 const StaticString shotKey("shot");
+#endif
 
 } // end anonymous namespace
 
@@ -18,6 +23,7 @@ ShotMessage::ShotMessage(uint16_t id, const Shot& s) :
 {
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<ShotMessage> ShotMessage::fromJSON(const Json::Value& object)
 {
 	auto msg = Message::fromJSON(object);
@@ -42,6 +48,7 @@ Json::Value ShotMessage::toJSON() const
 
 	return ret;
 }
+#endif
 
 bool ShotMessage::operator==(const Message& o) const
 {

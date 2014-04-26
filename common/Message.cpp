@@ -20,22 +20,30 @@
 #include "TestMessage.hpp"
 
 using namespace Exceptions;
+
+#ifdef WITH_JSON
 using namespace Json;
+#endif
 
 namespace {
 
+#ifdef WITH_JSON
 // Using StaticString allows JSONCPP to make some optimzations because it knows the strings are static.
 const StaticString idKey("id");
+#endif
 
 } // end anonymous namespace
 
+#ifdef WITH_JSON
 const StaticString Message::typeKey("type");
+#endif
 
 Message::Message(uint16_t idNum) :
 	id(idNum)
 {
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 {
 	ENFORCE(IOException, object.isMember(idKey), "The message contains no ID");
@@ -75,6 +83,7 @@ Json::Value Message::toJSON() const
 	ret[typeKey] = nameLookup.at(getType());
 	return ret;
 }
+#endif
 
 std::vector<uint8_t> Message::toBinary() const
 {
@@ -88,6 +97,7 @@ bool Message::operator==(const Message& o) const
 	return id == o.id;
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 {
 	using Type = Message::Type;
@@ -170,3 +180,4 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 			assert(false);
 	}
 }
+#endif

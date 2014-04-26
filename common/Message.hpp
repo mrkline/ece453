@@ -2,8 +2,11 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
+#ifdef WITH_JSON
 #include <jsoncpp/json/json.h>
+#endif
 
 class Message {
 
@@ -30,11 +33,13 @@ public:
 
 	Message(uint16_t idNum);
 
+#ifdef WITH_JSON
 	static std::unique_ptr<Message> fromJSON(const Json::Value& object);
 
 	const static Json::StaticString typeKey;
 
 	virtual Json::Value toJSON() const;
+#endif
 
 	virtual std::vector<uint8_t> toBinary() const;
 
@@ -54,4 +59,6 @@ namespace std
 	};
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<Message> JSONToMessage(const Json::Value& object);
+#endif

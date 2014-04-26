@@ -7,10 +7,14 @@
 
 using namespace std;
 using namespace Exceptions;
+
+#ifdef WITH_JSON
 using namespace Json;
+#endif
 
 namespace {
 
+#ifdef WITH_JSON
 // Using StaticString allows JSONCPP to make some optimzations because it knows the strings are static.
 const StaticString gameTypeKey("game type");
 const StaticString playerCountKey("player count");
@@ -33,6 +37,7 @@ SetupMessage::DataMap parseGameData(const Value& data)
 
 	return ret;
 }
+#endif
 
 } // End anonymous namespace
 
@@ -49,6 +54,7 @@ SetupMessage::SetupMessage(uint16_t id, GameType gType, int pCount, int time, in
 	ENFORCE(ArgumentException, winningScore >= -1, "Invalid winning score");
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<SetupMessage> SetupMessage::fromJSON(const Json::Value& object)
 {
 	auto msg = Message::fromJSON(object);
@@ -95,6 +101,7 @@ Json::Value SetupMessage::toJSON() const
 
 	return ret;
 }
+#endif
 
 
 bool SetupMessage::operator==(const Message& o) const

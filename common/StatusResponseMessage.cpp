@@ -6,10 +6,14 @@
 
 using namespace std;
 using namespace Exceptions;
+
+#ifdef WITH_JSON
 using namespace Json;
+#endif
 
 namespace {
 
+#ifdef WITH_JSON
 // Using StaticString allows JSONCPP to make some optimzations because it knows the strings are static.
 const StaticString runningKey("running");
 const StaticString timeRemainingKey("time remaining");
@@ -39,6 +43,7 @@ StatusResponseMessage::PlayerList parseStats(const Value& stats)
 
 	return ret;
 }
+#endif
 
 } // End anonymous namespace
 
@@ -58,6 +63,7 @@ StatusResponseMessage::StatusResponseMessage(uint16_t id, uint16_t respTo, const
 		ENFORCE(ArgumentException, players.size() > 0, "You must have at least one player.");
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<StatusResponseMessage> StatusResponseMessage::fromJSON(const Json::Value& object)
 {
 	const auto responseInfo = ResponseMessage::fromJSON(object); // Get the basic response info
@@ -107,6 +113,7 @@ Json::Value StatusResponseMessage::toJSON() const
 
 	return ret;
 }
+#endif
 
 
 bool StatusResponseMessage::operator==(const Message& o) const

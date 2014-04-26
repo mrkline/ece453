@@ -4,9 +4,12 @@
 
 #include "Exceptions.hpp"
 
-using namespace Json;
 using namespace Exceptions;
 using namespace std;
+
+#ifdef WITH_JSON
+using namespace Json;
+#endif
 
 namespace std
 {
@@ -19,6 +22,7 @@ namespace std
 
 namespace {
 
+#ifdef WITH_JSON
 // Using StaticString allows JSONCPP to make some optimzations because it knows the strings are static.
 const StaticString respondingToKey("responding to");
 const StaticString codeKey("code");
@@ -39,6 +43,7 @@ const unordered_map<ResponseMessage::Code, StaticString> codeToName = {
 	{ResponseMessage::Code::INVALID_REQUEST, StaticString("invalid request")},
 	{ResponseMessage::Code::UNSUPPORTED_REQUEST, StaticString("unsupported request")}
 };
+#endif
 
 } // End anonymous namespace
 
@@ -50,6 +55,7 @@ ResponseMessage::ResponseMessage(uint16_t idNum, uint16_t respTo, Code c, const 
 {
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<ResponseMessage> ResponseMessage::fromJSON(const Json::Value& object)
 {
 	auto msg = Message::fromJSON(object);
@@ -88,6 +94,7 @@ Json::Value ResponseMessage::toJSON() const
 
 	return ret;
 }
+#endif
 
 bool ResponseMessage::operator==(const Message& o) const
 {

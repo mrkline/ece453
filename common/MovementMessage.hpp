@@ -12,9 +12,11 @@ public:
 
 	MovementMessage(uint16_t id, ShotWithMovement&& m);
 
+#ifdef WITH_JSON
 	static std::unique_ptr<MovementMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
+#endif
 
 	Type getType() const override { return Type::MOVEMENT; }
 

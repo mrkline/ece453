@@ -8,7 +8,7 @@ LIBFLAGS := -pthread -ljsoncpp -lboost_system
 OBJS := $(patsubst %.cpp,%.o, $(wildcard common/*.cpp))
 TESTOBJS := $(patsubst %.cpp,%.o, $(wildcard tests/*.cpp))
 
-unit_tests: CXXFLAGS += -I. -Icommon -Itests -g
+unit_tests: CXXFLAGS += -I. -Icommon -Itests -g -DWITH_JSON
 unit_tests: $(OBJS) $(TESTOBJS)
 	echo $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(TESTOBJS) $(LIBFLAGS) -o unit_tests

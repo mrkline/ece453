@@ -1,10 +1,12 @@
+#ifdef WITH_JSON
+
 #include "TestMessage.hpp"
 
 #include "Exceptions.hpp"
 
 using namespace Exceptions;
-using namespace Json;
 using namespace std;
+using namespace Json;
 
 namespace {
 
@@ -52,3 +54,5 @@ bool TestMessage::operator==(const Message& o) const
 
 	return val == tm->val;
 }
+
+#endif

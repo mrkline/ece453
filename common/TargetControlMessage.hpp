@@ -10,9 +10,11 @@ struct TargetCommand {
 
 	TargetCommand(int8_t i, bool o) : id(i), on(o) { }
 
+#ifdef WITH_JSON
 	Json::Value toJSON() const;
 
 	static TargetCommand fromJSON(const Json::Value& object);
+#endif
 
 	bool operator==(const TargetCommand& o) const { return id == o.id && on == o.on; }
 };
@@ -29,9 +31,11 @@ public:
 
 	TargetControlMessage(uint16_t id, const TargetCommand& comm);
 
+#ifdef WITH_JSON
 	static std::unique_ptr<TargetControlMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
+#endif
 
 	Type getType() const override { return Type::TARGET_CONTROL; }
 

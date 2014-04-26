@@ -23,9 +23,11 @@ public:
 	StatusResponseMessage(uint16_t id, uint16_t respTo, const std::string& message,
 	                      bool isRunning, int timeLeft, int winScore, PlayerList&& playerStats);
 
+#ifdef WITH_JSON
 	static std::unique_ptr<StatusResponseMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
+#endif
 
 	virtual Type getType() const override { return Type::STATUS_RESPONSE; }
 

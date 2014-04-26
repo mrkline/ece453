@@ -20,9 +20,11 @@ public:
 
 	ResponseMessage(uint16_t idNum, uint16_t respTo, Code c, const std::string& msg);
 
+#ifdef WITH_JSON
 	static std::unique_ptr<ResponseMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
+#endif
 
 	const uint16_t respondingTo;
 
