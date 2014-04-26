@@ -22,7 +22,7 @@ const StaticString movementKey("movement");
 
 } // end anonymous namespace
 
-Shot::Shot(int8_t p, int8_t tar, int time) :
+Shot::Shot(int8_t p, int8_t tar, int32_t time) :
 	player(p),
 	target(tar),
 	time(time)
@@ -76,7 +76,8 @@ bool Shot::operator==(const Shot& o) const
 		&& time == o.time;
 }
 
-ShotWithMovement::ShotWithMovement(int8_t p, int8_t tar, int time, std::vector<Vector3>&& m) :
+ShotWithMovement::ShotWithMovement(int8_t p, int8_t tar, int32_t time, std::vector<Vector3>&& m) :
+
 	Shot(p, tar, time),
 	movement(move(m))
 { }

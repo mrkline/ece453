@@ -13,7 +13,7 @@ typedef std::vector<Vector3> Movement;
 /// Represents a shot with an idicator about whether or not it was hit
 class Shot {
 public:
-	Shot(int8_t p, int8_t tar, int time);
+	Shot(int8_t p, int8_t tar, int32_t time);
 
 	Shot(const Shot&) = default;
 
@@ -30,7 +30,7 @@ public:
 
 	int8_t player; ///< The ID of the player that took the shot
 	int8_t target; ///< The ID of the target that was hit. -1 if it was a miss
-	int time; ///< The timestamp of the shot, in milliseconds since the game started
+	int32_t time; ///< The timestamp of the shot, in milliseconds since the game started
 };
 
 namespace std {
@@ -50,7 +50,7 @@ struct hash<Shot> {
 
 class ShotWithMovement : public Shot {
 public:
-	ShotWithMovement(int8_t p, int8_t tar, int time, Movement&& m);
+	ShotWithMovement(int8_t p, int8_t tar, int32_t time, Movement&& m);
 
 	ShotWithMovement(const Shot&, Movement&& m);
 

@@ -72,8 +72,8 @@ void runGame(MessageQueue& in, MessageQueue& out, int8_t numberTargets, int numb
 					return;
 				}
 
-				const auto gameDuration = setupMessage->endTime <= 0 ?
-					chrono::seconds::max() : chrono::seconds(setupMessage->endTime);
+				const auto gameDuration = setupMessage->gameLength <= 0 ?
+					chrono::seconds::max() : chrono::seconds(setupMessage->gameLength);
 
 				// TODO: Be able to pass game data into the state machines
 				switch(setupMessage->gameType) {

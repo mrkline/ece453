@@ -49,7 +49,7 @@ PlayerStats parseStats(const Value& stat)
 	ENFORCE(IOException, hitsValue.isInt(), "A player's hit count is not an integer.");
 	ENFORCE(IOException, shotsValue.isArray(), "A player's shot list is not an array.");
 
-	return PlayerStats(scoreValue.asInt(), hitsValue.asInt(), parseShots(shotsValue));
+	return PlayerStats((int16_t)scoreValue.asInt(), (int16_t)hitsValue.asInt(), parseShots(shotsValue));
 }
 #endif
 

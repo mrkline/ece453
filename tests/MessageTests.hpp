@@ -22,7 +22,7 @@ std::unique_ptr<M> makeMessage()
 
 std::unique_ptr<ResponseMessage> makeResponseMessage();
 
-std::unique_ptr<SetupMessage> makeSetupMessage(int gameLength = 30, int maxScore = -1);
+std::unique_ptr<SetupMessage> makeSetupMessage(int16_t gameLength = 30, int16_t maxScore = -1);
 
 std::unique_ptr<StatusResponseMessage> makeStatusResponseMessage();
 

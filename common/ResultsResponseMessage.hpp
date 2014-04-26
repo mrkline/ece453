@@ -11,11 +11,15 @@ class ResultsResponseMessage : public ResponseMessage {
 public:
 
 	struct PlayerStats {
-		const int score; ///< The player's final score
-		const int hits; ///< The player's final hit count
+		const int16_t score; ///< The player's final score
+		const int16_t hits; ///< The player's final hit count
 		const std::vector<ShotWithMovement> shots; ///< A list of shots the player took
 
-		PlayerStats(int s, int h, std::vector<ShotWithMovement>&& t) : score(s), hits(h), shots(std::move(t)) { }
+		PlayerStats(int16_t s, int16_t h, std::vector<ShotWithMovement>&& t) :
+			score(s),
+			hits(h),
+			shots(std::move(t))
+		{ }
 
 		bool operator==(const PlayerStats& o) const { return score == o.score && hits == o.hits && shots == o.shots; }
 	};
