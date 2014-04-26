@@ -59,7 +59,7 @@ Shot Shot::fromJSON(const Json::Value& value)
 	ENFORCE(IOException, p >= -128 && p < 128, "A shot's player ID is not representable by a byte.");
 	ENFORCE(IOException, tar >= -128 && tar < 128, "A shot's target ID is not representable by a byte.");
 
-	return Shot((char)p, (char)tar, time);
+	return Shot((int8_t)p, (int8_t)tar, time);
 }
 
 bool Shot::operator==(const Shot& o) const
@@ -69,7 +69,7 @@ bool Shot::operator==(const Shot& o) const
 		&& time == o.time;
 }
 
-ShotWithMovement::ShotWithMovement(char p, char tar, int time, std::vector<Vector3>&& m) :
+ShotWithMovement::ShotWithMovement(int8_t p, int8_t tar, int time, std::vector<Vector3>&& m) :
 	Shot(p, tar, time),
 	movement(move(m))
 { }

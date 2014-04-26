@@ -9,7 +9,7 @@ class Message {
 public:
 
 	/// Different types of message payloads.
-	enum class Type {
+	enum class Type : int8_t {
 		EMPTY, ///< A message containing nothing but an ID
 		RESPONSE, ///< A generic response
 		SETUP, ///< Set up a game
@@ -34,6 +34,8 @@ public:
 	const static Json::StaticString typeKey;
 
 	virtual Json::Value toJSON() const;
+
+	virtual std::vector<uint8_t> toBinary() const;
 
 	virtual Type getType() const { return Type::EMPTY; }
 

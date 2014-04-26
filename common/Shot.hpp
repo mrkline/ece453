@@ -46,7 +46,7 @@ struct hash<Shot> {
 
 class ShotWithMovement : public Shot {
 public:
-	ShotWithMovement(char p, char tar, int time, Movement&& m);
+	ShotWithMovement(int8_t p, int8_t tar, int time, Movement&& m);
 
 	ShotWithMovement(const Shot&, Movement&& m);
 

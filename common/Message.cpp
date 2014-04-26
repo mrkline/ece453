@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "Exceptions.hpp"
+#include "BinaryMessage.hpp"
 #include "ResponseMessage.hpp"
 #include "SetupMessage.hpp"
 #include "StartMessage.hpp"
@@ -72,6 +73,13 @@ Json::Value Message::toJSON() const
 	ret[idKey] = id;
 	ret[typeKey] = nameLookup.at(getType());
 	return ret;
+}
+
+std::vector<uint8_t> Message::toBinary() const
+{
+	// Send a binary message with no body
+	array<uint8_t, 0> nothing;
+	return makeBinaryMessage(getType(), (uint16_t)id, begin(nothing), end(nothing));
 }
 
 bool Message::operator==(const Message& o) const
