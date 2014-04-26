@@ -31,7 +31,7 @@ public:
 
 	/// If time is a win condition, this is the maximum game length, in seconds.
 	/// If not, -1.
-	const int endTime;
+	const int gameLength;
 
 	/// If points is a win condition, this is the score a player must get to win.
 	/// If not, -1
