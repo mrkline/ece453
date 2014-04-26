@@ -36,7 +36,7 @@ SetupMessage::DataMap parseGameData(const Value& data)
 
 } // End anonymous namespace
 
-SetupMessage::SetupMessage(int id, GameType gType, int pCount, int time, int score, DataMap&& data) :
+SetupMessage::SetupMessage(uint16_t id, GameType gType, int pCount, int time, int score, DataMap&& data) :
 	Message(id),
 	gameType(gType),
 	playerCount(pCount),

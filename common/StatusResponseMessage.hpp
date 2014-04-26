@@ -20,7 +20,7 @@ public:
 
 	typedef std::vector<PlayerStats> PlayerList;
 
-	StatusResponseMessage(int id, int respTo, const std::string& message,
+	StatusResponseMessage(uint16_t id, uint16_t respTo, const std::string& message,
 	                      bool isRunning, int timeLeft, int winScore, PlayerList&& playerStats);
 
 	static std::unique_ptr<StatusResponseMessage> fromJSON(const Json::Value& object);

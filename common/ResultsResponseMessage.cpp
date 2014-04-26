@@ -48,7 +48,8 @@ PlayerStats parseStats(const Value& stat)
 
 } // end anonymous namespace
 
-ResultsResponseMessage::ResultsResponseMessage(int id, int respTo, const std::string& message, StatsList&& playerStats) :
+ResultsResponseMessage::ResultsResponseMessage(uint16_t id, uint16_t respTo,
+                                               const std::string& message, StatsList&& playerStats) :
 	// If we're sending a results response payload back, the request was ok.
 	ResponseMessage(id, respTo, ResponseMessage::Code::OK, message),
 	stats(move(playerStats))

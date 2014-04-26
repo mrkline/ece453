@@ -31,10 +31,9 @@ const StaticString idKey("id");
 
 const StaticString Message::typeKey("type");
 
-Message::Message(int idNum) :
+Message::Message(uint16_t idNum) :
 	id(idNum)
 {
-	ENFORCE(ArgumentException, id >= 0, "The ID cannot be negative.");
 }
 
 std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
@@ -44,7 +43,9 @@ std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 	const Value& idValue = object[idKey];
 
 	ENFORCE(IOException, idValue.isInt(), "The message's ID field is not an integer.");
-	return std::unique_ptr<Message>(new Message(idValue.asInt()));
+	const int rawID = idValue.asInt();
+	ENFORCE(IOException, rawID >= 0, "The message's ID must be positive");
+	return std::unique_ptr<Message>(new Message((uint16_t)rawID));
 }
 
 Json::Value Message::toJSON() const

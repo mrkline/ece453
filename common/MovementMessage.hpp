@@ -10,7 +10,7 @@ class MovementMessage : public Message {
 
 public:
 
-	MovementMessage(int id, ShotWithMovement&& m);
+	MovementMessage(uint16_t id, ShotWithMovement&& m);
 
 	static std::unique_ptr<MovementMessage> fromJSON(const Json::Value& object);
 

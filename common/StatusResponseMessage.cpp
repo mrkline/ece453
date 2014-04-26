@@ -42,7 +42,7 @@ StatusResponseMessage::PlayerList parseStats(const Value& stats)
 
 } // End anonymous namespace
 
-StatusResponseMessage::StatusResponseMessage(int id, int respTo, const std::string& message,
+StatusResponseMessage::StatusResponseMessage(uint16_t id, uint16_t respTo, const std::string& message,
 	                                         bool isRunning, int timeLeft, int winScore, PlayerList&& playerStats) :
 	// If we're sending a full status response message back, the request was ok.
 	ResponseMessage(id, respTo, ResponseMessage::Code::OK, message),

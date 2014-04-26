@@ -18,13 +18,13 @@ public:
 		UNSUPPORTED_REQUEST ///< The request was valid but the system could not fulfill it.
 	};
 
-	ResponseMessage(int idNum, int respTo, Code c, const std::string& msg);
+	ResponseMessage(uint16_t idNum, uint16_t respTo, Code c, const std::string& msg);
 
 	static std::unique_ptr<ResponseMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
 
-	const int respondingTo;
+	const uint16_t respondingTo;
 
 	const Code code;
 

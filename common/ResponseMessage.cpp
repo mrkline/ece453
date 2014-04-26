@@ -42,13 +42,12 @@ const unordered_map<ResponseMessage::Code, StaticString> codeToName = {
 
 } // End anonymous namespace
 
-ResponseMessage::ResponseMessage(int idNum, int respTo, Code c, const std::string& msg) :
+ResponseMessage::ResponseMessage(uint16_t idNum, uint16_t respTo, Code c, const std::string& msg) :
 	Message(idNum),
 	respondingTo(respTo),
 	code(c),
 	message(msg)
 {
-	ENFORCE(ArgumentException, respondingTo >= 0, "Responding to a negative ID does not make sense.");
 }
 
 std::unique_ptr<ResponseMessage> ResponseMessage::fromJSON(const Json::Value& object)
@@ -71,9 +70,12 @@ std::unique_ptr<ResponseMessage> ResponseMessage::fromJSON(const Json::Value& ob
 	const auto codeIt = nameToCode.find(codeValue.asString());
 	ENFORCE(IOException, codeIt != end(nameToCode), "The response code is invalid.");
 
+	const int respondingToRaw = respondingToValue.asInt();
+
+	ENFORCE(IOException, respondingToRaw >= 0, "The response ID must be positive");
+
 	return std::unique_ptr<ResponseMessage>(
-		new ResponseMessage(msg->id,
-		                    respondingToValue.asInt(), codeIt->second, messageValue.asString()));
+		new ResponseMessage(msg->id, (uint16_t)respondingToRaw, codeIt->second, messageValue.asString()));
 }
 
 Json::Value ResponseMessage::toJSON() const

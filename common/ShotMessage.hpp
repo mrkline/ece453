@@ -10,7 +10,7 @@ class ShotMessage : public Message {
 
 public:
 
-	ShotMessage(int id, const Shot& s);
+	ShotMessage(uint16_t id, const Shot& s);
 
 	static std::unique_ptr<ShotMessage> fromJSON(const Json::Value& object);
 

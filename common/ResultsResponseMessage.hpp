@@ -22,7 +22,7 @@ public:
 
 	typedef std::vector<PlayerStats> StatsList;
 
-	ResultsResponseMessage(int id, int respTo, const std::string& message, StatsList&& playerStats);
+	ResultsResponseMessage(uint16_t id, uint16_t respTo, const std::string& message, StatsList&& playerStats);
 
 	static std::unique_ptr<ResultsResponseMessage> fromJSON(const Json::Value& object);
 

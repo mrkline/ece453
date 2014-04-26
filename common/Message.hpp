@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 
 #include <jsoncpp/json/json.h>
@@ -27,7 +28,7 @@ public:
 		UNKNOWN ///< An unknown/invalid payload type
 	};
 
-	Message(int idNum);
+	Message(uint16_t idNum);
 
 	static std::unique_ptr<Message> fromJSON(const Json::Value& object);
 
@@ -39,7 +40,7 @@ public:
 
 	virtual Type getType() const { return Type::EMPTY; }
 
-	const int id;
+	const uint16_t id;
 
 	virtual bool operator==(const Message& o) const;
 };

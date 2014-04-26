@@ -5,7 +5,7 @@
 class ExitMessage : public Message {
 public:
 
-	ExitMessage(int id) : Message(id) { }
+	ExitMessage(uint16_t id) : Message(id) { }
 
 	static std::unique_ptr<ExitMessage> fromJSON(const Json::Value& object)
 	{

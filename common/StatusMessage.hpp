@@ -6,7 +6,7 @@ class StatusMessage : public Message {
 
 public:
 
-	StatusMessage(int id) : Message(id) { }
+	StatusMessage(uint16_t id) : Message(id) { }
 
 	static std::unique_ptr<StatusMessage> fromJSON(const Json::Value& object)
 	{

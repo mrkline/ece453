@@ -25,7 +25,7 @@ class MovementMessage;
  * Start this function in another thread, and use the message queues to interface it
  * with our UI and hardware.
  */
-void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberPlayers);
+void runGame(MessageQueue& in, MessageQueue& out, int8_t numberTargets, int numberPlayers);
 
 /// A base class for a game state machine.
 /// Each game type should derive a state machine class from this one.
@@ -82,7 +82,7 @@ public:
 	 * \param respondingTo The ID of the StartMessage
 	 * \returns A ResponseMessage indicating if the game was succesfully started or not.
 	 */
-	std::unique_ptr<ResponseMessage> start(int responseID, int respondingTo);
+	std::unique_ptr<ResponseMessage> start(uint16_t responseID, uint16_t respondingTo);
 
 	/**
 	 * \brief Responds to a StopMessage to stop the game
@@ -90,7 +90,7 @@ public:
 	 * \param respondingTo The ID of the StopMessage
 	 * \returns A ResponseMessage indicating if the game was succesfully stopped or not.
 	 */
-	std::unique_ptr<ResponseMessage> stop(int responseID, int respondingTo);
+	std::unique_ptr<ResponseMessage> stop(uint16_t responseID, uint16_t respondingTo);
 
 	/**
 	 * \brief Responds to a ShotMessage and records the shot
@@ -98,7 +98,7 @@ public:
 	 * \param shot The shot message
 	 * \returns An acknowledgement for the shot message
 	 */
-	virtual std::unique_ptr<ResponseMessage> onShot(int responseID, const ShotMessage& shot);
+	virtual std::unique_ptr<ResponseMessage> onShot(uint16_t responseID, const ShotMessage& shot);
 
 	/**
 	 * \brief Responds to a MovementMessage and matches the movement to the shot
@@ -106,7 +106,7 @@ public:
 	 * \param movement The movement message
 	 * \returns An acknowledgement for the shot message
 	 */
-	std::unique_ptr<ResponseMessage> onMovement(int responseID, const MovementMessage& movement);
+	std::unique_ptr<ResponseMessage> onMovement(uint16_t responseID, const MovementMessage& movement);
 
 	/**
 	 * \brief Responds to a StatusMessage
@@ -114,7 +114,7 @@ public:
 	 * \param respondingTo The ID of the StatusMessage
 	 * \returns A StatusResponseMessage indicating the game's current status
 	 */
-	std::unique_ptr<StatusResponseMessage> getStatusResponse(int responseID, int respondingTo);
+	std::unique_ptr<StatusResponseMessage> getStatusResponse(uint16_t responseID, uint16_t respondingTo);
 
 	/**
 	 * \brief Responds to a ResultsMessage
@@ -123,14 +123,14 @@ public:
 	 * \returns A ResultsResponseMessage indicating the game's results,
 	 *          or a ResponseMessage if the game is not at a point to return results.
 	 */
-	std::unique_ptr<ResponseMessage> getResultsResponse(int responseID, int respondingTo);
+	std::unique_ptr<ResponseMessage> getResultsResponse(uint16_t responseID, uint16_t respondingTo);
 
 	/**
 	 * \brief Called on a fairly short (100 ms range) periodic interval to allow the state machine to update.
 	 * \param messageID A unique ID that the state machine could use to send a message
 	 * \returns A message if the machine wants to send one, otherwise null
 	 */
-	virtual std::unique_ptr<Message> onTick(int messageID);
+	virtual std::unique_ptr<Message> onTick(uint16_t messageID);
 
 protected:
 

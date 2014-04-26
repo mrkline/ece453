@@ -2,7 +2,7 @@
 # I mean to mess with another build systems (maybe scons) at some point,
 # but will do just fine until then
 
-CXXFLAGS := -std=c++11 -Wall -Wextra -Weffc++ -pedantic
+CXXFLAGS := -std=c++11 -Wall -Wextra -Wconversion -Weffc++ -pedantic
 LIBFLAGS := -pthread -ljsoncpp -lboost_system
 
 OBJS := $(patsubst %.cpp,%.o, $(wildcard common/*.cpp))

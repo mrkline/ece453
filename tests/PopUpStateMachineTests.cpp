@@ -46,7 +46,7 @@ typedef steady_clock Clock;
 
 unique_ptr<ShotMessage> shootAt(int8_t targetID, int time)
 {
-	static int fireID = 9001;
+	static uint16_t fireID = 9001;
 	// Player 1 is our hero. He is always the guy who hits.
 	return unique_ptr<ShotMessage>(
 		new ShotMessage(fireID++, Shot(1, targetID, time)));
@@ -91,7 +91,7 @@ void noShoot()
 	assert(ack->respondingTo == id);
 
 	auto endTime = Clock::now() + seconds(gameDuration + 1);
-	int lastTarget = -1;
+	int8_t lastTarget = -1;
 	int messagesReceived = 0;
 	for (unique_ptr<Message> msg = out.receiveUntil(endTime); msg != nullptr; msg = out.receiveUntil(endTime)) {
 
@@ -156,7 +156,7 @@ void shoot()
 				lastTarget = tm->commands[0].id;
 				printf("Turning target on. Firing!\n");
 				fflush(stdout);
-				SEND(shootAt(lastTarget, duration_cast<milliseconds>(Clock::now() - startTime).count()));
+				SEND(shootAt(lastTarget, (int)duration_cast<milliseconds>(Clock::now() - startTime).count()));
 				break;
 			}
 
