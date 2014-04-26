@@ -1,3 +1,4 @@
 ui_*.h
 moc_*.cpp
 range_ui
+Makefile
