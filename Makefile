@@ -3,7 +3,7 @@
 # but will do just fine until then
 
 CXXFLAGS := -std=c++11 -Wall -Wextra -Weffc++ -pedantic
-LIBFLAGS := -ljsoncpp
+LIBFLAGS := -pthread -ljsoncpp -lboost_system
 
 OBJS := $(patsubst %.cpp,%.o, $(wildcard common/*.cpp))
 TESTOBJS := $(patsubst %.cpp,%.o, $(wildcard tests/*.cpp))
@@ -19,7 +19,7 @@ unit_tests: $(OBJS) $(TESTOBJS)
 
 # link
 gallery: $(OBJS) main.o
-	$(CXX) $(CXXFLAGS) $(OBJS)  $(LIBFLAGS) main.o -o gallery
+	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBFLAGS) main.o -o gallery
 
 # pull in dependency info for *existing* .o files
 -include $(OBJS:.o=.d)
