@@ -6,14 +6,19 @@
 
 using namespace std;
 using namespace Exceptions;
+
+#ifdef WITH_JSON
 using namespace Json;
+#endif
 
 namespace {
 
+#ifdef WITH_JSON
 const StaticString playerKey("player");
 const StaticString targetKey("target ID");
 const StaticString timeKey("time");
 const StaticString movementKey("movement");
+#endif
 
 } // end anonymous namespace
 
@@ -25,6 +30,7 @@ Shot::Shot(int8_t p, int8_t tar, int time) :
 	ENFORCE(ArgumentException, time >= 0, "A shot cannot take place before the game starts");
 }
 
+#ifdef WITH_JSON
 Json::Value Shot::toJSON() const
 {
 	Value shotValue(objectValue);
@@ -61,6 +67,7 @@ Shot Shot::fromJSON(const Json::Value& value)
 
 	return Shot((int8_t)p, (int8_t)tar, time);
 }
+#endif
 
 bool Shot::operator==(const Shot& o) const
 {
@@ -84,6 +91,7 @@ ShotWithMovement::ShotWithMovement(ShotWithMovement&& o) :
 	movement(move(o.movement))
 { }
 
+#ifdef WITH_JSON
 Json::Value ShotWithMovement::toJSON() const
 {
 	Value shotValue = Shot::toJSON();
@@ -101,6 +109,7 @@ ShotWithMovement ShotWithMovement::fromJSON(const Json::Value& value)
 
 	return ShotWithMovement(plain.player, plain.target, plain.time, movementFromJSON(movementValue));
 }
+#endif
 
 bool ShotWithMovement::operator==(const Shot& o) const
 {
@@ -114,6 +123,7 @@ bool ShotWithMovement::operator==(const Shot& o) const
 	return movement == swm->movement;
 }
 
+#ifdef WITH_JSON
 Movement movementFromJSON(const Json::Value& moves)
 {
 	Movement ret;
@@ -152,3 +162,4 @@ Json::Value movementToJSON(const Movement moves)
 
 	return movementValue;
 }
+#endif

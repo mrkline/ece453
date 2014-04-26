@@ -2,7 +2,9 @@
 
 #include <memory>
 
+#ifdef WITH_JSON
 #include <jsoncpp/json/json.h>
+#endif
 
 #include "Vector3.hpp"
 
@@ -15,9 +17,11 @@ public:
 
 	Shot(const Shot&) = default;
 
+#ifdef WITH_JSON
 	virtual Json::Value toJSON() const;
 
 	static Shot fromJSON(const Json::Value& value);
+#endif
 
 	virtual bool operator==(const Shot& o) const;
 
@@ -54,9 +58,11 @@ public:
 
 	ShotWithMovement(ShotWithMovement&& o);
 
+#ifdef WITH_JSON
 	Json::Value toJSON() const override;
 
 	static ShotWithMovement fromJSON(const Json::Value& value);
+#endif
 
 	bool operator==(const Shot& o) const override;
 
@@ -68,6 +74,8 @@ public:
 	Movement movement; ///< Provides accelerometer data leading up to the shot
 };
 
+#ifdef WITH_JSON
 Movement movementFromJSON(const Json::Value& moves);
 
 Json::Value movementToJSON(const Movement moves);
+#endif
