@@ -6,6 +6,7 @@
 #include <jsoncpp/json/json.h>
 #endif
 
+#include "GameTypes.hpp"
 #include "Vector3.hpp"
 
 typedef std::vector<Vector3> Movement;
@@ -13,7 +14,7 @@ typedef std::vector<Vector3> Movement;
 /// Represents a shot with an idicator about whether or not it was hit
 class Shot {
 public:
-	Shot(int8_t p, int8_t tar, int32_t time);
+	Shot(board_id_t p, board_id_t tar, timestamp_t time);
 
 	Shot(const Shot&) = default;
 
@@ -28,9 +29,9 @@ public:
 	// Allow us to sort via time
 	bool operator<(const Shot& o) const { return time < o.time; }
 
-	int8_t player; ///< The ID of the player that took the shot
-	int8_t target; ///< The ID of the target that was hit. -1 if it was a miss
-	int32_t time; ///< The timestamp of the shot, in milliseconds since the game started
+	board_id_t player; ///< The ID of the player that took the shot
+	board_id_t target; ///< The ID of the target that was hit. -1 if it was a miss
+	timestamp_t time; ///< The timestamp of the shot, in milliseconds since the game started
 };
 
 namespace std {
@@ -50,7 +51,7 @@ struct hash<Shot> {
 
 class ShotWithMovement : public Shot {
 public:
-	ShotWithMovement(int8_t p, int8_t tar, int32_t time, Movement&& m);
+	ShotWithMovement(board_id_t p, board_id_t tar, timestamp_t time, Movement&& m);
 
 	ShotWithMovement(const Shot&, Movement&& m);
 

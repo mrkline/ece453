@@ -11,11 +11,11 @@ class ResultsResponseMessage : public ResponseMessage {
 public:
 
 	struct PlayerStats {
-		const int16_t score; ///< The player's final score
-		const int16_t hits; ///< The player's final hit count
+		const score_t score; ///< The player's final score
+		const shot_t hits; ///< The player's final hit count
 		const std::vector<ShotWithMovement> shots; ///< A list of shots the player took
 
-		PlayerStats(int16_t s, int16_t h, std::vector<ShotWithMovement>&& t) :
+		PlayerStats(score_t s, shot_t h, std::vector<ShotWithMovement>&& t) :
 			score(s),
 			hits(h),
 			shots(std::move(t))
@@ -26,7 +26,7 @@ public:
 
 	typedef std::vector<PlayerStats> StatsList;
 
-	ResultsResponseMessage(uint16_t id, uint16_t respTo, const std::string& message, StatsList&& playerStats);
+	ResultsResponseMessage(message_id_t id, message_id_t respTo, const std::string& message, StatsList&& playerStats);
 
 #ifdef WITH_JSON
 	static std::unique_ptr<ResultsResponseMessage> fromJSON(const Json::Value& object);

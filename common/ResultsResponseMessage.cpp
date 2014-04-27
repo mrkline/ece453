@@ -49,13 +49,13 @@ PlayerStats parseStats(const Value& stat)
 	ENFORCE(IOException, hitsValue.isInt(), "A player's hit count is not an integer.");
 	ENFORCE(IOException, shotsValue.isArray(), "A player's shot list is not an array.");
 
-	return PlayerStats((int16_t)scoreValue.asInt(), (int16_t)hitsValue.asInt(), parseShots(shotsValue));
+	return PlayerStats((score_t)scoreValue.asInt(), (shot_t)hitsValue.asInt(), parseShots(shotsValue));
 }
 #endif
 
 } // end anonymous namespace
 
-ResultsResponseMessage::ResultsResponseMessage(uint16_t id, uint16_t respTo,
+ResultsResponseMessage::ResultsResponseMessage(message_id_t id, message_id_t respTo,
                                                const std::string& message, StatsList&& playerStats) :
 	// If we're sending a results response payload back, the request was ok.
 	ResponseMessage(id, respTo, ResponseMessage::Code::OK, message),

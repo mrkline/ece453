@@ -8,6 +8,8 @@
 #include <jsoncpp/json/json.h>
 #endif
 
+#include "GameTypes.hpp"
+
 class Message {
 
 public:
@@ -31,7 +33,7 @@ public:
 		UNKNOWN ///< An unknown/invalid payload type
 	};
 
-	Message(uint16_t idNum);
+	Message(message_id_t idNum);
 
 #ifdef WITH_JSON
 	static std::unique_ptr<Message> fromJSON(const Json::Value& object);
@@ -45,7 +47,7 @@ public:
 
 	virtual Type getType() const { return Type::EMPTY; }
 
-	const uint16_t id;
+	const message_id_t id;
 
 	virtual bool operator==(const Message& o) const;
 };

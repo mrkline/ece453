@@ -22,7 +22,7 @@ const StaticString movementKey("movement");
 
 } // end anonymous namespace
 
-Shot::Shot(int8_t p, int8_t tar, int32_t time) :
+Shot::Shot(board_id_t p, board_id_t tar, timestamp_t time) :
 	player(p),
 	target(tar),
 	time(time)
@@ -65,7 +65,7 @@ Shot Shot::fromJSON(const Json::Value& value)
 	ENFORCE(IOException, p >= -128 && p < 128, "A shot's player ID is not representable by a byte.");
 	ENFORCE(IOException, tar >= -128 && tar < 128, "A shot's target ID is not representable by a byte.");
 
-	return Shot((int8_t)p, (int8_t)tar, time);
+	return Shot((board_id_t)p, (board_id_t)tar, time);
 }
 #endif
 
@@ -76,7 +76,7 @@ bool Shot::operator==(const Shot& o) const
 		&& time == o.time;
 }
 
-ShotWithMovement::ShotWithMovement(int8_t p, int8_t tar, int32_t time, std::vector<Vector3>&& m) :
+ShotWithMovement::ShotWithMovement(board_id_t p, board_id_t tar, timestamp_t time, std::vector<Vector3>&& m) :
 
 	Shot(p, tar, time),
 	movement(move(m))

@@ -6,7 +6,7 @@ class StartMessage : public Message {
 
 public:
 
-	StartMessage(uint16_t id) : Message(id) { }
+	StartMessage(message_id_t id) : Message(id) { }
 
 #ifdef WITH_JSON
 	static std::unique_ptr<StartMessage> fromJSON(const Json::Value& object)

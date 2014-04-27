@@ -8,12 +8,12 @@
 using namespace std;
 using namespace std::chrono;
 
-PopUpStateMachine::PopUpStateMachine(int8_t numTargets, int numPlayers,
-                                     const std::chrono::seconds& gameDuration, int scoreToWin) :
+PopUpStateMachine::PopUpStateMachine(board_id_t numTargets, board_id_t numPlayers,
+                                     const std::chrono::seconds& gameDuration, score_t scoreToWin) :
 	GameStateMachine(numTargets, numPlayers, gameDuration, scoreToWin),
 	rng(std::random_device()()),
 	delayDistribution(3, 6),
-	targetDistribution(0, (int8_t)(numTargets - 1)),
+	targetDistribution(0, (board_id_t)(numTargets - 1)),
 	state(PopUpState::STARTUP),
 	transitionTime(),
 	targetUp(),
@@ -38,8 +38,10 @@ std::unique_ptr<ResponseMessage> PopUpStateMachine::onShot(uint16_t responseID, 
 		++roundWinner.hits;
 		// On the off-chance that due to some timing fluke, this arrives after the transition time,
 		// Award at least 10 points. This is probably unnecessary, but it doesn't hurt to be sure.
-		const int score = (int)(duration_cast<milliseconds>(transitionTime - Clock::now()).count() / 10);
-		roundWinner.score += max(10, score);
+		const score_t score = (score_t)(duration_cast<milliseconds>(transitionTime - Clock::now()).count() / 10);
+		// Yes, this is verbose and dumb. See
+		// http://stackoverflow.com/q/23317404/713961
+		roundWinner.score = (score_t)(roundWinner.score + max((score_t)10, score));
 		state = PopUpState::SHUTOFF;
 	}
 

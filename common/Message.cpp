@@ -38,7 +38,7 @@ const StaticString idKey("id");
 const StaticString Message::typeKey("type");
 #endif
 
-Message::Message(uint16_t idNum) :
+Message::Message(message_id_t idNum) :
 	id(idNum)
 {
 }
@@ -53,7 +53,7 @@ std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 	ENFORCE(IOException, idValue.isInt(), "The message's ID field is not an integer.");
 	const int rawID = idValue.asInt();
 	ENFORCE(IOException, rawID >= 0, "The message's ID must be positive");
-	return std::unique_ptr<Message>(new Message((uint16_t)rawID));
+	return std::unique_ptr<Message>(new Message((message_id_t)rawID));
 }
 
 Json::Value Message::toJSON() const
@@ -89,7 +89,7 @@ std::vector<uint8_t> Message::toBinary() const
 {
 	// Send a binary message with no body
 	array<uint8_t, 0> nothing;
-	return makeBinaryMessage(getType(), (uint16_t)id, begin(nothing), end(nothing));
+	return makeBinaryMessage(getType(), id, begin(nothing), end(nothing));
 }
 
 bool Message::operator==(const Message& o) const

@@ -17,7 +17,7 @@ const StaticString shotKey("shot");
 
 } // end anonymous namespace
 
-ShotMessage::ShotMessage(uint16_t id, const Shot& s) :
+ShotMessage::ShotMessage(message_id_t id, const Shot& s) :
 	Message(id),
 	shot(s)
 {

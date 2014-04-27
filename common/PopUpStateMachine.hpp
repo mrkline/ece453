@@ -17,8 +17,8 @@ public:
 	 *                     Pass std::chrono::seconds::max for infinite (ish) duration.
 	 * \param scoreToWin The winning score. Pass a negative value for no winning score
 	 */
-	PopUpStateMachine(int8_t numTargets, int numPlayers,
-	                  const std::chrono::seconds& gameDuration, int scoreToWin);
+	PopUpStateMachine(board_id_t numTargets, board_id_t numPlayers,
+	                  const std::chrono::seconds& gameDuration, score_t scoreToWin);
 
 	std::unique_ptr<ResponseMessage> onShot(uint16_t responseID, const ShotMessage& shot) override;
 

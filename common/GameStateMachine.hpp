@@ -25,7 +25,7 @@ class MovementMessage;
  * Start this function in another thread, and use the message queues to interface it
  * with our UI and hardware.
  */
-void runGame(MessageQueue& in, MessageQueue& out, int8_t numberTargets, int numberPlayers);
+void runGame(MessageQueue& in, MessageQueue& out, board_id_t numberTargets, board_id_t numberPlayers);
 
 /// A base class for a game state machine.
 /// Each game type should derive a state machine class from this one.
@@ -35,12 +35,12 @@ public:
 
 	/// Tracks the hit count and score of a player.
 	struct Player {
-		int score;
-		int hits;
+		score_t score;
+		shot_t hits;
 
 		Player() : score(0), hits(0) { }
 
-		Player(int s, int h) : score(s), hits(h) { }
+		Player(score_t s, shot_t h) : score(s), hits(h) { }
 	};
 
 	/// The game's overall state
@@ -66,8 +66,8 @@ public:
 	 *                     Pass std::chrono::seconds::max for infinite (ish) duration.
 	 * \param scoreToWin The winning score. Pass a negative value for no winning score
 	 */
-	GameStateMachine(int numTargets, int numPlayers,
-	                 const std::chrono::seconds& gameDuration, int scoreToWin);
+	GameStateMachine(board_id_t numTargets, board_id_t numPlayers,
+	                 const std::chrono::seconds& gameDuration, score_t scoreToWin);
 
 	/// Returns true if the game is running
 	bool isRunning() { return gameState == State::RUNNING; }
@@ -106,7 +106,7 @@ public:
 	 * \param movement The movement message
 	 * \returns An acknowledgement for the shot message
 	 */
-	std::unique_ptr<ResponseMessage> onMovement(uint16_t responseID, const MovementMessage& movement);
+	std::unique_ptr<ResponseMessage> onMovement(message_id_t responseID, const MovementMessage& movement);
 
 	/**
 	 * \brief Responds to a StatusMessage
@@ -114,7 +114,7 @@ public:
 	 * \param respondingTo The ID of the StatusMessage
 	 * \returns A StatusResponseMessage indicating the game's current status
 	 */
-	std::unique_ptr<StatusResponseMessage> getStatusResponse(uint16_t responseID, uint16_t respondingTo);
+	std::unique_ptr<StatusResponseMessage> getStatusResponse(message_id_t responseID, message_id_t respondingTo);
 
 	/**
 	 * \brief Responds to a ResultsMessage
@@ -123,14 +123,14 @@ public:
 	 * \returns A ResultsResponseMessage indicating the game's results,
 	 *          or a ResponseMessage if the game is not at a point to return results.
 	 */
-	std::unique_ptr<ResponseMessage> getResultsResponse(uint16_t responseID, uint16_t respondingTo);
+	std::unique_ptr<ResponseMessage> getResultsResponse(message_id_t responseID, message_id_t respondingTo);
 
 	/**
 	 * \brief Called on a fairly short (100 ms range) periodic interval to allow the state machine to update.
 	 * \param messageID A unique ID that the state machine could use to send a message
 	 * \returns A message if the machine wants to send one, otherwise null
 	 */
-	virtual std::unique_ptr<Message> onTick(uint16_t messageID);
+	virtual std::unique_ptr<Message> onTick(message_id_t messageID);
 
 protected:
 
@@ -144,7 +144,7 @@ protected:
 
 	const std::chrono::seconds duration;
 
-	const int winningScore;
+	const score_t winningScore;
 
 	/// When we receive a shot, it is put here until its corresponding movement arrives.
 	std::unordered_set<Shot> shotsWithoutMovement;

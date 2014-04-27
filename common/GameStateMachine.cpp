@@ -14,7 +14,7 @@
 using namespace std;
 using namespace Exceptions;
 
-void runGame(MessageQueue& in, MessageQueue& out, int8_t numberTargets, int numberPlayers)
+void runGame(MessageQueue& in, MessageQueue& out, board_id_t numberTargets, board_id_t numberPlayers)
 {
 	ENFORCE(ArgumentException, numberTargets > 0, "You must have at least one target.");
 	ENFORCE(ArgumentException, numberPlayers > 0, "You must have at least one player.");
@@ -244,8 +244,8 @@ void runGame(MessageQueue& in, MessageQueue& out, int8_t numberTargets, int numb
 	}
 }
 
-GameStateMachine::GameStateMachine(int numTargets, int numPlayers,
-	                               const std::chrono::seconds& gameDuration, int scoreToWin) :
+GameStateMachine::GameStateMachine(board_id_t numTargets, board_id_t numPlayers,
+	                               const std::chrono::seconds& gameDuration, shot_t scoreToWin) :
 	targetCount(numTargets),
 	players(numPlayers),
 	gameEndTime(),
@@ -258,7 +258,7 @@ GameStateMachine::GameStateMachine(int numTargets, int numPlayers,
 	ENFORCE(ArgumentException, numPlayers > 0, "You must have at least one player.");
 }
 
-std::unique_ptr<ResponseMessage> GameStateMachine::start(uint16_t responseID, uint16_t respondingTo)
+std::unique_ptr<ResponseMessage> GameStateMachine::start(message_id_t responseID, message_id_t respondingTo)
 {
 	if (isRunning()) {
 		return unique_ptr<ResponseMessage>(
@@ -284,7 +284,7 @@ std::unique_ptr<ResponseMessage> GameStateMachine::start(uint16_t responseID, ui
 		                    "The game has been successfully started"));
 }
 
-std::unique_ptr<ResponseMessage> GameStateMachine::stop(uint16_t responseID, uint16_t respondingTo)
+std::unique_ptr<ResponseMessage> GameStateMachine::stop(message_id_t responseID, message_id_t respondingTo)
 {
 	if (!isRunning()) {
 		return unique_ptr<ResponseMessage>(
@@ -300,7 +300,7 @@ std::unique_ptr<ResponseMessage> GameStateMachine::stop(uint16_t responseID, uin
 }
 
 
-std::unique_ptr<ResponseMessage> GameStateMachine::onShot(uint16_t responseID, const ShotMessage& shot)
+std::unique_ptr<ResponseMessage> GameStateMachine::onShot(message_id_t responseID, const ShotMessage& shot)
 {
 	if (gameState == State::SETUP) {
 		return unique_ptr<ResponseMessage>(
@@ -317,7 +317,7 @@ std::unique_ptr<ResponseMessage> GameStateMachine::onShot(uint16_t responseID, c
 		new ResponseMessage(responseID, shot.id, ResponseMessage::Code::OK, ss.str()));
 }
 
-std::unique_ptr<ResponseMessage> GameStateMachine::onMovement(uint16_t responseID, const MovementMessage& movement)
+std::unique_ptr<ResponseMessage> GameStateMachine::onMovement(message_id_t responseID, const MovementMessage& movement)
 {
 	if (gameState == State::SETUP) {
 		return unique_ptr<ResponseMessage>(
@@ -346,7 +346,8 @@ std::unique_ptr<ResponseMessage> GameStateMachine::onMovement(uint16_t responseI
 		new ResponseMessage(responseID, movement.id, ResponseMessage::Code::OK, ss.str()));
 }
 
-std::unique_ptr<StatusResponseMessage> GameStateMachine::getStatusResponse(uint16_t responseID, uint16_t respondingTo)
+std::unique_ptr<StatusResponseMessage> GameStateMachine::getStatusResponse(message_id_t responseID,
+                                                                           message_id_t respondingTo)
 {
 	StatusResponseMessage::PlayerList statsList;
 	for (const auto& player : players)
@@ -372,11 +373,12 @@ std::unique_ptr<StatusResponseMessage> GameStateMachine::getStatusResponse(uint1
 
 	return unique_ptr<StatusResponseMessage>(
 		new StatusResponseMessage(responseID, respondingTo, response, gameState == State::RUNNING,
-		                          (int)remaining.count(), winningScore,
+		                          (duration_t)remaining.count(), winningScore,
 		                          move(statsList)));
 }
 
-std::unique_ptr<ResponseMessage> GameStateMachine::getResultsResponse(uint16_t responseID, uint16_t respondingTo)
+std::unique_ptr<ResponseMessage> GameStateMachine::getResultsResponse(message_id_t responseID,
+                                                                      message_id_t respondingTo)
 {
 	if (gameState != State::OVER) {
 		return unique_ptr<ResponseMessage>(

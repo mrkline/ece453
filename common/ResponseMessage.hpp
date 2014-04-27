@@ -18,7 +18,7 @@ public:
 		UNSUPPORTED_REQUEST ///< The request was valid but the system could not fulfill it.
 	};
 
-	ResponseMessage(uint16_t idNum, uint16_t respTo, Code c, const std::string& msg);
+	ResponseMessage(message_id_t idNum, message_id_t respTo, Code c, const std::string& msg);
 
 #ifdef WITH_JSON
 	static std::unique_ptr<ResponseMessage> fromJSON(const Json::Value& object);
@@ -26,7 +26,7 @@ public:
 	Json::Value toJSON() const override;
 #endif
 
-	const uint16_t respondingTo;
+	const message_id_t respondingTo;
 
 	const Code code;
 

@@ -10,18 +10,18 @@ class StatusResponseMessage : public ResponseMessage {
 public:
 
 	struct PlayerStats {
-		const int16_t score;
-		const int16_t hits;
+		const score_t score;
+		const shot_t hits;
 
-		PlayerStats(int16_t s, int16_t h) : score(s), hits(h) { }
+		PlayerStats(score_t s, shot_t h) : score(s), hits(h) { }
 
 		bool operator==(const PlayerStats& o) const { return score == o.score && hits == o.hits; }
 	};
 
 	typedef std::vector<PlayerStats> PlayerList;
 
-	StatusResponseMessage(uint16_t id, uint16_t respTo, const std::string& message,
-	                      bool isRunning, int16_t timeLeft, int16_t winScore, PlayerList&& playerStats);
+	StatusResponseMessage(message_id_t id, message_id_t respTo, const std::string& message,
+	                      bool isRunning, duration_t timeLeft, score_t winScore, PlayerList&& playerStats);
 
 #ifdef WITH_JSON
 	static std::unique_ptr<StatusResponseMessage> fromJSON(const Json::Value& object);
@@ -33,9 +33,9 @@ public:
 
 	const bool running;
 
-	const int16_t timeRemaining;
+	const duration_t timeRemaining;
 
-	const int16_t winningScore;
+	const score_t winningScore;
 
 	const PlayerList players;
 

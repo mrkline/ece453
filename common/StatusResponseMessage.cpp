@@ -47,8 +47,9 @@ StatusResponseMessage::PlayerList parseStats(const Value& stats)
 
 } // End anonymous namespace
 
-StatusResponseMessage::StatusResponseMessage(uint16_t id, uint16_t respTo, const std::string& message,
-	                                         bool isRunning, int16_t timeLeft, int16_t winScore, PlayerList&& playerStats) :
+StatusResponseMessage::StatusResponseMessage(message_id_t id, message_id_t respTo, const std::string& message,
+	                                         bool isRunning, duration_t timeLeft, score_t winScore,
+	                                         PlayerList&& playerStats) :
 	// If we're sending a full status response message back, the request was ok.
 	ResponseMessage(id, respTo, ResponseMessage::Code::OK, message),
 	running(isRunning),
@@ -89,7 +90,7 @@ std::unique_ptr<StatusResponseMessage> StatusResponseMessage::fromJSON(const Jso
 	return std::unique_ptr<StatusResponseMessage>(
 		new StatusResponseMessage(responseInfo->id, responseInfo->respondingTo, responseInfo->message,
 		                          runningValue.asBool(),
-		                          (int16_t)timeRemainingValue.asInt(), (int16_t)winningScoreValue.asInt(),
+		                          (duration_t)timeRemainingValue.asInt(), (score_t)winningScoreValue.asInt(),
 		                          parseStats(playerStatsValue)));
 }
 

@@ -17,7 +17,7 @@ const StaticString movementKey("shot with movement");
 
 } // end anonymous namespace
 
-MovementMessage::MovementMessage(uint16_t id, ShotWithMovement&& m) :
+MovementMessage::MovementMessage(message_id_t id, ShotWithMovement&& m) :
 	Message(id),
 	movement(move(m))
 {

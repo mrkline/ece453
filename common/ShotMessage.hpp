@@ -10,7 +10,7 @@ class ShotMessage : public Message {
 
 public:
 
-	ShotMessage(uint16_t id, const Shot& s);
+	ShotMessage(message_id_t id, const Shot& s);
 
 #ifdef WITH_JSON
 	static std::unique_ptr<ShotMessage> fromJSON(const Json::Value& object);

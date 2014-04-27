@@ -39,17 +39,17 @@ TargetCommand TargetCommand::fromJSON(const Json::Value& object)
 	ENFORCE(IOException, idValue.isInt(), "The target ID is not an integer.");
 	ENFORCE(IOException, onValue.isBool(), "The target ID is not a bool.");
 
-	return TargetCommand((int8_t)idValue.asInt(), onValue.asBool());
+	return TargetCommand((board_id_t)idValue.asInt(), onValue.asBool());
 }
 #endif
 
-TargetControlMessage::TargetControlMessage(uint16_t id, CommandList&& comms) :
+TargetControlMessage::TargetControlMessage(message_id_t id, CommandList&& comms) :
 	Message(id),
 	commands(move(comms))
 {
 }
 
-TargetControlMessage::TargetControlMessage(uint16_t id, const TargetCommand& comm) :
+TargetControlMessage::TargetControlMessage(message_id_t id, const TargetCommand& comm) :
 	Message(id),
 	commands({comm})
 {

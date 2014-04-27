@@ -14,7 +14,7 @@ const StaticString payloadKey("test payload");
 
 } // end anonymous namespace
 
-TestMessage::TestMessage(uint16_t id, const Json::Value& object) :
+TestMessage::TestMessage(message_id_t id, const Json::Value& object) :
 	Message(id),
 	val(object)
 {

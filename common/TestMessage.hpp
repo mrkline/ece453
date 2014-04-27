@@ -9,7 +9,7 @@ class TestMessage : public Message {
 
 public:
 
-	TestMessage(uint16_t id, const Json::Value& object = Json::Value());
+	TestMessage(message_id_t id, const Json::Value& object = Json::Value());
 
 	static std::unique_ptr<TestMessage> fromJSON(const Json::Value& object);
 

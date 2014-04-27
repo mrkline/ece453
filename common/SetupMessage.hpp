@@ -13,7 +13,8 @@ public:
 
 	typedef std::unordered_map<std::string, int> DataMap;
 
-	SetupMessage(uint16_t id, GameType gType, int8_t pCount, int16_t time, int16_t score, DataMap&& data = DataMap());
+	SetupMessage(message_id_t id, GameType gType, board_id_t pCount, duration_t time, score_t score,
+	             DataMap&& data = DataMap());
 
 #ifdef WITH_JSON
 	static std::unique_ptr<SetupMessage> fromJSON(const Json::Value& object);
@@ -27,15 +28,15 @@ public:
 	const GameType gameType;
 
 	/// The number of players playing.
-	const int8_t playerCount;
+	const board_id_t playerCount;
 
 	/// If time is a win condition, this is the maximum game length, in seconds.
 	/// If not, -1.
-	const int16_t gameLength;
+	const duration_t gameLength;
 
 	/// If points is a win condition, this is the score a player must get to win.
 	/// If not, -1
-	const int16_t winningScore;
+	const score_t winningScore;
 
 	const DataMap gameData;
 

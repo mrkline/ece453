@@ -15,7 +15,8 @@ const std::array<uint8_t, 2>& getMagicBytes();
 uint16_t getCRC(const std::vector<uint8_t> data);
 
 template <typename InputIt>
-std::vector<uint8_t> makeBinaryMessage(Message::Type type, int16_t id, InputIt payloadStart, InputIt payloadEnd)
+std::vector<uint8_t> makeBinaryMessage(Message::Type type, message_id_t id,
+                                       InputIt payloadStart, InputIt payloadEnd)
 {
 	if (payloadStart > payloadEnd)
 		THROW(ArgumentOutOfRangeException, "The start iterator is after the end iterator");

@@ -41,7 +41,8 @@ SetupMessage::DataMap parseGameData(const Value& data)
 
 } // End anonymous namespace
 
-SetupMessage::SetupMessage(uint16_t id, GameType gType, int8_t pCount, int16_t time, int16_t score, DataMap&& data) :
+SetupMessage::SetupMessage(message_id_t id, GameType gType, board_id_t pCount,
+                           duration_t time, score_t score, DataMap&& data) :
 	Message(id),
 	gameType(gType),
 	playerCount(pCount),
@@ -79,8 +80,8 @@ std::unique_ptr<SetupMessage> SetupMessage::fromJSON(const Json::Value& object)
 
 	return std::unique_ptr<SetupMessage>(
 		new SetupMessage(msg->id,
-		                 (GameType)gameTypeValue.asInt(), (int8_t)playerCountValue.asInt(),
-		                 (int16_t)gameLengthValue.asInt(), (int16_t)winningScoreValue.asInt(),
+		                 (GameType)gameTypeValue.asInt(), (board_id_t)playerCountValue.asInt(),
+		                 (duration_t)gameLengthValue.asInt(), (score_t)winningScoreValue.asInt(),
 		                 parseGameData(gameDataValue)));
 }
 

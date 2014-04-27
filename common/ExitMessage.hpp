@@ -5,7 +5,7 @@
 class ExitMessage : public Message {
 public:
 
-	ExitMessage(uint16_t id) : Message(id) { }
+	ExitMessage(message_id_t id) : Message(id) { }
 
 #ifdef WITH_JSON
 	static std::unique_ptr<ExitMessage> fromJSON(const Json::Value& object)
