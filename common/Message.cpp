@@ -85,11 +85,18 @@ Json::Value Message::toJSON() const
 }
 #endif
 
+std::unique_ptr<Message> Message::fromBinary(uint8_t* buf, size_t len)
+{
+	using namespace BinaryMessage;
+	ENFORCE(IOException, isValidMessage(buf, len), "Message is not valid");
+	return std::unique_ptr<Message>(new Message(getID(buf)));
+}
+
 std::vector<uint8_t> Message::toBinary() const
 {
 	// Send a binary message with no body
 	array<uint8_t, 0> nothing;
-	return makeBinaryMessage(getType(), id, begin(nothing), end(nothing));
+	return BinaryMessage::makeMessage(getType(), id, begin(nothing), end(nothing));
 }
 
 bool Message::operator==(const Message& o) const

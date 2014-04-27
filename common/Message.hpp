@@ -32,7 +32,6 @@ public:
 		TEST, ///< A test payload that holds a string
 		UNKNOWN ///< An unknown/invalid payload type
 	};
-
 	Message(message_id_t idNum);
 
 #ifdef WITH_JSON
@@ -42,6 +41,8 @@ public:
 
 	virtual Json::Value toJSON() const;
 #endif
+
+	static std::unique_ptr<Message> fromBinary(uint8_t* buf, size_t len);
 
 	virtual std::vector<uint8_t> toBinary() const;
 
