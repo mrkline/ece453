@@ -14,6 +14,14 @@ const std::array<uint8_t, 2>& getMagicBytes();
 
 uint16_t getCRC(const std::vector<uint8_t> data);
 
+void appendInt(std::vector<uint8_t>& buf, uint16_t i);
+
+inline void appendInt(std::vector<uint8_t>& buf, int16_t i) { appendInt(buf, (uint16_t)i); }
+
+void appendInt(std::vector<uint8_t>& buf, uint32_t i);
+
+inline void appendInt(std::vector<uint8_t>& buf, int32_t i) { appendInt(buf, (uint32_t)i); }
+
 template <typename InputIt>
 std::vector<uint8_t> makeBinaryMessage(Message::Type type, message_id_t id,
                                        InputIt payloadStart, InputIt payloadEnd)
@@ -34,16 +42,13 @@ std::vector<uint8_t> makeBinaryMessage(Message::Type type, message_id_t id,
 	ret.emplace_back((uint8_t)type);
 
 	// Append ID
-	ret.emplace_back((uint8_t)((id & 0xff00) >> 8));
-	ret.emplace_back((uint8_t)((id & 0x00ff) >> 0));
+	appendInt(ret, id);
 
 	// Append payload
 	ret.insert(end(ret), payloadStart, payloadEnd);
 
 	// Append CRC
-	uint16_t crc = getCRC(ret);
-	ret.emplace_back((uint8_t)((crc & 0xff00) >> 8));
-	ret.emplace_back((uint8_t)((crc & 0x00ff) >> 0));
+	appendInt(ret, getCRC(ret));
 
 	return ret;
 }
