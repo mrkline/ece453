@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 
+#include "BinaryMessage.hpp"
 #include "Exceptions.hpp"
 
 using namespace Exceptions;
@@ -95,6 +96,34 @@ Json::Value ResponseMessage::toJSON() const
 	return ret;
 }
 #endif
+
+std::unique_ptr<ResponseMessage> ResponseMessage::fromBinary(uint8_t* buf, size_t len)
+{
+	auto msg = Message::fromBinary(buf, len);
+
+	using namespace BinaryMessage;
+
+	size_t pl;
+	const uint8_t* bl = getPayload(buf, pl);
+	// Make sure the payload contains for our expected data (respondingTo ID and code)
+	ENFORCE(IOException, pl >= sizeof(message_id_t) + 1, "The provided message is too small.");
+
+	message_id_t resp = extractUInt16(bl);
+	bl += 2;
+	Code c = (Code)*bl;
+
+	// Binary response messages contain no strings. Not worth the trouble or bandwidth.
+	return std::unique_ptr<ResponseMessage>(
+		new ResponseMessage(msg->id, resp, c, ""));
+}
+
+std::vector<uint8_t> ResponseMessage::getBinaryPayload() const
+{
+	vector<uint8_t> ret;
+	BinaryMessage::appendInt(ret, respondingTo);
+	ret.emplace_back((uint8_t)code);
+	return ret;
+}
 
 bool ResponseMessage::operator==(const Message& o) const
 {

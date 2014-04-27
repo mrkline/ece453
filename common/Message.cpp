@@ -94,9 +94,15 @@ std::unique_ptr<Message> Message::fromBinary(uint8_t* buf, size_t len)
 
 std::vector<uint8_t> Message::toBinary() const
 {
-	// Send a binary message with no body
-	array<uint8_t, 0> nothing;
-	return BinaryMessage::makeMessage(getType(), id, begin(nothing), end(nothing));
+	// Send a binary message with whatever payload is needed
+	auto payload = getBinaryPayload();
+	return BinaryMessage::makeMessage(getType(), id, begin(payload), end(payload));
+}
+
+std::vector<uint8_t> Message::getBinaryPayload() const
+{
+	// An empty message has no payload.
+	return vector<uint8_t>();
 }
 
 bool Message::operator==(const Message& o) const

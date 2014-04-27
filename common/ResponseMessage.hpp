@@ -10,7 +10,7 @@ class ResponseMessage : public Message {
 
 public:
 
-	enum class Code {
+	enum class Code : int8_t {
 		OK, ///< Everything went as expected.
 		INTERNAL_ERROR, ///< Something went wrong inside the system.
 		UNKNOWN_REQUEST, ///< The system couldn't make sense of the request.
@@ -25,6 +25,10 @@ public:
 
 	Json::Value toJSON() const override;
 #endif
+
+	static std::unique_ptr<ResponseMessage> fromBinary(uint8_t* buf, size_t len);
+
+	std::vector<uint8_t> getBinaryPayload() const override;
 
 	const message_id_t respondingTo;
 

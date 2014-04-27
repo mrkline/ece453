@@ -44,7 +44,9 @@ public:
 
 	static std::unique_ptr<Message> fromBinary(uint8_t* buf, size_t len);
 
-	virtual std::vector<uint8_t> toBinary() const;
+	std::vector<uint8_t> toBinary() const;
+
+	virtual std::vector<uint8_t> getBinaryPayload() const;
 
 	virtual Type getType() const { return Type::EMPTY; }
 
