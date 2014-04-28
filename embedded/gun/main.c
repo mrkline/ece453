@@ -18,27 +18,28 @@
 extern RF_SETTINGS rfSettings;
 
 volatile unsigned char info;
-//volatile unsigned int transmit_flag;
 
 unsigned int buzz;
-//unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0x00};
 unsigned char RxBuffer[PACKET_LEN+2];
 unsigned char RxBufferLength = 0;
 
 unsigned char transmitting = 0;
 unsigned char receiving = 0;
-unsigned char gunID;
-unsigned char numShots = 0;
-unsigned char rounds;
+unsigned char gunID;				//Hard coded gun ID to distinguish between the guns when sending messages
+
+unsigned char rounds;				//Duration of game being played
+unsigned laserDuration;				//How long the laser stays on after a trigger pull
+unsigned char r;					//The character received from the RX uart buffer
+uint16_t timeStamp;				//Time of each shot that is taken -> Change to 16 bit int
+
+unsigned char *time_stamp;
+uint32_t numShots = 0;			//Total shots this gun has taken
 
 const unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
 
-void uart_putc(unsigned char c);
-void uart_puts(const char *str);
-
 void uart_putc(unsigned char c)
 {
-	while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
+	while (!(UCA0IFG & UCTXIFG));             // USCI_A0 TX buffer ready?
 	    UCA0TXBUF = c;                  // TX -> RXed character
 }
 void uart_puts(const char *str)
@@ -46,19 +47,25 @@ void uart_puts(const char *str)
      while(*str) uart_putc(*str++);
 }
 
+void uart_getc(void)
+{
+	while(!(UCA0IFG & UCRXIFG));
+		r = UCA0RXBUF;
+
+}
+
 //If the trigger is pulled, we will go to this method to take care of the
 // buzzer and laser functionality
 void TriggerPull(void)
 {
-	buzz = 50;
-    P2OUT |= 0x01; //When the button is pushed down(trigger pull) the laser should go on (output bit goes high)
-
-    //When the button is pushed, the buzzer should make a noise for certain amount of time
-    while(buzz != 0)
-    {
-    	P2OUT |= 0x04; //Buzzer goes on (output bit goes high)
-    	buzz = buzz - 1;
-    }
+	timeStamp = TA0R;//When trigger is pulled, get the timer value and put into variable timeStamp
+	//Append timeStamp to the time stamp string
+	laserDuration = 0;
+	while(laserDuration != 10000)
+	{
+		P2OUT |= 0x05;		//Turn on the laser and buzzer
+		laserDuration++;
+	}
 }
 
 
@@ -126,7 +133,7 @@ __interrupt void PORT2_ISR(void)
     P2IFG &= 0xFD;
     //buttonPressed = 1;
     TriggerPull();
-    P2OUT &= 0xFA;		//Turn the buzzer and the laser off
+
     numShots = numShots + 1;			//NOT SURE ABOUT THIS LOGIC
     __bic_SR_register_on_exit(LPM3_bits); // Exit active
     break;
@@ -137,7 +144,7 @@ __interrupt void PORT2_ISR(void)
     case 12: break;                         // P2.5 IFG
     case 14: break;                         // P2.6 IFG
     case 16: break;                         // P2.7 IFG
-    default: break;
+    //default: break;
   }
 }
 
@@ -151,8 +158,8 @@ __interrupt void USCI_A0_ISR(void)
   case 2:                                   // Vector 2 - RXIFG
     while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
     UCA0TXBUF = UCA0RXBUF;                  // TX -> RXed character
-    while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
-    UCA0TXBUF = 'T';                  // TX -> RXed character
+  /*  while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
+    UCA0TXBUF = 'T';                  // TX -> RXed character*/
     break;
   case 4:break;                             // Vector 4 - TXIFG
   default: break;
@@ -188,7 +195,7 @@ __interrupt void CC1101_ISR(void)
 
         // Check the CRC results
         /*if(RxBuffer[CRC_LQI_IDX] & CRC_OK)
-          P2OUT ^= BIT6;                    // Toggle LED1*/
+          P2OUT ^= BIT6;             */       // Toggle LED1
       }
       else if(transmitting)		    // TX end of packet
       {
@@ -218,10 +225,10 @@ void main(void) {
     // Increase PMMCOREV level to 2 in order to avoid low voltage error
     // when the RF core is enabled
     SetVCore(2);
-
     ResetRadioCore();
     InitRadio();
 
+    //Map registers for UART and wireless
     PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
     P1MAP5 = PM_UCA0RXD;                      // Map UCA0RXD output to P1.5
     P1MAP6 = PM_UCA0TXD;                      // Map UCA0TXD output to P1.6
@@ -230,6 +237,7 @@ void main(void) {
     P1DIR |= BIT6;                            // Set P1.6 as TX output
     P1SEL |= BIT5 + BIT6;                     // Select P1.5 & P1.6 to UART function
 
+    //UART CONFIGURATION
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
     UCA0CTL1 |= UCSSEL_1;                     // CLK = ACLK
     UCA0BR0 = 0x03;                           // 32kHz/9600=3.41 (see User's Guide)
@@ -238,10 +246,24 @@ void main(void) {
     UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
     UCA0IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
 
-    __bis_SR_register(GIE);       // Enter LPM0, Enable interrupts
-      __no_operation();                         // For debugger
-    //Gun needs to transmit its data to the peripheral and receive info back from peripheral
-    //Configure all GPIO pins and antenna pins
+    //UNIFIED SYSTEM CLOCK CONFIG - SET ACLK to 2.67 MHz
+    UCSCTL1 |= 0x0040;
+    UCSCTL1 &= 0xFFCF;
+    UCSCTL0 &= 0xE7FF;
+    UCSCTL0 |= 0x0700;
+    UCSCTL4 |= 0x0300;						//Set ACLK frequency to DCO frequency
+    UCSCTL4 &= 0xFFFB;
+
+    //TIMER A0 CONFIGURATION - Keeps time for reporting time of shots fired
+    TA0CTL &= 0x00;
+    TA0CTL |= 0x0120;		//Set Timer to use ACLK, continuous, has no interrupts
+
+    //TIMER A1 CONFIGURATION - For strobing the laser in a pattern
+    TA1CTL &= 0x00;
+    TA1CTL |= 0x0102;						//Use ACLK for frequency, in stop mode, has interrupts
+
+   __bis_SR_register(GIE);       				// Enter LPM0, Enable interrupts
+   __no_operation();                         	// For debugger
 
     //Make pins 2.2(buzzer) & 2.0(laser) outputs and pin 2.1(button) an input
     P2DIR &= 0xFD;
@@ -250,40 +272,32 @@ void main(void) {
     //Pins 2.0, 2.1, and 2.2 selected to be GPIOs
     P2SEL &= 0xF0;
 
-    //Set up an interrupt on the button for the trigger pull
-    P2IES &= 0xFD;    	//P2IES -> Select interrupt edge: 0 = L to H, 1 = H to L -> Check this with schematic tomorrow
+    //INTERRUPT FOR PUSH BUTTON
+    P2IES &= 0xFD;    	//P2IES -> Select interrupt edge: 0 = L to H, 1 = H to L
     P2IE |= 0x02;		//P2IE  -> Enable/Disable Interrupt: 0 = disabled, 1 = enabled
+    P2OUT &= 0xFE;		//Turn off laser
+    while(1)
+    {
+    	//P2OUT &= 0xFE;		//Turn off laser
+    }
 
-   	//P2OUT &= 0xF7;		//Light the diode
-   	P2OUT |= 0x08;		//Darken the diode
-   	ReceiveOff();
-   	receiving = 0;
-
-   	transmitting = 1;
-   	Transmit( (unsigned char*)TxBuffer, sizeof TxBuffer);  			//In order to transmit
-
-
-   	P2OUT |= 0x08;		//Darken the diode
-   //while(1);
+    //Assign a unique gun ID to the gun
   /*  while(1)
     {
     	numShots = 0;			//Reset value of number of shots
-    	while(rounds != 0)
-    	{
+
     		//Gun will be receiving a message to tell it to send its data
     		//Gets message from peripheral board
 
     		info = gunID;	//Send peripheral confirmation that this gun is in the game - send its unique id
     		TxBuffer[PACKET_LEN - 2] = info;
-    		Transmit( (unsigned char*)TxBuffer, sizeof TxBuffer);
-    		transmitting = 1;	//Ready gun board to send info to peripheral
 
     		//Gun then will wait for next message from peripheral - End of Game
     		info = numShots;//When message received, transmit packet with number of shots fired with unique gun ID
-    		info = gunID;		//LOOK AT THIS TONIGHT
     		TxBuffer[PACKET_LEN - 2] = info;
     		Transmit((unsigned char*)TxBuffer, sizeof TxBuffer);
     		transmitting = 1;
-    	}
+
     }*/
 }
+

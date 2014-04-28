@@ -1,4 +1,4 @@
-#include <msp430.h> 
+#include <msp430.h>
 #include "RF_Toggle_LED_Demo.h"
 
 #define  PACKET_LEN         (0x05)			// PACKET_LEN <= 61
@@ -21,7 +21,24 @@ unsigned char receiving = 0;
 unsigned char targetID;
 unsigned char timeStamp;
 unsigned char count;
+uint32_t ledcount;
 
+
+#pragma vector=TIMER1_A0_VECTOR
+__interrupt void TIMER1_A0_ISR(void)
+{
+	switch(__even_in_range(TA0IV, 14))
+	{
+		case 0: break;
+		case 2: break;
+		case 4: break;
+		case 6: break;
+		case 8: break;
+		case 10: break;
+		case 12: break;
+		case 14: break;
+	}
+}
 //Interrupt for Port 2 bit that relates to the sensor,
 // We want to interrupt when the sensors detect light
 #pragma vector=PORT2_VECTOR
@@ -40,15 +57,25 @@ __interrupt void PORT2_ISR(void)
     case  8: break;                         // P2.3 IFG
     case 10: break;                         // P2.4 IFG
     case 12: break;                         // P2.5 IFG
-    case 14: break;                         // P2.6 IFG
-    case 16: break;                         // P2.7 IFG
+    case 14:
+    	P2IE = 0;		//FOR TESTING
+    	LEDs();
+    	__bic_SR_register_on_exit(LPM3_bits); // Exit active
+    	break;                         // P2.6 IFG
+    case 16:
+    	P2IE = 0;		//FOR TESTING
+    	LEDs();
+    	__bic_SR_register_on_exit(LPM3_bits); // Exit active
+    	break;                         // P2.7 IFG
     default: break;
   }
 }
 
+
+
 void Sensors(void)
 {
-	counter = 50;		//Just a guess
+	counter = 100;		//Just a guess
 	while((P2IN & 0x04) && counter)
 	{
 		counter = counter - 1;	// When counter equals a certain amount of time indicate target has been hit
@@ -67,10 +94,15 @@ void Sensors(void)
 void LEDs(void)
 {
 	//When this is reached, we know the target is "hit"
-	P2OUT &= 0xF8;		//Turn off Red LEDs
 
-	P2OUT |= 0x10;		//Turn on green leds showing target has been hit
-
+	ledcount = 0;
+	while (ledcount < 10000)
+	{
+		P2OUT &= 0x00;		//Turn off Red LEDs
+		P2OUT |= 0x10;		//Turn on green leds showing target has been hit
+		ledcount++;
+	}
+	P2OUT &= 0x00;
 	//Indicate hit
 	return;
 }
@@ -174,7 +206,7 @@ __interrupt void CC1101_ISR(void)
       if(receiving)			    // RX end of packet
       {
     	  P2OUT &= 0xF7;		//Turn off the red LEDs
-    	  P2OUT |= 0x40;		//Turn on blue LEDs
+    	  P2OUT |= 0x20;		//Turn on blue LEDs
         // Read the length byte from the FIFO
         RxBufferLength = ReadSingleReg( RXBYTES );
         ReadBurstReg(RF_RXFIFORD, RxBuffer, RxBufferLength);
@@ -184,7 +216,7 @@ __interrupt void CC1101_ISR(void)
 
         // Check the CRC results
         /*if(RxBuffer[CRC_LQI_IDX] & CRC_OK)
-          P2OUT ^= BIT6;                    // Toggle LED1*/
+          P2OUT ^= BIT6;                  */  // Toggle LED1
       }
       else if(transmitting)		    // TX end of packet
       {
@@ -219,19 +251,36 @@ void main(void) {
     InitRadio();		//Set up the antenna for 915 MHz
     active = 0;			//Target starts as inactive
 
+    //UNIFIED SYSTEM CLOCK CONFIG - SET ACLK to 2.67 MHz
+    UCSCTL1 |= 0x0040;
+    UCSCTL1 &= 0xFFCF;
+    UCSCTL0 &= 0xE7FF;
+    UCSCTL0 |= 0x0700;
+    UCSCTL4 |= 0x0300;						//Set ACLK frequency to DCO frequency
+    UCSCTL4 &= 0xFFFB;
+
+    //TIMER A0 CONFIGURATION - Keeps time for reporting time of shots fired
+    TA0CTL &= 0x00;
+    TA0CTL |= 0x0120;		//Set Timer to use ACLK, continuous, has no interrupts
+
     PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
     P1MAP5 = PM_UCA0RXD;                      // Map UCA0RXD output to P1.5
     P1MAP6 = PM_UCA0TXD;                      // Map UCA0TXD output to P1.6
     PMAPPWD = 0;                              // Lock port mapping registers
 
-    //Set up GPIO pins for LEDs and Sensors
-    P2DIR &= 0xFB;				//Set Sensors GPIO to an input
-    P2DIR |= 0x3A;				//Set LEDs GPIO to outputs
+    __bis_SR_register(GIE);       				// Enter LPM0, Enable interrupts
+      __no_operation();                         	// For debugger
 
-    P2SEL &= 0xC1;				//Set all to be GPIO pins
+    P2OUT &= 0x00;		//Clear the output register for Port 2
+    //Set up GPIO pins for LEDs and Sensors (0 for input, 1 for output)
+    P2DIR &= 0x00;				//Set Sensors GPIO to an input
+   // P2DIR |= 0x3A;				//Set LEDs GPIO to outputs
+    P2DIR |= 0x3A;			//FOR TESTING
+    //P5DIR |= 0x01;
 
-    //P2OUT &= 0x00;
-    //P2OUT |= 0x02;				//Turn on the test LED to see if we made it this far
+   // P2SEL &= 0xC1;				//Set all to be GPIO pins - 0 for GPIO
+    P2SEL &= 0x01;		//FOR TESTING
+    //P5SEL &= 0xFD;
 
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
     UCA0CTL1 |= UCSSEL_1;                     // CLK = ACLK
@@ -241,34 +290,34 @@ void main(void) {
     UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
     UCA0IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
 
-   Strobe( RF_SIDLE );				//Exit receive mode on the antenna
-   Strobe(RF_SRX);					//Enable receive mode on the antenna
+  // Strobe( RF_SIDLE );				//Exit receive mode on the antenna
+   //Strobe(RF_SRX);					//Enable receive mode on the antenna
 
     //Set up an interrupt on the sensors when they detect light
-    P2IES &= 0xFB;    	//P2IES -> Select interrupt edge: 0 = L to H, 1 = H to L -> Check this with schematic tomorrow
-    P2IE |= 0x04;		//P2IE  -> Enable/Disable Interrupt: 0 = disabled, 1 = enabled
-    count = 0;
+   // P2IES &= 0xFB;    	//P2IES -> Select interrupt edge: 0 = L to H, 1 = H to L -> Check this with schematic tomorrow
+   // P2IE |= 0x04;		//P2IE  -> Enable/Disable Interrupt: 0 = disabled, 1 = enabled
 
+    P2IE |= 0xC0;		//FOR TESTING
+    P2IES &= 0x3F;		//FOR TESTING
+
+    count = 0;
     P2OUT |= 0x08;		//Turn LEDs red
 
+    //Assign unique target ID to each target
     while(1)
     {
-       	ReceiveOn();					//To receive
-       	receiving = 1;
+    	/*P2OUT |= 0x08;		//Turn LEDs red
+    	if(P2IN & 0x80)
+    	{
+    		LEDs();
+    		break;
 
-       /*	if(PM_UCA0RXD == "HELLO")
-       	{
-       		while(count < 10)
-       		{
-       			count++;
-       			P2OUT &= 0xC7;
-       		}
+    	}*/
 
-       		P2OUT |= 0x10;
-       		count = 0;
-       	}*/
     }
- /*   while(1)
+    /*
+
+    while(1)
     {
     	//Receive message from peripheral confirming this target is in the game
     	//Send back a confirmation with unique target ID
@@ -276,4 +325,6 @@ void main(void) {
     	//When sensors confirm a hit, send packet of info to peripheral with target ID and timestamp
     	//Then target is inactive until it gets message from peripheral that it is active again
     }*/
+
 }
+

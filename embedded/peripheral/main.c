@@ -14,7 +14,7 @@ extern RF_SETTINGS rfSettings;
 volatile unsigned int info[6];
 //volatile unsigned int transmit_flag;
 
-unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0x00};
+const unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0x00};
 unsigned char RxBuffer[PACKET_LEN+2];
 unsigned char RxBufferLength = 0;
 
@@ -24,7 +24,7 @@ unsigned char targets;
 unsigned char rounds;
 unsigned char gunIDs[2];
 unsigned char targetIDs[3];
-unsigned char *string = "HELLO";
+
 
 void uart_putc(unsigned char c)
 {
@@ -149,6 +149,8 @@ __interrupt void CC1101_ISR(void)
       }
       else if(transmitting)		    // TX end of packet
       {
+    	 P2OUT &= 0xF7;		//Turn off the red LEDs
+    	 P2OUT |= 0x20;		//Turn on blue LEDs
         RF1AIE &= ~BIT9;                    // Disable TX end-of-packet interrupt
         //P2OUT &= ~BIT7;                     // Turn off LED after Transmit
         transmitting = 0;
@@ -169,12 +171,11 @@ __interrupt void CC1101_ISR(void)
  * main.c
 */
 void main(void) {
-    WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
+     WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 
     //Peripheral is going to send and receive information from other modules so need to set it up to receive information
     // and send it along the PM_UCA0SOMI pin to the Zedboard or the Cypress
 
-    //P5SEL |= 0x03;                            // Enable XT1 pins
     // Increase PMMCOREV level to 2 in order to avoid low voltage error
     // when the RF core is enabled
       SetVCore(2);
@@ -203,6 +204,13 @@ void main(void) {
       uart_puts((char *)"\n\r**************\n\rPeripheral\n\r");
       uart_puts((char *)"***************\n\r\n\r");
 
+
+      //Set up GPIO pins for LEDs and Sensors
+          P2DIR &= 0xFB;				//Set Sensors GPIO to an input
+          P2DIR |= 0x3A;				//Set LEDs GPIO to outputs
+
+          P2SEL &= 0xC1;				//Set all to be GPIO pins
+
       //Strobe sends commands to our antenna
 //      Strobe( RF_SIDLE );				//Exit receive mode on the antenna
      // Strobe(RF_SRX);					//Enable receive mode on the antenna
@@ -210,8 +218,9 @@ void main(void) {
       __bis_SR_register(GIE);
       __no_operation();                         // For debugger
 
-     Transmit(string, 5);			//In order to transmit
-     transmitting = 1;
+      transmitting = 1;
+      Transmit( (unsigned char*)TxBuffer, sizeof TxBuffer); 			//In order to transmit
+
      while(1);
   /*    while(1)
       {
