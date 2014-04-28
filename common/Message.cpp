@@ -223,10 +223,6 @@ std::unique_ptr<Message> binaryToMessage(uint8_t* buf, size_t len)
 		case Type::TARGET_CONTROL:
 			return TargetControlMessage::fromBinary(buf, len);
 
-			return ExitMessage::fromBinary(buf, len);
-
-			return TestMessage::fromBinary(buf, len);
-
 		// We don't have binary versions of these
 		case Type::STATUS:
 		case Type::STATUS_RESPONSE:

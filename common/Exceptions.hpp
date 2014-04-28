@@ -59,10 +59,10 @@ namespace Exceptions
 	};
 
 	/**
-	\brief Thrown if a method or function is not implemented.
-
-	Mostly for use as a placeholder in stubs during development.
-	*/
+	 *\brief Thrown if a method or function is not implemented.
+	 *
+	 * Mostly for use as a placeholder in stubs during development.
+	 */
 	class NotImplementedException : public Exception {
 
 	public:
@@ -193,7 +193,7 @@ namespace Exceptions
 		virtual ~ConcurrencyException() noexcept { }
 	};
 
-	/// Thrown if a method was called at an improper time
+	/// Thrown if a method was called at an improper time or is not supported by a particular implementation
 	class InvalidOperationException : public Exception {
 
 	public:
