@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Message.hpp"
+#include "Exceptions.hpp"
 
 class StatusMessage : public Message {
 
@@ -14,6 +15,12 @@ public:
 		return std::unique_ptr<StatusMessage>(new StatusMessage(Message::fromJSON(object)->id));
 	}
 #endif
+
+	std::vector<uint8_t> getBinaryPayload() const override
+	{
+		THROW(Exceptions::InvalidOperationException,
+		      "This messsage type does not support binary serialization");
+	}
 
 	Type getType() const override { return Type::STATUS; }
 

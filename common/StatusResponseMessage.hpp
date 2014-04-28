@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 
+#include "Exceptions.hpp"
 #include "ResponseMessage.hpp"
 
 class StatusResponseMessage : public ResponseMessage {
@@ -28,6 +29,12 @@ public:
 
 	Json::Value toJSON() const override;
 #endif
+
+	std::vector<uint8_t> getBinaryPayload() const override
+	{
+		THROW(Exceptions::InvalidOperationException,
+		      "This messsage type does not support binary serialization");
+	}
 
 	virtual Type getType() const override { return Type::STATUS_RESPONSE; }
 
