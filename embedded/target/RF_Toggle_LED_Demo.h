@@ -17,3 +17,5 @@ void LEDs(void);
 
 void uart_putc(unsigned char c);
 void uart_puts(const char *str);
+void uart_getc(void);
+//void uart_gets(void);
