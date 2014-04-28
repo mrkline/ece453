@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #ifdef WITH_JSON
 #include <jsoncpp/json/json.h>
@@ -20,6 +21,10 @@ public:
 
 	static Shot fromJSON(const Json::Value& value);
 #endif
+
+	std::vector<uint8_t> toBinary() const;
+
+	static Shot fromBinary(const uint8_t* buf, size_t len);
 
 	bool operator==(const Shot& o) const;
 

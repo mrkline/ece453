@@ -18,6 +18,12 @@ uint16_t getCRC(const void* data, size_t len);
 
 inline uint16_t getCRC(const std::vector<uint8_t> data) { return getCRC(data.data(), data.size()); }
 
+// Don't let us accidentally call this for bytes, which would get promoted to a larger type
+
+inline void appendInt(std::vector<uint8_t>&, uint8_t) { std::terminate(); }
+
+inline void appendInt(std::vector<uint8_t>&, int8_t) { std::terminate(); }
+
 void appendInt(std::vector<uint8_t>& buf, uint16_t i);
 
 inline void appendInt(std::vector<uint8_t>& buf, int16_t i) { appendInt(buf, (uint16_t)i); }
@@ -111,12 +117,12 @@ inline message_id_t getID(const uint8_t* buf)
  * \returns A pointer to the payload
  * \warning This assumes you have validated the message already.
  */
-inline const uint8_t* getPayload(const uint8_t* buf, size_t& len)
+inline std::pair<const uint8_t*, size_t> getPayload(const uint8_t* buf)
 {
 	buf += 5;
-	len = extractUInt16(buf);
+	size_t len = extractUInt16(buf);
 	buf += 2;
-	return buf;
+	return std::pair<const uint8_t*, size_t>(buf, len);
 }
 
 } // end namespace BinaryMessage

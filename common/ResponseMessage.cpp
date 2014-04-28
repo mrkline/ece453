@@ -103,14 +103,13 @@ std::unique_ptr<ResponseMessage> ResponseMessage::fromBinary(uint8_t* buf, size_
 
 	using namespace BinaryMessage;
 
-	size_t pl;
-	const uint8_t* bl = getPayload(buf, pl);
+	auto load = getPayload(buf);
 	// Make sure the payload contains for our expected data (respondingTo ID and code)
-	ENFORCE(IOException, pl >= sizeof(message_id_t) + 1, "The provided message is too small.");
+	ENFORCE(IOException, load.second >= sizeof(message_id_t) + 1, "The provided message is too small.");
 
-	message_id_t resp = extractUInt16(bl);
-	bl += 2;
-	Code c = (Code)*bl;
+	message_id_t resp = extractUInt16(load.first);
+	load.first += 2;
+	Code c = (Code)*load.first;
 
 	// Binary response messages contain no strings. Not worth the trouble or bandwidth.
 	return std::unique_ptr<ResponseMessage>(

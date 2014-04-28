@@ -2,6 +2,7 @@
 
 #include <limits>
 
+#include "BinaryMessage.hpp"
 #include "Exceptions.hpp"
 
 using namespace std;
@@ -68,6 +69,35 @@ Shot Shot::fromJSON(const Json::Value& value)
 	return Shot((board_id_t)p, (board_id_t)tar, time);
 }
 #endif
+
+std::vector<uint8_t> Shot::toBinary() const
+{
+	using namespace BinaryMessage;
+
+	vector<uint8_t> ret;
+
+	ret.emplace_back(player);
+	ret.emplace_back(target);
+	appendInt(ret, time);
+
+	return ret;
+}
+
+Shot Shot::fromBinary(const uint8_t* buf, size_t len)
+{
+	// Quick checks that I didn't forget to update this function if sizes change
+	static_assert(sizeof(board_id_t) == sizeof(int8_t), "Someone changed the board ID length");
+	static_assert(sizeof(timestamp_t) == sizeof(int32_t), "Someone changed the timestamp length");
+
+	ENFORCE(IOException, len >= sizeof(player) + sizeof(target) + sizeof(time),
+	        "This buffer does not have room for a shot.");
+
+	board_id_t player = (board_id_t)buf[0];
+	board_id_t target = (board_id_t)buf[1];
+	timestamp_t time = BinaryMessage::extractInt32(&buf[2]);
+
+	return Shot(player, target, time);
+}
 
 bool Shot::operator==(const Shot& o) const
 {

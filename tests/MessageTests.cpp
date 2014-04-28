@@ -111,8 +111,8 @@ void MessageTests()
 	test("ResponseMessage -> Binary", []{ binaryCheck(makeResponseMessage(), Type::RESPONSE); });
 	test("StartMessage -> Binary", []{ binaryCheck(makeMessage<StartMessage>(), Type::START); });
 	test("StopMessage -> Binary", []{ binaryCheck(makeMessage<StopMessage>(), Type::STOP); });
-	/*
 	test("ShotMessage -> Binary", []{ binaryCheck(makeShotMessage(), Type::SHOT); });
+	/*
 	test("TargetControlMessage -> Binary", [] { binaryCheck(makeTargetControlMessage(), Type::TARGET_CONTROL); });
 	*/
 }

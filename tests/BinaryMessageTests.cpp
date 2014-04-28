@@ -54,14 +54,12 @@ void sanity()
 	assert(getID(buf.data()) == 42);
 
 	// Check getPayload
-	const uint8_t* lp = buf.data();
-	size_t ls;
-	lp = getPayload(lp, ls);
+	auto lp = getPayload(buf.data());
 	// Sizes should match
-	assert(ls == load.size());
+	assert(lp.second == load.size());
 	// Data should match
 	for (auto i = 0u; i < load.size(); ++i)
-		assert(lp[i] == load[i]);
+		assert(lp.first[i] == lp.first[i]);
 }
 
 void badCRC()
