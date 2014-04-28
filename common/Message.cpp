@@ -14,7 +14,6 @@
 #include "ResultsMessage.hpp"
 #include "ResultsResponseMessage.hpp"
 #include "ShotMessage.hpp"
-#include "MovementMessage.hpp"
 #include "TargetControlMessage.hpp"
 #include "ExitMessage.hpp"
 #include "TestMessage.hpp"
@@ -177,9 +176,6 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 		case Type::SHOT:
 			return ShotMessage::fromJSON(object);
 
-		case Type::MOVEMENT:
-			return MovementMessage::fromJSON(object);
-
 		case Type::TARGET_CONTROL:
 			return TargetControlMessage::fromJSON(object);
 
@@ -223,9 +219,6 @@ std::unique_ptr<Message> binaryToMessage(uint8_t* buf, size_t len)
 
 		case Type::SHOT:
 			return ShotMessage::fromBinary(buf, len);
-
-		case Type::MOVEMENT:
-			return MovementMessage::fromBinary(buf, len);
 
 		case Type::TARGET_CONTROL:
 			return TargetControlMessage::fromBinary(buf, len);

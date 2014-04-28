@@ -8,7 +8,6 @@
 #include "SetupMessage.hpp"
 #include "TargetControlMessage.hpp"
 #include "ShotMessage.hpp"
-#include "MovementMessage.hpp"
 #include "PopUpStateMachine.hpp"
 
 using namespace std;
@@ -131,18 +130,6 @@ void runGame(MessageQueue& in, MessageQueue& out, board_id_t numberTargets, boar
 			}
 		};
 
-		// Respond to a movement message
-		const auto onMovement = [&](const MovementMessage& movement) {
-			if (machine == nullptr) {
-				out.send(unique_ptr<ResponseMessage>(
-					new ResponseMessage(uid++, movement.id, Code::INVALID_REQUEST,
-					                    "A game has not been set up. A movement message should not be arriving now.")));
-			}
-			else {
-				out.send(machine->onMovement(uid++, movement));
-			}
-		};
-
 		// Get the status from the state machine,
 		// or return our own if there is not a state machine to ask.
 		const auto getStatus = [&] {
@@ -211,9 +198,6 @@ void runGame(MessageQueue& in, MessageQueue& out, board_id_t numberTargets, boar
 						onShot(*unique_dynamic_cast<ShotMessage>(move(msg)));
 						break;
 
-					case Type::MOVEMENT:
-						onMovement(*unique_dynamic_cast<MovementMessage>(move(msg)));
-
 					case Type::STATUS:
 						getStatus();
 						break;
@@ -251,8 +235,7 @@ GameStateMachine::GameStateMachine(board_id_t numTargets, board_id_t numPlayers,
 	gameEndTime(),
 	duration(gameDuration),
 	winningScore(scoreToWin),
-	shotsWithoutMovement(),
-	shotsWithMovement()
+	shots()
 {
 	ENFORCE(ArgumentException, numTargets > 0, "You must have at least one target.");
 	ENFORCE(ArgumentException, numPlayers > 0, "You must have at least one player.");
@@ -271,8 +254,7 @@ std::unique_ptr<ResponseMessage> GameStateMachine::start(message_id_t responseID
 		player = Player();
 
 	// Zero shots
-	shotsWithoutMovement.clear();
-	shotsWithMovement.clear();
+	shots.clear();
 
 	// Set the game's end time
 	gameEndTime = Clock::now() + duration;
@@ -308,42 +290,13 @@ std::unique_ptr<ResponseMessage> GameStateMachine::onShot(message_id_t responseI
 			                    "Shots cannot be registered before the game even starts."));
 	}
 
-	shotsWithoutMovement.emplace(shot.shot);
+	shots.emplace(shot.shot);
 
 	stringstream ss;
 	ss << "Shot fired at " << shot.shot.time << " registered";
 
 	return unique_ptr<ResponseMessage>(
 		new ResponseMessage(responseID, shot.id, ResponseMessage::Code::OK, ss.str()));
-}
-
-std::unique_ptr<ResponseMessage> GameStateMachine::onMovement(message_id_t responseID, const MovementMessage& movement)
-{
-	if (gameState == State::SETUP) {
-		return unique_ptr<ResponseMessage>(
-			new ResponseMessage(responseID, movement.id, ResponseMessage::Code::INVALID_REQUEST,
-			                    "Movement cannot be registered before the game even starts."));
-	}
-
-	auto it = shotsWithoutMovement.find(movement.movement);
-
-	if (it == end(shotsWithoutMovement)) {
-		return unique_ptr<ResponseMessage>(
-			new ResponseMessage(responseID, movement.id, ResponseMessage::Code::INVALID_REQUEST,
-			                    "The movement's shot was never seen before."));
-	}
-
-	// Take the shot out of the "without movement" set
-	shotsWithoutMovement.erase(it);
-
-	// Place it into the set of shots with recorded movement.
-	shotsWithMovement.emplace(movement.movement);
-
-	stringstream ss;
-	ss << "Movement for shot fired at " << movement.movement.time << " registered";
-
-	return unique_ptr<ResponseMessage>(
-		new ResponseMessage(responseID, movement.id, ResponseMessage::Code::OK, ss.str()));
 }
 
 std::unique_ptr<StatusResponseMessage> GameStateMachine::getStatusResponse(message_id_t responseID,
@@ -387,22 +340,14 @@ std::unique_ptr<ResponseMessage> GameStateMachine::getResultsResponse(message_id
 	}
 
 	// An array of shots for each player
-	std::vector<std::vector<ShotWithMovement>> shotsByPlayer(players.size());
+	std::vector<std::vector<Shot>> shotsByPlayer(players.size());
 
 	// Go through our shots and sort them into our player lists
-	for (const auto& shot : shotsWithMovement)
+	for (const auto& shot : shots)
 		shotsByPlayer[shot.player].emplace_back(shot);
 
-	// Also do do this for shots that never got their movement.
-	///TODO: Do we want to do this or return a "not ready" message?
-	for (const auto& shot : shotsWithoutMovement)
-		shotsByPlayer[shot.player].emplace_back(ShotWithMovement(shot, Movement()));
-
-	// Sort all the shots by time.
-	// This is unnecessary if we choose not to add the shots without movement
-	// (see the TODO above)
 	for (auto playerShots : shotsByPlayer) {
-		sort(begin(playerShots), end(playerShots), [](const ShotWithMovement& swm1, const ShotWithMovement& swm2) {
+		sort(begin(playerShots), end(playerShots), [](const Shot& swm1, const Shot& swm2) {
 			return swm1.time < swm2.time;
 		});
 	}

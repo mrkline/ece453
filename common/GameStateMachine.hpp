@@ -12,7 +12,6 @@
 // Forward declarations. We don't need to include the hearders because we just have references here.
 // We'll include the headers in the .cpp file
 class ShotMessage;
-class MovementMessage;
 
 /**
  * \brief Runs a game via a game state machine
@@ -101,14 +100,6 @@ public:
 	virtual std::unique_ptr<ResponseMessage> onShot(uint16_t responseID, const ShotMessage& shot);
 
 	/**
-	 * \brief Responds to a MovementMessage and matches the movement to the shot
-	 * \param responseID an ID for the returning acknowledgement
-	 * \param movement The movement message
-	 * \returns An acknowledgement for the shot message
-	 */
-	std::unique_ptr<ResponseMessage> onMovement(message_id_t responseID, const MovementMessage& movement);
-
-	/**
 	 * \brief Responds to a StatusMessage
 	 * \param responseID An ID for the returning message
 	 * \param respondingTo The ID of the StatusMessage
@@ -146,9 +137,5 @@ protected:
 
 	const score_t winningScore;
 
-	/// When we receive a shot, it is put here until its corresponding movement arrives.
-	std::unordered_set<Shot> shotsWithoutMovement;
-
-	/// After we receive a shot's movement, it is put here, ordered by time
-	std::set<ShotWithMovement> shotsWithMovement;
+	std::unordered_set<Shot> shots;
 };

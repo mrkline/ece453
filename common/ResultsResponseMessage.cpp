@@ -25,12 +25,12 @@ const StaticString shotsKey("shots");
 typedef ResultsResponseMessage::PlayerStats PlayerStats;
 
 #ifdef WITH_JSON
-std::vector<ShotWithMovement> parseShots(const Value& shots)
+std::vector<Shot> parseShots(const Value& shots)
 {
-	std::vector<ShotWithMovement> ret;
+	std::vector<Shot> ret;
 
 	for (const Value& shot : shots)
-		ret.emplace_back(ShotWithMovement::fromJSON(shot));
+		ret.emplace_back(Shot::fromJSON(shot));
 
 	return ret;
 }
