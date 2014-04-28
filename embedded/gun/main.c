@@ -262,6 +262,7 @@ void main(void) {
     TA1CTL &= 0x00;
     TA1CTL |= 0x0102;						//Use ACLK for frequency, in stop mode, has interrupts
 
+
    __bis_SR_register(GIE);       				// Enter LPM0, Enable interrupts
    __no_operation();                         	// For debugger
 

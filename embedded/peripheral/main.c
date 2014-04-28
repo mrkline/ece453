@@ -171,7 +171,8 @@ __interrupt void CC1101_ISR(void)
  * main.c
 */
 void main(void) {
-     WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
+
+	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 
     //Peripheral is going to send and receive information from other modules so need to set it up to receive information
     // and send it along the PM_UCA0SOMI pin to the Zedboard or the Cypress
