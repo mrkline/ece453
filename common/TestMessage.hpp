@@ -1,3 +1,5 @@
+#ifdef WITH_JSON
+
 #pragma once
 
 #include "Message.hpp"
@@ -7,7 +9,7 @@ class TestMessage : public Message {
 
 public:
 
-	TestMessage(int id, const Json::Value& object = Json::Value());
+	TestMessage(message_id_t id, const Json::Value& object = Json::Value());
 
 	static std::unique_ptr<TestMessage> fromJSON(const Json::Value& object);
 
@@ -19,3 +21,5 @@ public:
 
 	Json::Value val;
 };
+
+#endif

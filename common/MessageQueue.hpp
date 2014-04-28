@@ -40,10 +40,34 @@ public:
 	 * \param timeout The time interval, in milliseconds, to wait if the queue is empty
 	 * \returns A dequeued message or nullptr if the timeout is reached
 	 */
-	std::unique_ptr<Message> receive(const std::chrono::milliseconds& timeout);
+	template <typename Rep, typename Period>
+	std::unique_ptr<Message> receive(const std::chrono::duration<Rep, Period>& timeout)
+	{
+		// If we are not allowed to dequeue right now, just wait the expected time and return
+		std::unique_lock<std::mutex> lock(qMutex);
+		if (notifier.wait_for(lock, timeout, [this] { return !q.empty(); })) {
+			auto ret = std::move(q.front());
+			q.pop_front();
+			return ret;
+		}
+		else {
+			return nullptr;
+		}
+	}
 
-
-	std::unique_ptr<Message> receiveBefore(const std::chrono::time_point<std::chrono::steady_clock>& time);
+	template <typename Clock, typename Duration>
+	std::unique_ptr<Message> receiveUntil(const std::chrono::time_point<Clock, Duration>& time)
+	{
+		std::unique_lock<std::mutex> lock(qMutex);
+		if (notifier.wait_until(lock, time, [this] { return !q.empty(); })) {
+			auto ret = std::move(q.front());
+			q.pop_front();
+			return ret;
+		}
+		else {
+			return nullptr;
+		}
+	}
 
 	/// Returns true if the queue is empty
 	bool empty();

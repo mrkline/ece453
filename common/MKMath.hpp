@@ -111,7 +111,7 @@ namespace Math {
 		DoubleUnion uB(b);
 
 		if (uA.isPositive() == uB.isPositive())
-			 return abs(uA.i - uB.i) <= tolerance;
+			 return labs(uA.i - uB.i) <= tolerance;
 		else
 			return a == b;
 	}

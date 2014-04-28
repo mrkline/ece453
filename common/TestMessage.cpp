@@ -1,10 +1,12 @@
+#ifdef WITH_JSON
+
 #include "TestMessage.hpp"
 
 #include "Exceptions.hpp"
 
 using namespace Exceptions;
-using namespace Json;
 using namespace std;
+using namespace Json;
 
 namespace {
 
@@ -12,7 +14,7 @@ const StaticString payloadKey("test payload");
 
 } // end anonymous namespace
 
-TestMessage::TestMessage(int id, const Json::Value& object) :
+TestMessage::TestMessage(message_id_t id, const Json::Value& object) :
 	Message(id),
 	val(object)
 {
@@ -52,3 +54,5 @@ bool TestMessage::operator==(const Message& o) const
 
 	return val == tm->val;
 }
+
+#endif

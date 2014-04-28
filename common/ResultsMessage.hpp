@@ -6,12 +6,14 @@ class ResultsMessage : public Message {
 
 public:
 
-	ResultsMessage(int id) : Message(id) { }
+	ResultsMessage(message_id_t id) : Message(id) { }
 
+#ifdef WITH_JSON
 	static std::unique_ptr<ResultsMessage> fromJSON(const Json::Value& object)
 	{
 		return std::unique_ptr<ResultsMessage>(new ResultsMessage(Message::fromJSON(object)->id));
 	}
+#endif
 
 	Type getType() const override { return Type::RESULTS; }
 

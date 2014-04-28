@@ -5,14 +5,16 @@
 #include "Message.hpp"
 
 struct TargetCommand {
-	int id; ///< The ID of the target
+	board_id_t id; ///< The ID of the target
 	bool on; ///< true if the LEDs should be on
 
-	TargetCommand(int i, bool o) : id(i), on(o) { }
+	TargetCommand(board_id_t i, bool o) : id(i), on(o) { }
 
+#ifdef WITH_JSON
 	Json::Value toJSON() const;
 
 	static TargetCommand fromJSON(const Json::Value& object);
+#endif
 
 	bool operator==(const TargetCommand& o) const { return id == o.id && on == o.on; }
 };
@@ -25,13 +27,15 @@ public:
 
 	typedef std::vector<TargetCommand> CommandList;
 
-	TargetControlMessage(int id, CommandList&& comms);
+	TargetControlMessage(message_id_t id, CommandList&& comms);
 
-	TargetControlMessage(int id, const TargetCommand& comm);
+	TargetControlMessage(message_id_t id, const TargetCommand& comm);
 
+#ifdef WITH_JSON
 	static std::unique_ptr<TargetControlMessage> fromJSON(const Json::Value& object);
 
 	Json::Value toJSON() const override;
+#endif
 
 	Type getType() const override { return Type::TARGET_CONTROL; }
 

@@ -14,7 +14,7 @@
 using namespace std;
 using namespace Exceptions;
 
-void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberPlayers)
+void runGame(MessageQueue& in, MessageQueue& out, board_id_t numberTargets, board_id_t numberPlayers)
 {
 	ENFORCE(ArgumentException, numberTargets > 0, "You must have at least one target.");
 	ENFORCE(ArgumentException, numberPlayers > 0, "You must have at least one player.");
@@ -25,7 +25,7 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 	unique_ptr<GameStateMachine> machine;
 
 	// A unique ID we can use for sending messages (each message must have its own unique ID)
-	int uid = 0;
+	uint16_t uid = 0;
 
 	// The interval in which we should call the state machine's onTick if there are no unprocessed messages.
 	static const auto tickInterval = chrono::milliseconds(100);
@@ -36,7 +36,7 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 	// Receive messages as they come in until we get an exit message,
 	// and tick in the meantime if we don't receive one.
 	for (unique_ptr<Message> msg; msg == nullptr || msg->getType() != Message::Type::EXIT;
-		msg = in.receiveBefore(nextTick)) {
+		msg = in.receiveUntil(nextTick)) {
 
 		// These are just convenience lambda functions so the switch statement below is less cluttered
 
@@ -72,8 +72,8 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 					return;
 				}
 
-				const auto gameDuration = setupMessage->endTime <= 0 ?
-					chrono::seconds::max() : chrono::seconds(setupMessage->endTime);
+				const auto gameDuration = setupMessage->gameLength <= 0 ?
+					chrono::seconds::max() : chrono::seconds(setupMessage->gameLength);
 
 				// TODO: Be able to pass game data into the state machines
 				switch(setupMessage->gameType) {
@@ -244,8 +244,8 @@ void runGame(MessageQueue& in, MessageQueue& out, int numberTargets, int numberP
 	}
 }
 
-GameStateMachine::GameStateMachine(int numTargets, int numPlayers,
-	                               const std::chrono::seconds& gameDuration, int scoreToWin) :
+GameStateMachine::GameStateMachine(board_id_t numTargets, board_id_t numPlayers,
+	                               const std::chrono::seconds& gameDuration, shot_t scoreToWin) :
 	targetCount(numTargets),
 	players(numPlayers),
 	gameEndTime(),
@@ -258,7 +258,7 @@ GameStateMachine::GameStateMachine(int numTargets, int numPlayers,
 	ENFORCE(ArgumentException, numPlayers > 0, "You must have at least one player.");
 }
 
-std::unique_ptr<ResponseMessage> GameStateMachine::start(int responseID, int respondingTo)
+std::unique_ptr<ResponseMessage> GameStateMachine::start(message_id_t responseID, message_id_t respondingTo)
 {
 	if (isRunning()) {
 		return unique_ptr<ResponseMessage>(
@@ -284,7 +284,7 @@ std::unique_ptr<ResponseMessage> GameStateMachine::start(int responseID, int res
 		                    "The game has been successfully started"));
 }
 
-std::unique_ptr<ResponseMessage> GameStateMachine::stop(int responseID, int respondingTo)
+std::unique_ptr<ResponseMessage> GameStateMachine::stop(message_id_t responseID, message_id_t respondingTo)
 {
 	if (!isRunning()) {
 		return unique_ptr<ResponseMessage>(
@@ -300,7 +300,7 @@ std::unique_ptr<ResponseMessage> GameStateMachine::stop(int responseID, int resp
 }
 
 
-std::unique_ptr<ResponseMessage> GameStateMachine::onShot(int responseID, const ShotMessage& shot)
+std::unique_ptr<ResponseMessage> GameStateMachine::onShot(message_id_t responseID, const ShotMessage& shot)
 {
 	if (gameState == State::SETUP) {
 		return unique_ptr<ResponseMessage>(
@@ -317,7 +317,7 @@ std::unique_ptr<ResponseMessage> GameStateMachine::onShot(int responseID, const 
 		new ResponseMessage(responseID, shot.id, ResponseMessage::Code::OK, ss.str()));
 }
 
-std::unique_ptr<ResponseMessage> GameStateMachine::onMovement(int responseID, const MovementMessage& movement)
+std::unique_ptr<ResponseMessage> GameStateMachine::onMovement(message_id_t responseID, const MovementMessage& movement)
 {
 	if (gameState == State::SETUP) {
 		return unique_ptr<ResponseMessage>(
@@ -346,7 +346,8 @@ std::unique_ptr<ResponseMessage> GameStateMachine::onMovement(int responseID, co
 		new ResponseMessage(responseID, movement.id, ResponseMessage::Code::OK, ss.str()));
 }
 
-std::unique_ptr<StatusResponseMessage> GameStateMachine::getStatusResponse(int responseID, int respondingTo)
+std::unique_ptr<StatusResponseMessage> GameStateMachine::getStatusResponse(message_id_t responseID,
+                                                                           message_id_t respondingTo)
 {
 	StatusResponseMessage::PlayerList statsList;
 	for (const auto& player : players)
@@ -372,11 +373,12 @@ std::unique_ptr<StatusResponseMessage> GameStateMachine::getStatusResponse(int r
 
 	return unique_ptr<StatusResponseMessage>(
 		new StatusResponseMessage(responseID, respondingTo, response, gameState == State::RUNNING,
-		                          remaining.count(), winningScore,
+		                          (duration_t)remaining.count(), winningScore,
 		                          move(statsList)));
 }
 
-std::unique_ptr<ResponseMessage> GameStateMachine::getResultsResponse(int responseID, int respondingTo)
+std::unique_ptr<ResponseMessage> GameStateMachine::getResultsResponse(message_id_t responseID,
+                                                                      message_id_t respondingTo)
 {
 	if (gameState != State::OVER) {
 		return unique_ptr<ResponseMessage>(
@@ -415,7 +417,7 @@ std::unique_ptr<ResponseMessage> GameStateMachine::getResultsResponse(int respon
 		new ResultsResponseMessage(responseID, respondingTo, "Game results:", move(resList)));
 }
 
-std::unique_ptr<Message> GameStateMachine::onTick(int)
+std::unique_ptr<Message> GameStateMachine::onTick(uint16_t)
 {
 	if (winningScore > 0
 		&& any_of(begin(players), end(players), [this](const Player& p) { return p.score >= winningScore; }))

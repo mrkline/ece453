@@ -17,12 +17,12 @@ public:
 	 *                     Pass std::chrono::seconds::max for infinite (ish) duration.
 	 * \param scoreToWin The winning score. Pass a negative value for no winning score
 	 */
-	PopUpStateMachine(int numTargets, int numPlayers,
-	                  const std::chrono::seconds& gameDuration, int scoreToWin);
+	PopUpStateMachine(board_id_t numTargets, board_id_t numPlayers,
+	                  const std::chrono::seconds& gameDuration, score_t scoreToWin);
 
-	std::unique_ptr<ResponseMessage> onShot(int responseID, const ShotMessage& shot) override;
+	std::unique_ptr<ResponseMessage> onShot(uint16_t responseID, const ShotMessage& shot) override;
 
-	std::unique_ptr<Message> onTick(int messageID) override;
+	std::unique_ptr<Message> onTick(uint16_t messageID) override;
 
 private:
 
@@ -33,11 +33,11 @@ private:
 		SHUTOFF ///< Shut off the target after it has been hit
 	};
 
-	std::unique_ptr<Message> duringDelay(int messageID);
+	std::unique_ptr<Message> duringDelay(uint16_t messageID);
 
 	void duringUp();
 
-	std::unique_ptr<Message> duringShutoff(int messageID);
+	std::unique_ptr<Message> duringShutoff(uint16_t messageID);
 
 	void transitionToDelay();
 
@@ -48,7 +48,7 @@ private:
 	std::uniform_int_distribution<> delayDistribution;
 
 	/// The random distribution of the target to pop up
-	std::uniform_int_distribution<> targetDistribution;
+	std::uniform_int_distribution<int8_t> targetDistribution;
 
 	PopUpState state;
 
@@ -59,5 +59,5 @@ private:
 	TimePoint targetUp;
 
 	/// Stores the target we brought up
-	int whichTarget;
+	int8_t whichTarget;
 };

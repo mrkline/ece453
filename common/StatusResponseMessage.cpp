@@ -6,10 +6,14 @@
 
 using namespace std;
 using namespace Exceptions;
+
+#ifdef WITH_JSON
 using namespace Json;
+#endif
 
 namespace {
 
+#ifdef WITH_JSON
 // Using StaticString allows JSONCPP to make some optimzations because it knows the strings are static.
 const StaticString runningKey("running");
 const StaticString timeRemainingKey("time remaining");
@@ -39,11 +43,13 @@ StatusResponseMessage::PlayerList parseStats(const Value& stats)
 
 	return ret;
 }
+#endif
 
 } // End anonymous namespace
 
-StatusResponseMessage::StatusResponseMessage(int id, int respTo, const std::string& message,
-	                                         bool isRunning, int timeLeft, int winScore, PlayerList&& playerStats) :
+StatusResponseMessage::StatusResponseMessage(message_id_t id, message_id_t respTo, const std::string& message,
+	                                         bool isRunning, duration_t timeLeft, score_t winScore,
+	                                         PlayerList&& playerStats) :
 	// If we're sending a full status response message back, the request was ok.
 	ResponseMessage(id, respTo, ResponseMessage::Code::OK, message),
 	running(isRunning),
@@ -58,6 +64,7 @@ StatusResponseMessage::StatusResponseMessage(int id, int respTo, const std::stri
 		ENFORCE(ArgumentException, players.size() > 0, "You must have at least one player.");
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<StatusResponseMessage> StatusResponseMessage::fromJSON(const Json::Value& object)
 {
 	const auto responseInfo = ResponseMessage::fromJSON(object); // Get the basic response info
@@ -82,7 +89,8 @@ std::unique_ptr<StatusResponseMessage> StatusResponseMessage::fromJSON(const Jso
 
 	return std::unique_ptr<StatusResponseMessage>(
 		new StatusResponseMessage(responseInfo->id, responseInfo->respondingTo, responseInfo->message,
-		                          runningValue.asBool(), timeRemainingValue.asInt(), winningScoreValue.asInt(),
+		                          runningValue.asBool(),
+		                          (duration_t)timeRemainingValue.asInt(), (score_t)winningScoreValue.asInt(),
 		                          parseStats(playerStatsValue)));
 }
 
@@ -107,6 +115,7 @@ Json::Value StatusResponseMessage::toJSON() const
 
 	return ret;
 }
+#endif
 
 
 bool StatusResponseMessage::operator==(const Message& o) const

@@ -4,17 +4,23 @@
 
 using namespace std;
 using namespace Exceptions;
+
+#ifdef WITH_JSON
 using namespace Json;
+#endif
 
 namespace {
 
+#ifdef WITH_JSON
 const StaticString idKey("target ID");
 const StaticString onKey("target on");
 
 const StaticString commandsKey("commands");
+#endif
 
 } // end anonymous namespace
 
+#ifdef WITH_JSON
 Json::Value TargetCommand::toJSON() const
 {
 	Value ret(objectValue);
@@ -33,21 +39,23 @@ TargetCommand TargetCommand::fromJSON(const Json::Value& object)
 	ENFORCE(IOException, idValue.isInt(), "The target ID is not an integer.");
 	ENFORCE(IOException, onValue.isBool(), "The target ID is not a bool.");
 
-	return TargetCommand(idValue.asInt(), onValue.asBool());
+	return TargetCommand((board_id_t)idValue.asInt(), onValue.asBool());
 }
+#endif
 
-TargetControlMessage::TargetControlMessage(int id, CommandList&& comms) :
+TargetControlMessage::TargetControlMessage(message_id_t id, CommandList&& comms) :
 	Message(id),
 	commands(move(comms))
 {
 }
 
-TargetControlMessage::TargetControlMessage(int id, const TargetCommand& comm) :
+TargetControlMessage::TargetControlMessage(message_id_t id, const TargetCommand& comm) :
 	Message(id),
 	commands({comm})
 {
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<TargetControlMessage> TargetControlMessage::fromJSON(const Json::Value& object)
 {
 	auto msg = Message::fromJSON(object);
@@ -80,6 +88,7 @@ Json::Value TargetControlMessage::toJSON() const
 
 	return ret;
 }
+#endif
 
 bool TargetControlMessage::operator==(const Message& o) const
 {

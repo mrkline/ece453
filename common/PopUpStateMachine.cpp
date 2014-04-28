@@ -8,12 +8,12 @@
 using namespace std;
 using namespace std::chrono;
 
-PopUpStateMachine::PopUpStateMachine(int numTargets, int numPlayers,
-                                     const std::chrono::seconds& gameDuration, int scoreToWin) :
+PopUpStateMachine::PopUpStateMachine(board_id_t numTargets, board_id_t numPlayers,
+                                     const std::chrono::seconds& gameDuration, score_t scoreToWin) :
 	GameStateMachine(numTargets, numPlayers, gameDuration, scoreToWin),
 	rng(std::random_device()()),
-	delayDistribution(5, 10),
-	targetDistribution(0, numTargets - 1),
+	delayDistribution(3, 6),
+	targetDistribution(0, (board_id_t)(numTargets - 1)),
 	state(PopUpState::STARTUP),
 	transitionTime(),
 	targetUp(),
@@ -21,7 +21,7 @@ PopUpStateMachine::PopUpStateMachine(int numTargets, int numPlayers,
 {
 }
 
-std::unique_ptr<ResponseMessage> PopUpStateMachine::onShot(int responseID, const ShotMessage& shot)
+std::unique_ptr<ResponseMessage> PopUpStateMachine::onShot(uint16_t responseID, const ShotMessage& shot)
 {
 	auto msg = GameStateMachine::onShot(responseID, shot);
 
@@ -38,15 +38,17 @@ std::unique_ptr<ResponseMessage> PopUpStateMachine::onShot(int responseID, const
 		++roundWinner.hits;
 		// On the off-chance that due to some timing fluke, this arrives after the transition time,
 		// Award at least 10 points. This is probably unnecessary, but it doesn't hurt to be sure.
-		const int score = duration_cast<milliseconds>(transitionTime - Clock::now()).count() / 10;
-		roundWinner.score += max(10, score);
+		const score_t score = (score_t)(duration_cast<milliseconds>(transitionTime - Clock::now()).count() / 10);
+		// Yes, this is verbose and dumb. See
+		// http://stackoverflow.com/q/23317404/713961
+		roundWinner.score = (score_t)(roundWinner.score + max((score_t)10, score));
 		state = PopUpState::SHUTOFF;
 	}
 
 	return msg;
 }
 
-std::unique_ptr<Message> PopUpStateMachine::onTick(int messageID)
+std::unique_ptr<Message> PopUpStateMachine::onTick(uint16_t messageID)
 {
 	// Run the base functionality.
 	auto msg = GameStateMachine::onTick(messageID);
@@ -79,7 +81,7 @@ std::unique_ptr<Message> PopUpStateMachine::onTick(int messageID)
 }
 
 
-std::unique_ptr<Message> PopUpStateMachine::duringDelay(int messageID)
+std::unique_ptr<Message> PopUpStateMachine::duringDelay(uint16_t messageID)
 {
 	// The time the target will stay up before going back down
 	static const seconds targetWindow(5);
@@ -109,7 +111,7 @@ void PopUpStateMachine::duringUp()
 		state = PopUpState::SHUTOFF;
 }
 
-std::unique_ptr<Message> PopUpStateMachine::duringShutoff(int messageID)
+std::unique_ptr<Message> PopUpStateMachine::duringShutoff(uint16_t messageID)
 {
 	// If the game is over, fall back to startup. Otherwise, back to delay
 	if (isOver())

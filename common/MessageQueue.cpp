@@ -39,33 +39,6 @@ std::unique_ptr<Message> MessageQueue::receive()
 	return ret;
 }
 
-std::unique_ptr<Message> MessageQueue::receive(const std::chrono::milliseconds& timeout)
-{
-	// If we are not allowed to dequeue right now, just wait the expected time and return
-	unique_lock<mutex> lock(qMutex);
-	if (notifier.wait_for(lock, timeout, [this] { return !q.empty(); })) {
-		auto ret = std::move(q.front());
-		q.pop_front();
-		return ret;
-	}
-	else {
-		return nullptr;
-	}
-}
-
-std::unique_ptr<Message> MessageQueue::receiveBefore(const std::chrono::time_point<std::chrono::steady_clock>& time)
-{
-	unique_lock<mutex> lock(qMutex);
-	if (notifier.wait_until(lock, time, [this] { return !q.empty(); })) {
-		auto ret = std::move(q.front());
-		q.pop_front();
-		return ret;
-	}
-	else {
-		return nullptr;
-	}
-}
-
 bool MessageQueue::empty()
 {
 	unique_lock<mutex> lock(qMutex);

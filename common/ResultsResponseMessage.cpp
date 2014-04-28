@@ -6,19 +6,25 @@
 
 using namespace std;
 using namespace Exceptions;
+
+#ifdef WITH_JSON
 using namespace Json;
+#endif
 
 namespace {
 
+#ifdef WITH_JSON
 // Using StaticString allows JSONCPP to make some optimzations because it knows the strings are static.
 const StaticString playerStatsKey("player stats");
 const StaticString scoreKey("score");
 const StaticString hitsKey("hits");
 const StaticString shotsKey("shots");
+#endif
 
 // For laziness
 typedef ResultsResponseMessage::PlayerStats PlayerStats;
 
+#ifdef WITH_JSON
 std::vector<ShotWithMovement> parseShots(const Value& shots)
 {
 	std::vector<ShotWithMovement> ret;
@@ -43,12 +49,14 @@ PlayerStats parseStats(const Value& stat)
 	ENFORCE(IOException, hitsValue.isInt(), "A player's hit count is not an integer.");
 	ENFORCE(IOException, shotsValue.isArray(), "A player's shot list is not an array.");
 
-	return PlayerStats(scoreValue.asInt(), hitsValue.asInt(), parseShots(shotsValue));
+	return PlayerStats((score_t)scoreValue.asInt(), (shot_t)hitsValue.asInt(), parseShots(shotsValue));
 }
+#endif
 
 } // end anonymous namespace
 
-ResultsResponseMessage::ResultsResponseMessage(int id, int respTo, const std::string& message, StatsList&& playerStats) :
+ResultsResponseMessage::ResultsResponseMessage(message_id_t id, message_id_t respTo,
+                                               const std::string& message, StatsList&& playerStats) :
 	// If we're sending a results response payload back, the request was ok.
 	ResponseMessage(id, respTo, ResponseMessage::Code::OK, message),
 	stats(move(playerStats))
@@ -58,6 +66,7 @@ ResultsResponseMessage::ResultsResponseMessage(int id, int respTo, const std::st
 	}
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<ResultsResponseMessage> ResultsResponseMessage::fromJSON(const Json::Value& object)
 {
 	const auto responseInfo = ResponseMessage::fromJSON(object); // Get the basic response info
@@ -108,6 +117,7 @@ Json::Value ResultsResponseMessage::toJSON() const
 
 	return ret;
 }
+#endif
 
 bool ResultsResponseMessage::operator==(const Message& o) const
 {

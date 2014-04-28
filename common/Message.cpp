@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "Exceptions.hpp"
+#include "BinaryMessage.hpp"
 #include "ResponseMessage.hpp"
 #include "SetupMessage.hpp"
 #include "StartMessage.hpp"
@@ -19,23 +20,30 @@
 #include "TestMessage.hpp"
 
 using namespace Exceptions;
+
+#ifdef WITH_JSON
 using namespace Json;
+#endif
 
 namespace {
 
+#ifdef WITH_JSON
 // Using StaticString allows JSONCPP to make some optimzations because it knows the strings are static.
 const StaticString idKey("id");
+#endif
 
 } // end anonymous namespace
 
+#ifdef WITH_JSON
 const StaticString Message::typeKey("type");
+#endif
 
-Message::Message(int idNum) :
+Message::Message(message_id_t idNum) :
 	id(idNum)
 {
-	ENFORCE(ArgumentException, id >= 0, "The ID cannot be negative.");
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 {
 	ENFORCE(IOException, object.isMember(idKey), "The message contains no ID");
@@ -43,7 +51,9 @@ std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 	const Value& idValue = object[idKey];
 
 	ENFORCE(IOException, idValue.isInt(), "The message's ID field is not an integer.");
-	return std::unique_ptr<Message>(new Message(idValue.asInt()));
+	const int rawID = idValue.asInt();
+	ENFORCE(IOException, rawID >= 0, "The message's ID must be positive");
+	return std::unique_ptr<Message>(new Message((message_id_t)rawID));
 }
 
 Json::Value Message::toJSON() const
@@ -73,12 +83,34 @@ Json::Value Message::toJSON() const
 	ret[typeKey] = nameLookup.at(getType());
 	return ret;
 }
+#endif
+
+std::unique_ptr<Message> Message::fromBinary(uint8_t* buf, size_t len)
+{
+	using namespace BinaryMessage;
+	ENFORCE(IOException, isValidMessage(buf, len), "Message is not valid");
+	return std::unique_ptr<Message>(new Message(getID(buf)));
+}
+
+std::vector<uint8_t> Message::toBinary() const
+{
+	// Send a binary message with whatever payload is needed
+	auto payload = getBinaryPayload();
+	return BinaryMessage::makeMessage(getType(), id, begin(payload), end(payload));
+}
+
+std::vector<uint8_t> Message::getBinaryPayload() const
+{
+	// An empty message has no payload.
+	return vector<uint8_t>();
+}
 
 bool Message::operator==(const Message& o) const
 {
 	return id == o.id;
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 {
 	using Type = Message::Type;
@@ -161,3 +193,4 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 			assert(false);
 	}
 }
+#endif

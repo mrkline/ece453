@@ -6,18 +6,23 @@
 
 using namespace std;
 using namespace Exceptions;
+
+#ifdef WITH_JSON
 using namespace Json;
+#endif
 
 namespace {
 
+#ifdef WITH_JSON
 const StaticString playerKey("player");
 const StaticString targetKey("target ID");
 const StaticString timeKey("time");
 const StaticString movementKey("movement");
+#endif
 
 } // end anonymous namespace
 
-Shot::Shot(int8_t p, int8_t tar, int time) :
+Shot::Shot(board_id_t p, board_id_t tar, timestamp_t time) :
 	player(p),
 	target(tar),
 	time(time)
@@ -25,6 +30,7 @@ Shot::Shot(int8_t p, int8_t tar, int time) :
 	ENFORCE(ArgumentException, time >= 0, "A shot cannot take place before the game starts");
 }
 
+#ifdef WITH_JSON
 Json::Value Shot::toJSON() const
 {
 	Value shotValue(objectValue);
@@ -59,8 +65,9 @@ Shot Shot::fromJSON(const Json::Value& value)
 	ENFORCE(IOException, p >= -128 && p < 128, "A shot's player ID is not representable by a byte.");
 	ENFORCE(IOException, tar >= -128 && tar < 128, "A shot's target ID is not representable by a byte.");
 
-	return Shot((char)p, (char)tar, time);
+	return Shot((board_id_t)p, (board_id_t)tar, time);
 }
+#endif
 
 bool Shot::operator==(const Shot& o) const
 {
@@ -69,7 +76,8 @@ bool Shot::operator==(const Shot& o) const
 		&& time == o.time;
 }
 
-ShotWithMovement::ShotWithMovement(char p, char tar, int time, std::vector<Vector3>&& m) :
+ShotWithMovement::ShotWithMovement(board_id_t p, board_id_t tar, timestamp_t time, std::vector<Vector3>&& m) :
+
 	Shot(p, tar, time),
 	movement(move(m))
 { }
@@ -84,6 +92,7 @@ ShotWithMovement::ShotWithMovement(ShotWithMovement&& o) :
 	movement(move(o.movement))
 { }
 
+#ifdef WITH_JSON
 Json::Value ShotWithMovement::toJSON() const
 {
 	Value shotValue = Shot::toJSON();
@@ -101,6 +110,7 @@ ShotWithMovement ShotWithMovement::fromJSON(const Json::Value& value)
 
 	return ShotWithMovement(plain.player, plain.target, plain.time, movementFromJSON(movementValue));
 }
+#endif
 
 bool ShotWithMovement::operator==(const Shot& o) const
 {
@@ -114,6 +124,7 @@ bool ShotWithMovement::operator==(const Shot& o) const
 	return movement == swm->movement;
 }
 
+#ifdef WITH_JSON
 Movement movementFromJSON(const Json::Value& moves)
 {
 	Movement ret;
@@ -152,3 +163,4 @@ Json::Value movementToJSON(const Movement moves)
 
 	return movementValue;
 }
+#endif

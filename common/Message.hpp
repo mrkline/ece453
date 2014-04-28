@@ -1,15 +1,21 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
+#include <vector>
 
+#ifdef WITH_JSON
 #include <jsoncpp/json/json.h>
+#endif
+
+#include "GameTypes.hpp"
 
 class Message {
 
 public:
 
 	/// Different types of message payloads.
-	enum class Type {
+	enum class Type : int8_t {
 		EMPTY, ///< A message containing nothing but an ID
 		RESPONSE, ///< A generic response
 		SETUP, ///< Set up a game
@@ -26,18 +32,25 @@ public:
 		TEST, ///< A test payload that holds a string
 		UNKNOWN ///< An unknown/invalid payload type
 	};
+	Message(message_id_t idNum);
 
-	Message(int idNum);
-
+#ifdef WITH_JSON
 	static std::unique_ptr<Message> fromJSON(const Json::Value& object);
 
 	const static Json::StaticString typeKey;
 
 	virtual Json::Value toJSON() const;
+#endif
+
+	static std::unique_ptr<Message> fromBinary(uint8_t* buf, size_t len);
+
+	std::vector<uint8_t> toBinary() const;
+
+	virtual std::vector<uint8_t> getBinaryPayload() const;
 
 	virtual Type getType() const { return Type::EMPTY; }
 
-	const int id;
+	const message_id_t id;
 
 	virtual bool operator==(const Message& o) const;
 };
@@ -51,4 +64,6 @@ namespace std
 	};
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<Message> JSONToMessage(const Json::Value& object);
+#endif

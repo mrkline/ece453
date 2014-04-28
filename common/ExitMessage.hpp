@@ -5,12 +5,14 @@
 class ExitMessage : public Message {
 public:
 
-	ExitMessage(int id) : Message(id) { }
+	ExitMessage(message_id_t id) : Message(id) { }
 
+#ifdef WITH_JSON
 	static std::unique_ptr<ExitMessage> fromJSON(const Json::Value& object)
 	{
 		return std::unique_ptr<ExitMessage>(new ExitMessage(Message::fromJSON(object)->id));
 	}
+#endif
 
 	Type getType() const override { return Type::EXIT; }
 

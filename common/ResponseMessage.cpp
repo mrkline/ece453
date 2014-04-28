@@ -2,11 +2,15 @@
 
 #include <unordered_map>
 
+#include "BinaryMessage.hpp"
 #include "Exceptions.hpp"
 
-using namespace Json;
 using namespace Exceptions;
 using namespace std;
+
+#ifdef WITH_JSON
+using namespace Json;
+#endif
 
 namespace std
 {
@@ -19,6 +23,7 @@ namespace std
 
 namespace {
 
+#ifdef WITH_JSON
 // Using StaticString allows JSONCPP to make some optimzations because it knows the strings are static.
 const StaticString respondingToKey("responding to");
 const StaticString codeKey("code");
@@ -39,18 +44,19 @@ const unordered_map<ResponseMessage::Code, StaticString> codeToName = {
 	{ResponseMessage::Code::INVALID_REQUEST, StaticString("invalid request")},
 	{ResponseMessage::Code::UNSUPPORTED_REQUEST, StaticString("unsupported request")}
 };
+#endif
 
 } // End anonymous namespace
 
-ResponseMessage::ResponseMessage(int idNum, int respTo, Code c, const std::string& msg) :
+ResponseMessage::ResponseMessage(message_id_t idNum, message_id_t respTo, Code c, const std::string& msg) :
 	Message(idNum),
 	respondingTo(respTo),
 	code(c),
 	message(msg)
 {
-	ENFORCE(ArgumentException, respondingTo >= 0, "Responding to a negative ID does not make sense.");
 }
 
+#ifdef WITH_JSON
 std::unique_ptr<ResponseMessage> ResponseMessage::fromJSON(const Json::Value& object)
 {
 	auto msg = Message::fromJSON(object);
@@ -71,9 +77,12 @@ std::unique_ptr<ResponseMessage> ResponseMessage::fromJSON(const Json::Value& ob
 	const auto codeIt = nameToCode.find(codeValue.asString());
 	ENFORCE(IOException, codeIt != end(nameToCode), "The response code is invalid.");
 
+	const int respondingToRaw = respondingToValue.asInt();
+
+	ENFORCE(IOException, respondingToRaw >= 0, "The response ID must be positive");
+
 	return std::unique_ptr<ResponseMessage>(
-		new ResponseMessage(msg->id,
-		                    respondingToValue.asInt(), codeIt->second, messageValue.asString()));
+		new ResponseMessage(msg->id, (message_id_t)respondingToRaw, codeIt->second, messageValue.asString()));
 }
 
 Json::Value ResponseMessage::toJSON() const
@@ -84,6 +93,35 @@ Json::Value ResponseMessage::toJSON() const
 	ret[codeKey] = codeToName.at(code);
 	ret[messageKey] = message;
 
+	return ret;
+}
+#endif
+
+std::unique_ptr<ResponseMessage> ResponseMessage::fromBinary(uint8_t* buf, size_t len)
+{
+	auto msg = Message::fromBinary(buf, len);
+
+	using namespace BinaryMessage;
+
+	size_t pl;
+	const uint8_t* bl = getPayload(buf, pl);
+	// Make sure the payload contains for our expected data (respondingTo ID and code)
+	ENFORCE(IOException, pl >= sizeof(message_id_t) + 1, "The provided message is too small.");
+
+	message_id_t resp = extractUInt16(bl);
+	bl += 2;
+	Code c = (Code)*bl;
+
+	// Binary response messages contain no strings. Not worth the trouble or bandwidth.
+	return std::unique_ptr<ResponseMessage>(
+		new ResponseMessage(msg->id, resp, c, ""));
+}
+
+std::vector<uint8_t> ResponseMessage::getBinaryPayload() const
+{
+	vector<uint8_t> ret;
+	BinaryMessage::appendInt(ret, respondingTo);
+	ret.emplace_back((uint8_t)code);
 	return ret;
 }
 
