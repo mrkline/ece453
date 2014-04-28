@@ -37,6 +37,16 @@ uint32_t numShots = 0;			//Total shots this gun has taken
 
 const unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
 
+
+//Interrupt vector for timer1 A0
+#pragma vector=TIMER1_A0_VECTOR
+__interrupt void TIMER1_A0_ISR(void)
+{
+
+}
+
+
+
 void uart_putc(unsigned char c)
 {
 	while (!(UCA0IFG & UCTXIFG));             // USCI_A0 TX buffer ready?
@@ -63,7 +73,8 @@ void TriggerPull(void)
 	laserDuration = 0;
 	while(laserDuration != 10000)
 	{
-		P2OUT |= 0x05;		//Turn on the laser and buzzer
+		P2OUT |= 0x01;		//Turn on the laser
+		P2OUT ^= 0x04;		//Toggle the buzzer
 		laserDuration++;
 	}
 }
@@ -246,22 +257,21 @@ void main(void) {
     UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
     UCA0IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
 
-    //UNIFIED SYSTEM CLOCK CONFIG - SET ACLK to 2.67 MHz
-    UCSCTL1 |= 0x0040;
-    UCSCTL1 &= 0xFFCF;
-    UCSCTL0 &= 0xE7FF;
-    UCSCTL0 |= 0x0700;
-    UCSCTL4 |= 0x0300;						//Set ACLK frequency to DCO frequency
-    UCSCTL4 &= 0xFFFB;
-
     //TIMER A0 CONFIGURATION - Keeps time for reporting time of shots fired
-    TA0CTL &= 0x00;
-    TA0CTL |= 0x0120;		//Set Timer to use ACLK, continuous, has no interrupts
+   // TA0CTL &= 0x00;
+   // TA0CTL |= 0x0120;		//Set Timer to use ACLK, continuous, has no interrupts
+
+  //  TA0CCTL0 = CCIE;                          // CCR0 interrupt enabled
+  //  TA0CCR0 = 50000;
+    TA0CTL = TASSEL_2 + MC_2 + TACLR;         // SMCLK, upmode, clear TAR
 
     //TIMER A1 CONFIGURATION - For strobing the laser in a pattern
-    TA1CTL &= 0x00;
-    TA1CTL |= 0x0102;						//Use ACLK for frequency, in stop mode, has interrupts
+  //  TA1CTL &= 0x00;
+    //TA1CTL |= 0x0102;						//Use ACLK for frequency, in stop mode, has interrupts
 
+    TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
+    TA1CCR0 = 50000;
+    TA1CTL = TASSEL_2 + MC_1 + TACLR;         // SMCLK, upmode, clear TAR
 
    __bis_SR_register(GIE);       				// Enter LPM0, Enable interrupts
    __no_operation();                         	// For debugger
@@ -277,19 +287,20 @@ void main(void) {
     P2IES &= 0xFD;    	//P2IES -> Select interrupt edge: 0 = L to H, 1 = H to L
     P2IE |= 0x02;		//P2IE  -> Enable/Disable Interrupt: 0 = disabled, 1 = enabled
     P2OUT &= 0xFE;		//Turn off laser
-    while(1)
-    {
+    while(1);
+
     	//P2OUT &= 0xFE;		//Turn off laser
-    }
+
 
     //Assign a unique gun ID to the gun
   /*  while(1)
     {
     	numShots = 0;			//Reset value of number of shots
+	//Gets an 'Are you there?' message
+	 //Check ID and match to gun ID -> acknowledgment sent back to confirm
 
-    		//Gun will be receiving a message to tell it to send its data
-    		//Gets message from peripheral board
-
+	//Gets a message that round is over
+	 //Respond with a shot message for each message
     		info = gunID;	//Send peripheral confirmation that this gun is in the game - send its unique id
     		TxBuffer[PACKET_LEN - 2] = info;
 

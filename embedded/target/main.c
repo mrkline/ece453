@@ -35,8 +35,7 @@ uint32_t ledcount;
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void TIMER1_A0_ISR(void)
 {
-
-			P2OUT &= 0x00;
+			P2OUT &= 0x00;	//Turn off the LEDs - the target has been hit
 			cont = 1;
 
 }
@@ -102,14 +101,9 @@ void LEDs(void)
 
 	while(!cont)
 	{
-	/*while (ledcount < 100)
-	{
-		//P2OUT &= 0x00;		//Turn off Red LEDs
-		//P2OUT |= 0x10;		//Turn on green leds showing target has been hit
-		ledcount++;
 
-	}*/
 	}
+	//Send message to daughter board when it gets hit - wait for a second -> if no acknowledgement then send again
 	//P2OUT &= 0x00;
 	//Indicate hit
 	return;
@@ -259,13 +253,6 @@ void main(void) {
     InitRadio();		//Set up the antenna for 915 MHz
     active = 0;			//Target starts as inactive
 
-    //UNIFIED SYSTEM CLOCK CONFIG - SET ACLK to 2.67 MHz
-  /*  UCSCTL1 |= 0x0040;
-    UCSCTL1 &= 0xFFCF;
-    UCSCTL0 &= 0xE7FF;
-    UCSCTL0 |= 0x0700;
-    UCSCTL4 |= 0x0300;						//Set ACLK frequency to DCO frequency
-    UCSCTL4 &= 0xFFFB;*/
 
     PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
     P1MAP5 = PM_UCA0RXD;                      // Map UCA0RXD output to P1.5
@@ -295,7 +282,7 @@ void main(void) {
     UCA0IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
 
     //TIMER A0 CONFIGURATIONS - For the LEDs on the target to time their color change
-    TA0CTL &= 0x00;			//Clear the control register
+    //TA0CTL &= 0x00;			//Clear the control register
    // TA0CTL |= 0x0102;		//Set Timer to use ACLK, in stop mode, has interrupts
     //TA0CCTL0 |= CCIE;		//Set this interrupt as the highest priority
     //TA0CCR0 = TRIGGER;		//Compare/Capture for Timer will interrupt when this value is reached - should be one second
@@ -319,14 +306,9 @@ void main(void) {
     //Assign unique target ID to each target
     while(1)
     {
-    	//LEDs();
-    	/*P2OUT |= 0x08;		//Turn LEDs red
-    	if(P2IN & 0x80)
-    	{
-    		LEDs();
-    		break;
-
-    	}*/
+    	//Respond to 'Are you there?' message from daughter board
+    		//Respond by matching targets ID to the message ID
+    	//Get message telling when to be turned on -> send confirmation back
 
     }
     /*
