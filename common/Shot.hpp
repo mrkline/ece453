@@ -9,8 +9,6 @@
 #include "GameTypes.hpp"
 #include "Vector3.hpp"
 
-typedef std::vector<Vector3> Movement;
-
 /// Represents a shot with an idicator about whether or not it was hit
 class Shot {
 public:
@@ -48,35 +46,3 @@ struct hash<Shot> {
 };
 
 } // end namespace std
-
-class ShotWithMovement : public Shot {
-public:
-	ShotWithMovement(board_id_t p, board_id_t tar, timestamp_t time, Movement&& m);
-
-	ShotWithMovement(const Shot&, Movement&& m);
-
-	ShotWithMovement(const ShotWithMovement&) = default;
-
-	ShotWithMovement(ShotWithMovement&& o);
-
-#ifdef WITH_JSON
-	Json::Value toJSON() const override;
-
-	static ShotWithMovement fromJSON(const Json::Value& value);
-#endif
-
-	bool operator==(const Shot& o) const override;
-
-	ShotWithMovement& operator=(ShotWithMovement&&) = default;
-
-	ShotWithMovement& operator=(const ShotWithMovement&) = default;
-
-	// A vector of vectors. Surely this will cause no confusion.
-	Movement movement; ///< Provides accelerometer data leading up to the shot
-};
-
-#ifdef WITH_JSON
-Movement movementFromJSON(const Json::Value& moves);
-
-Json::Value movementToJSON(const Movement moves);
-#endif

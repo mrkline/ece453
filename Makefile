@@ -49,6 +49,6 @@ gallery: $(OBJS) main.o
 
 # remove compilation products
 clean:
-	rm -f tests/*.o common/*.o *.o *.gch *.d
+	rm -f tests/*.o tests/*.d common/*.o common/*.d *.o *.gch *.d
 
 .PHONY: clean debug release

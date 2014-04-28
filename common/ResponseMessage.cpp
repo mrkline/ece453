@@ -136,6 +136,7 @@ bool ResponseMessage::operator==(const Message& o) const
 		return false;
 
 	return respondingTo == rm->respondingTo
-		&& code == rm->code
-		&& message == rm->message;
+		&& code == rm->code;
+		// Allow compatibility for binary responses, which carry no string
+		// && message == rm->message;
 }

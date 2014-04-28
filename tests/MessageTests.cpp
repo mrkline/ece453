@@ -17,7 +17,7 @@ using namespace std;
 
 namespace {
 
-void check(const unique_ptr<Message>& load, Message::Type t)
+void JSONCheck(const unique_ptr<Message>& load, Message::Type t)
 {
 	Json::Value jrep = load->toJSON();
 
@@ -25,6 +25,16 @@ void check(const unique_ptr<Message>& load, Message::Type t)
 	assert(fromJSON->getType() == load->getType());
 	assert(load->getType() == t); // To make sure we don't forget to override getType()
 	assert(*load == *fromJSON);
+}
+
+void binaryCheck(const unique_ptr<Message>& load, Message::Type t)
+{
+	vector<uint8_t> buf = load->toBinary();
+
+	auto fromBinary = binaryToMessage(buf.data(), buf.size());
+	assert(fromBinary->getType() == load->getType());
+	assert(load->getType() == t);
+	assert(*load == *fromBinary);
 }
 
 } // end anonymous namespace
@@ -54,28 +64,12 @@ std::unique_ptr<StatusResponseMessage> makeStatusResponseMessage()
 		new StatusResponseMessage(0, 56, "I am a response!", true, 42, -1, move(stats)));
 }
 
-Movement makeMovement()
-{
-	random_device rd;
-	mt19937 gen(rd());
-	uniform_real_distribution<float> dis(-1, 1);
-	auto genFloat = [&]() { return dis(gen); };
-
-	Movement fakeMovement;
-	for (int i = 0; i < 10; ++i)
-		fakeMovement.emplace_back(genFloat(), genFloat(), genFloat());
-
-	return fakeMovement;
-}
 
 std::unique_ptr<ResultsResponseMessage> makeResultsResponseMessage()
 {
 	typedef ResultsResponseMessage::PlayerStats PlayerStats;
 
-
-	ShotWithMovement aShot(2, 4, 240, makeMovement());
-
-	PlayerStats stat(20, 1, vector<ShotWithMovement>({aShot}));
+	PlayerStats stat(20, 1, vector<Shot>({ Shot(2, 4, 240) }));
 
 	return unique_ptr<ResultsResponseMessage>(
 		new ResultsResponseMessage(0, 21, "I'm some results!", vector<PlayerStats>({stat})));
@@ -85,12 +79,6 @@ std::unique_ptr<ShotMessage> makeShotMessage()
 {
 	return unique_ptr<ShotMessage>(
 		new ShotMessage(0, Shot(2, 4, 240)));
-}
-
-std::unique_ptr<MovementMessage> makeMovementMessage()
-{
-	return unique_ptr<MovementMessage>(
-		new MovementMessage(0, ShotWithMovement(2, 4, 240, makeMovement())));
 }
 
 std::unique_ptr<TargetControlMessage> makeTargetControlMessage()
@@ -105,19 +93,28 @@ void MessageTests()
 	using Type = Message::Type;
 
 	beginUnit("Message");
-	test("Message -> JSON", []{ check(makeMessage(), Type::EMPTY); });
-	test("ResponseMessage -> JSON", []{ check(makeResponseMessage(), Type::RESPONSE); });
-	test("SetupMessage -> JSON", []{ check(makeSetupMessage(), Type::SETUP); });
-	test("StartMessage -> JSON", []{ check(makeMessage<StartMessage>(), Type::START); });
-	test("StopMessage -> JSON", []{ check(makeMessage<StopMessage>(), Type::STOP); });
-	test("StatusMessage -> JSON", []{ check(makeMessage<StatusMessage>(), Type::STATUS); });
-	test("StatusResponseMessage -> JSON", []{ check(makeStatusResponseMessage(), Type::STATUS_RESPONSE); });
-	test("ResultsMessage -> JSON", []{ check(makeMessage<ResultsMessage>(), Type::RESULTS); });
-	test("ResultsResponseMessage -> JSON", []{ check(makeResultsResponseMessage(), Type::RESULTS_RESPONSE); });
-	test("ShotMessage -> JSON", []{ check(makeShotMessage(), Type::SHOT); });
-	test("MovementMessage -> JSON", [] { check(makeMovementMessage(), Type::MOVEMENT); });
-	test("TargetControlMessage -> JSON", [] { check(makeTargetControlMessage(), Type::TARGET_CONTROL); });
-	test("ExitMessage -> JSON", []{ check(makeMessage<ExitMessage>(), Type::EXIT); });
+	test("Message -> JSON", []{ JSONCheck(makeMessage(), Type::EMPTY); });
+	test("ResponseMessage -> JSON", []{ JSONCheck(makeResponseMessage(), Type::RESPONSE); });
+	test("SetupMessage -> JSON", []{ JSONCheck(makeSetupMessage(), Type::SETUP); });
+	test("StartMessage -> JSON", []{ JSONCheck(makeMessage<StartMessage>(), Type::START); });
+	test("StopMessage -> JSON", []{ JSONCheck(makeMessage<StopMessage>(), Type::STOP); });
+	test("StatusMessage -> JSON", []{ JSONCheck(makeMessage<StatusMessage>(), Type::STATUS); });
+	test("StatusResponseMessage -> JSON", []{ JSONCheck(makeStatusResponseMessage(), Type::STATUS_RESPONSE); });
+	test("ResultsMessage -> JSON", []{ JSONCheck(makeMessage<ResultsMessage>(), Type::RESULTS); });
+	test("ResultsResponseMessage -> JSON", []{ JSONCheck(makeResultsResponseMessage(), Type::RESULTS_RESPONSE); });
+	test("ShotMessage -> JSON", []{ JSONCheck(makeShotMessage(), Type::SHOT); });
+	test("TargetControlMessage -> JSON", [] { JSONCheck(makeTargetControlMessage(), Type::TARGET_CONTROL); });
+	test("ExitMessage -> JSON", []{ JSONCheck(makeMessage<ExitMessage>(), Type::EXIT); });
+
+
+	test("Message -> Binary", []{ binaryCheck(makeMessage(), Type::EMPTY); });
+	test("ResponseMessage -> Binary", []{ binaryCheck(makeResponseMessage(), Type::RESPONSE); });
+	test("StartMessage -> Binary", []{ binaryCheck(makeMessage<StartMessage>(), Type::START); });
+	test("StopMessage -> Binary", []{ binaryCheck(makeMessage<StopMessage>(), Type::STOP); });
+	/*
+	test("ShotMessage -> Binary", []{ binaryCheck(makeShotMessage(), Type::SHOT); });
+	test("TargetControlMessage -> Binary", [] { binaryCheck(makeTargetControlMessage(), Type::TARGET_CONTROL); });
+	*/
 }
 
 } // end namespace Testing

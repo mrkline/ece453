@@ -7,7 +7,6 @@
 #include "ResultsResponseMessage.hpp"
 #include "StatusResponseMessage.hpp"
 #include "ShotMessage.hpp"
-#include "MovementMessage.hpp"
 #include "TargetControlMessage.hpp"
 
 namespace Testing {
@@ -26,13 +25,9 @@ std::unique_ptr<SetupMessage> makeSetupMessage(int16_t gameLength = 30, int16_t 
 
 std::unique_ptr<StatusResponseMessage> makeStatusResponseMessage();
 
-Movement makeMovement();
-
 std::unique_ptr<ResultsResponseMessage> makeResultsResponseMessage();
 
 std::unique_ptr<ShotMessage> makeShotMessage();
-
-std::unique_ptr<MovementMessage> makeMovementMessage();
 
 std::unique_ptr<TargetControlMessage> makeTargetControlMessage();
 

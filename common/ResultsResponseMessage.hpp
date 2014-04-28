@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 
+#include "Exceptions.hpp"
 #include "ResponseMessage.hpp"
 #include "Shot.hpp"
 
@@ -13,9 +14,9 @@ public:
 	struct PlayerStats {
 		const score_t score; ///< The player's final score
 		const shot_t hits; ///< The player's final hit count
-		const std::vector<ShotWithMovement> shots; ///< A list of shots the player took
+		const std::vector<Shot> shots; ///< A list of shots the player took
 
-		PlayerStats(score_t s, shot_t h, std::vector<ShotWithMovement>&& t) :
+		PlayerStats(score_t s, shot_t h, std::vector<Shot>&& t) :
 			score(s),
 			hits(h),
 			shots(std::move(t))
@@ -33,6 +34,12 @@ public:
 
 	Json::Value toJSON() const override;
 #endif
+
+	std::vector<uint8_t> getBinaryPayload() const override
+	{
+		THROW(Exceptions::InvalidOperationException,
+		      "This messsage type does not support binary serialization");
+	}
 
 	Type getType() const override { return Type::RESULTS_RESPONSE; }
 

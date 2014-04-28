@@ -14,6 +14,12 @@ public:
 	}
 #endif
 
+	std::vector<uint8_t> getBinaryPayload() const override
+	{
+		THROW(Exceptions::InvalidOperationException,
+		      "This messsage type does not support binary serialization");
+	}
+
 	Type getType() const override { return Type::EXIT; }
 
 	bool operator==(const Message& o) const override

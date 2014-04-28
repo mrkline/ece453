@@ -13,7 +13,6 @@
 #include "StartMessage.hpp"
 #include "StopMessage.hpp"
 #include "ShotMessage.hpp"
-#include "MovementMessage.hpp"
 #include "ExitMessage.hpp"
 
 using namespace std;
@@ -87,19 +86,6 @@ void earlyShot()
 	auto ack = unique_dynamic_cast<ResponseMessage>(out.receive());
 	assert(ack != nullptr);
 	// We shouldn't be able to shoot before actually setting up and starting
-	assert(ack->code == Code::INVALID_REQUEST);
-	assert(ack->respondingTo == id);
-	EXIT;
-	ASSERT_EMPTY_OUT;
-}
-
-void earlyMovement()
-{
-	MACHINE_ENVIRONMENT;
-	SEND(makeMovementMessage());
-	auto ack = unique_dynamic_cast<ResponseMessage>(out.receive());
-	assert(ack != nullptr);
-	// We shouldn't be able to send a message before actually setting up and starting
 	assert(ack->code == Code::INVALID_REQUEST);
 	assert(ack->respondingTo == id);
 	EXIT;

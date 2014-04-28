@@ -67,3 +67,5 @@ namespace std
 #ifdef WITH_JSON
 std::unique_ptr<Message> JSONToMessage(const Json::Value& object);
 #endif
+
+std::unique_ptr<Message> binaryToMessage(uint8_t* buf, size_t len);
