@@ -7,7 +7,6 @@
 #endif
 
 #include "GameTypes.hpp"
-#include "Vector3.hpp"
 
 /// Represents a shot with an idicator about whether or not it was hit
 class Shot {
@@ -17,12 +16,12 @@ public:
 	Shot(const Shot&) = default;
 
 #ifdef WITH_JSON
-	virtual Json::Value toJSON() const;
+	Json::Value toJSON() const;
 
 	static Shot fromJSON(const Json::Value& value);
 #endif
 
-	virtual bool operator==(const Shot& o) const;
+	bool operator==(const Shot& o) const;
 
 	// Allow us to sort via time
 	bool operator<(const Shot& o) const { return time < o.time; }
