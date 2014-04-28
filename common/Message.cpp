@@ -194,3 +194,55 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 	}
 }
 #endif
+
+std::unique_ptr<Message> binaryToMessage(uint8_t* buf, size_t len)
+{
+	using Type = Message::Type;
+
+	// May be a duplicate, but hell, unless it's a performance concern, we'll take it.
+	// If we want to eliminate the duplicate, take a look at the fromBinary functions
+	ENFORCE(IOException, BinaryMessage::isValidMessage(buf, len), "Message is not valid");
+
+	auto type = BinaryMessage::getType(buf);
+
+	using Type = Message::Type;
+
+	switch (type) {
+
+		case Type::EMPTY:
+			return Message::fromBinary(buf, len);
+
+		case Type::RESPONSE:
+			return ResponseMessage::fromBinary(buf, len);
+
+		case Type::START:
+			return StartMessage::fromBinary(buf, len);
+
+		case Type::STOP:
+			return StopMessage::fromBinary(buf, len);
+
+		case Type::SHOT:
+			return ShotMessage::fromBinary(buf, len);
+
+		case Type::MOVEMENT:
+			return MovementMessage::fromBinary(buf, len);
+
+		case Type::TARGET_CONTROL:
+			return TargetControlMessage::fromBinary(buf, len);
+
+			return ExitMessage::fromBinary(buf, len);
+
+			return TestMessage::fromBinary(buf, len);
+
+		// We don't have binary versions of these
+		case Type::STATUS:
+		case Type::STATUS_RESPONSE:
+		case Type::RESULTS:
+		case Type::RESULTS_RESPONSE:
+		case Type::SETUP:
+		case Type::TEST:
+		case Type::EXIT:
+		default:
+			assert(false);
+	}
+}

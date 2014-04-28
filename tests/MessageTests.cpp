@@ -17,7 +17,7 @@ using namespace std;
 
 namespace {
 
-void check(const unique_ptr<Message>& load, Message::Type t)
+void JSONCheck(const unique_ptr<Message>& load, Message::Type t)
 {
 	Json::Value jrep = load->toJSON();
 
@@ -25,6 +25,16 @@ void check(const unique_ptr<Message>& load, Message::Type t)
 	assert(fromJSON->getType() == load->getType());
 	assert(load->getType() == t); // To make sure we don't forget to override getType()
 	assert(*load == *fromJSON);
+}
+
+void binaryCheck(const unique_ptr<Message>& load, Message::Type t)
+{
+	vector<uint8_t> buf = load->toBinary();
+
+	auto fromBinary = binaryToMessage(buf.data(), buf.size());
+	assert(fromBinary->getType() == load->getType());
+	assert(load->getType() == t);
+	assert(*load == *fromBinary);
 }
 
 } // end anonymous namespace
@@ -105,19 +115,28 @@ void MessageTests()
 	using Type = Message::Type;
 
 	beginUnit("Message");
-	test("Message -> JSON", []{ check(makeMessage(), Type::EMPTY); });
-	test("ResponseMessage -> JSON", []{ check(makeResponseMessage(), Type::RESPONSE); });
-	test("SetupMessage -> JSON", []{ check(makeSetupMessage(), Type::SETUP); });
-	test("StartMessage -> JSON", []{ check(makeMessage<StartMessage>(), Type::START); });
-	test("StopMessage -> JSON", []{ check(makeMessage<StopMessage>(), Type::STOP); });
-	test("StatusMessage -> JSON", []{ check(makeMessage<StatusMessage>(), Type::STATUS); });
-	test("StatusResponseMessage -> JSON", []{ check(makeStatusResponseMessage(), Type::STATUS_RESPONSE); });
-	test("ResultsMessage -> JSON", []{ check(makeMessage<ResultsMessage>(), Type::RESULTS); });
-	test("ResultsResponseMessage -> JSON", []{ check(makeResultsResponseMessage(), Type::RESULTS_RESPONSE); });
-	test("ShotMessage -> JSON", []{ check(makeShotMessage(), Type::SHOT); });
-	test("MovementMessage -> JSON", [] { check(makeMovementMessage(), Type::MOVEMENT); });
-	test("TargetControlMessage -> JSON", [] { check(makeTargetControlMessage(), Type::TARGET_CONTROL); });
-	test("ExitMessage -> JSON", []{ check(makeMessage<ExitMessage>(), Type::EXIT); });
+	test("Message -> JSON", []{ JSONCheck(makeMessage(), Type::EMPTY); });
+	test("ResponseMessage -> JSON", []{ JSONCheck(makeResponseMessage(), Type::RESPONSE); });
+	test("SetupMessage -> JSON", []{ JSONCheck(makeSetupMessage(), Type::SETUP); });
+	test("StartMessage -> JSON", []{ JSONCheck(makeMessage<StartMessage>(), Type::START); });
+	test("StopMessage -> JSON", []{ JSONCheck(makeMessage<StopMessage>(), Type::STOP); });
+	test("StatusMessage -> JSON", []{ JSONCheck(makeMessage<StatusMessage>(), Type::STATUS); });
+	test("StatusResponseMessage -> JSON", []{ JSONCheck(makeStatusResponseMessage(), Type::STATUS_RESPONSE); });
+	test("ResultsMessage -> JSON", []{ JSONCheck(makeMessage<ResultsMessage>(), Type::RESULTS); });
+	test("ResultsResponseMessage -> JSON", []{ JSONCheck(makeResultsResponseMessage(), Type::RESULTS_RESPONSE); });
+	test("ShotMessage -> JSON", []{ JSONCheck(makeShotMessage(), Type::SHOT); });
+	test("MovementMessage -> JSON", [] { JSONCheck(makeMovementMessage(), Type::MOVEMENT); });
+	test("TargetControlMessage -> JSON", [] { JSONCheck(makeTargetControlMessage(), Type::TARGET_CONTROL); });
+	test("ExitMessage -> JSON", []{ JSONCheck(makeMessage<ExitMessage>(), Type::EXIT); });
+
+
+	test("Message -> Binary", []{ binaryCheck(makeMessage(), Type::EMPTY); });
+	test("ResponseMessage -> Binary", []{ binaryCheck(makeResponseMessage(), Type::RESPONSE); });
+	test("StartMessage -> Binary", []{ binaryCheck(makeMessage<StartMessage>(), Type::START); });
+	test("StopMessage -> Binary", []{ binaryCheck(makeMessage<StopMessage>(), Type::STOP); });
+	test("ShotMessage -> Binary", []{ binaryCheck(makeShotMessage(), Type::SHOT); });
+	test("MovementMessage -> Binary", [] { binaryCheck(makeMovementMessage(), Type::MOVEMENT); });
+	test("TargetControlMessage -> Binary", [] { binaryCheck(makeTargetControlMessage(), Type::TARGET_CONTROL); });
 }
 
 } // end namespace Testing
