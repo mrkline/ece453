@@ -1,5 +1,6 @@
 #include "GameStateMachine.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <sstream>
 
