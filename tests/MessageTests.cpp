@@ -112,9 +112,7 @@ void MessageTests()
 	test("StartMessage -> Binary", []{ binaryCheck(makeMessage<StartMessage>(), Type::START); });
 	test("StopMessage -> Binary", []{ binaryCheck(makeMessage<StopMessage>(), Type::STOP); });
 	test("ShotMessage -> Binary", []{ binaryCheck(makeShotMessage(), Type::SHOT); });
-	/*
 	test("TargetControlMessage -> Binary", [] { binaryCheck(makeTargetControlMessage(), Type::TARGET_CONTROL); });
-	*/
 }
 
 } // end namespace Testing

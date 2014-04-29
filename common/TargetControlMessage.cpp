@@ -1,5 +1,8 @@
 #include "TargetControlMessage.hpp"
 
+#include <cassert>
+
+#include "BinaryMessage.hpp"
 #include "Exceptions.hpp"
 
 using namespace std;
@@ -89,6 +92,44 @@ Json::Value TargetControlMessage::toJSON() const
 	return ret;
 }
 #endif
+
+std::unique_ptr<TargetControlMessage> TargetControlMessage::fromBinary(uint8_t* buf, size_t len)
+{
+	auto msg = Message::fromBinary(buf, len);
+	auto load = BinaryMessage::getPayload(buf);
+	ENFORCE(IOException, load.second > 3, "The payload cannot fit target commands.");
+	
+	const uint8_t numCommands = *load.first;
+	ENFORCE(IOException, load.second - 1 == numCommands * 2,
+	        "The payload is the incorrect size for target commands.");
+
+	++load.first;
+
+	CommandList comms;
+
+	for (uint8_t i = 0; i < numCommands; ++i) {
+		comms.emplace_back(load.first[0], (bool)load.first[1]);
+		load.first += 2;
+	}
+
+	return unique_ptr<TargetControlMessage>(
+		new TargetControlMessage(msg->id, move(comms)));
+}
+
+std::vector<uint8_t> TargetControlMessage::getBinaryPayload() const
+{
+	assert(Message::getBinaryPayload().size() == 0);
+	vector<uint8_t> ret;
+	ret.emplace_back((uint8_t)commands.size());
+
+	for (const auto& command : commands) {
+		ret.emplace_back(command.id);
+		ret.emplace_back((uint8_t)command.on);
+	}
+
+	return ret;
+}
+
 
 bool TargetControlMessage::operator==(const Message& o) const
 {

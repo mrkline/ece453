@@ -20,7 +20,7 @@ public:
 
 	static std::unique_ptr<ShotMessage> fromBinary(uint8_t* buf, size_t len);
 
-	virtual std::vector<uint8_t> getBinaryPayload() const override;
+	std::vector<uint8_t> getBinaryPayload() const override;
 
 	Type getType() const override { return Type::SHOT; }
 

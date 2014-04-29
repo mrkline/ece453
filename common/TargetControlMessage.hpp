@@ -37,6 +37,10 @@ public:
 	Json::Value toJSON() const override;
 #endif
 
+	static std::unique_ptr<TargetControlMessage> fromBinary(uint8_t* buf, size_t len);
+
+	std::vector<uint8_t> getBinaryPayload() const override;
+
 	Type getType() const override { return Type::TARGET_CONTROL; }
 
 	bool operator==(const Message& o) const override;
