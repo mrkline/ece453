@@ -33,7 +33,7 @@ unsigned char count;
 volatile unsigned char color;
 unsigned char cont;
 uint32_t ledcount;
-<<<<<<< HEAD
+
 
 //Interrupt for the ADC
 #pragma vector = ADC12_VECTOR
@@ -45,11 +45,11 @@ __interrupt void ADC12_ISR(void)
   case  2: break;                           // Vector  2:  ADC overflow
   case  4: break;                           // Vector  4:  ADC timing overflow
   case  6:                                  // Vector  6:  ADC12IFG0
-    if (ADC12MEM0 >= 0x7ff)                 // ADC12MEM = A0 > 0.5AVcc?
+    if (ADC12MEM0 >= 0x1FF)                 // ADC12MEM = A0 > 0.5AVcc?
       //P1OUT |= BIT0;                        // P1.0 = 1
+    	color = GREEN;
+    	active = 0;
     	LEDs();
-    else
-      //P1OUT &= ~BIT0;                       // P1.0 = 0
 
     __bic_SR_register_on_exit(LPM0_bits);   // Exit active CPU
   case  8: break;                           // Vector  8:  ADC12IFG1
@@ -70,9 +70,9 @@ __interrupt void ADC12_ISR(void)
   }
 }
 
-=======
+
 volatile acount;//used for debug, turn target off after hit for 3 seconds.  Then turn target back to active.
->>>>>>> origin/master
+
 //Interrupt vector for timer1 A0
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void TIMER1_A0_ISR(void)
@@ -101,8 +101,9 @@ __interrupt void PORT2_ISR(void)
     case  4: break;                         // P2.1 IFG
     case  6:
     	//P2IE = 0;							//Clear the interrupt
-    	//P1IFG
-    	Sensors();							//Go into the Sensors function
+
+    	//Sensors();							//Go into the Sensors function
+
     	__bic_SR_register_on_exit(LPM3_bits); // Exit active
     	break;                         		// P2.2 IFG
     case  8: break;                         // P2.3 IFG
@@ -303,7 +304,7 @@ void adc_config(void)
 {
     ADC12CTL0 = ADC12SHT02 + ADC12ON;         // Sampling time, ADC12 on
     ADC12CTL1 = ADC12SHP;                     // Use sampling timer
-    ADC12IE = 0x01;                           // Enable interrupt
+    ADC12IE = 0x07;                           // Enable interrupt for 2.0, 2.1, and 2.2
     ADC12CTL0 |= ADC12ENC;
 }
 
@@ -355,19 +356,15 @@ void uart_config(void)
 void timer_config(void)
 {
     TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
-<<<<<<< HEAD
-    TA1CCR0 = 50000;
-    TA1CTL = TASSEL_2 + MC_1 + TACLR;         // SMCLK, upmode, clear TAR
+    TA1CCR0 = 40000;//50000;
+    TA1CTL = TASSEL_1 + MC_0 + TACLR; //Start with timer halted, turn on at target hit//MC_1;// + TACLR;         // SMCLK, upmode, clear TAR
 }
 /*
  * main.c
  */
 void main(void) {
     WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
-=======
-    TA1CCR0 = 40000;//50000;
-    TA1CTL = TASSEL_1 + MC_0 + TACLR; //Start with timer halted, turn on at target hit//MC_1;// + TACLR;         // SMCLK, upmode, clear TAR
->>>>>>> origin/master
+
 
     // Increase PMMCOREV level to 2 in order to avoid low voltage error
     // when the RF core is enabled
@@ -395,7 +392,8 @@ void main(void) {
     //Assign unique target ID to each target
     while(1)
     {
-    	if(active){
+    	if(active)
+    	{
     		color = RED;
     		P2IE |= 0xC0;//turns on shot recieved interrupt
     		LEDs();
