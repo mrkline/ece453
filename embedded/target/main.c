@@ -13,10 +13,12 @@
 #define  CRC_OK             (BIT7)          // CRC_OK bit
 #define  PATABLE_VAL        (0x51)          // 0 dBm output
 #define  TRIGGER 			26700			// Marks one second on the trigger interrupt
-
+#define  BLUE				(0x20)
+#define  GREEN 				(0x10)
+#define  RED				(0x08)
 extern RF_SETTINGS rfSettings;
 
-unsigned int active;			//Set to 1 if target is currently the one to be shot at otherwise its 0
+volatile unsigned int active;			//Set to 1 if target is currently the one to be shot at otherwise its 0
 unsigned int counter;			//Counter for the sensors being high - could also use a timer?
 
 unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0x00};
@@ -28,8 +30,10 @@ unsigned char receiving = 0;
 unsigned char targetID;
 uint16_t timeStamp;
 unsigned char count;
+volatile unsigned char color;
 unsigned char cont;
 uint32_t ledcount;
+<<<<<<< HEAD
 
 //Interrupt for the ADC
 #pragma vector = ADC12_VECTOR
@@ -66,13 +70,23 @@ __interrupt void ADC12_ISR(void)
   }
 }
 
+=======
+volatile acount;//used for debug, turn target off after hit for 3 seconds.  Then turn target back to active.
+>>>>>>> origin/master
 //Interrupt vector for timer1 A0
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void TIMER1_A0_ISR(void)
 {
-			P2OUT &= 0x00;	//Turn off the LEDs - the target has been hit
-			cont = 1;
-
+	acount++;
+	P2OUT = 0x00;	//Turn off the LEDs - the target has been hit
+	cont = 1;
+	//P2OUT ^= 0x20;
+	if(acount > 3){
+		active = 1;//turn target back on, for debug testing
+		acount = 0;
+		TA1CTL = TASSEL_1 + MC_0 + TACLR;//turn off timer
+		P2IFG &= 0x3F;//clears any "bounce" interrupts for gun hits
+	}
 }
 
 //Interrupt for Port 2 bit that relates to the sensor,
@@ -86,7 +100,8 @@ __interrupt void PORT2_ISR(void)
     case  2: break;                         // P2.0 IFG
     case  4: break;                         // P2.1 IFG
     case  6:
-    	P2IE = 0;							//Clear the interrupt
+    	//P2IE = 0;							//Clear the interrupt
+    	//P1IFG
     	Sensors();							//Go into the Sensors function
     	__bic_SR_register_on_exit(LPM3_bits); // Exit active
     	break;                         		// P2.2 IFG
@@ -94,12 +109,21 @@ __interrupt void PORT2_ISR(void)
     case 10: break;                         // P2.4 IFG
     case 12: break;                         // P2.5 IFG
     case 14:
-    	P2IE = 0;		//FOR TESTING
+    	active = 0;//set target to off, it has been hit and should not read anymore
+    	//P1IFG &= 0xDF;
+    	P2IE = 0;		//gun 1 hit
+
+    	TA1CTL = TASSEL_1 + MC_1 + TACLR;//start timer to turn color on for a second
+    	color = BLUE;
     	LEDs();
     	__bic_SR_register_on_exit(LPM3_bits); // Exit active
     	break;                         // P2.6 IFG
     case 16:
-    	P2IE = 0;		//FOR TESTING
+    	active = 0;//set target to off, it has been hit and should not read anymore;
+    	P1IFG &= 0xBF;
+    	P2IE = 0;		//gun2 hit
+    	color = GREEN;
+    	TA1CTL = TASSEL_1 + MC_1 + TACLR;//start timer to turn color on for a second
     	LEDs();
     	__bic_SR_register_on_exit(LPM3_bits); // Exit active
     	break;                         // P2.7 IFG
@@ -130,10 +154,10 @@ void LEDs(void)
 	//When this is reached, we know the target is "hit"
 
 	ledcount = 0;
-	TA0CTL |= 0x0010;				//Start the timer
-	P2OUT &= 0x00;		//Turn off Red LEDs
-	P2OUT |= 0x10;		//Turn on green leds showing target has been hit
-
+	//TA0CTL |= 0x0010;				//Start the timer
+	P2OUT &= 0x00;		//Turn off LEDs
+	P2OUT |= color;//0x10;		//Turn on desired leds showing target has been hit
+	return;
 	while(!cont)
 	{
 
@@ -331,6 +355,7 @@ void uart_config(void)
 void timer_config(void)
 {
     TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
+<<<<<<< HEAD
     TA1CCR0 = 50000;
     TA1CTL = TASSEL_2 + MC_1 + TACLR;         // SMCLK, upmode, clear TAR
 }
@@ -339,6 +364,10 @@ void timer_config(void)
  */
 void main(void) {
     WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
+=======
+    TA1CCR0 = 40000;//50000;
+    TA1CTL = TASSEL_1 + MC_0 + TACLR; //Start with timer halted, turn on at target hit//MC_1;// + TACLR;         // SMCLK, upmode, clear TAR
+>>>>>>> origin/master
 
     // Increase PMMCOREV level to 2 in order to avoid low voltage error
     // when the RF core is enabled
@@ -366,6 +395,11 @@ void main(void) {
     //Assign unique target ID to each target
     while(1)
     {
+    	if(active){
+    		color = RED;
+    		P2IE |= 0xC0;//turns on shot recieved interrupt
+    		LEDs();
+    	}
     	//Respond to 'Are you there?' message from daughter board
     		//Respond by matching targets ID to the message ID
     	//Get message telling when to be turned on -> send confirmation back
