@@ -14,7 +14,7 @@
 #define  CRC_LQI_IDX        (PACKET_LEN+1)  // Index of appended LQI, checksum
 #define  CRC_OK             (BIT7)          // CRC_OK bit
 #define  PATABLE_VAL        (0x51)          // 0 dBm output
-
+#define GUN_CODE 			0xAF
 extern RF_SETTINGS rfSettings;
 
 volatile unsigned char info;
@@ -26,12 +26,12 @@ unsigned char RxBufferLength = 0;
 unsigned char transmitting = 0;
 unsigned char receiving = 0;
 unsigned char gunID;				//Hard coded gun ID to distinguish between the guns when sending messages
-
+unsigned char laser;				//boolean for laser on or off
 unsigned char rounds;				//Duration of game being played
 unsigned laserDuration;				//How long the laser stays on after a trigger pull
 unsigned char r;					//The character received from the RX uart buffer
 uint16_t timeStamp;				//Time of each shot that is taken -> Change to 16 bit int
-
+volatile acount;
 unsigned char *time_stamp;
 uint32_t numShots = 0;			//Total shots this gun has taken
 
@@ -42,10 +42,32 @@ const unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void TIMER1_A0_ISR(void)
 {
-
+	if(acount >= 8){
+		//active = 1;//turn target back on, for debug testing
+		//P2OUT ^= 0x04;
+		acount = 0;
+		P2OUT &= 0xFE;	//Turn off the laser
+		P2IFG = 0;
+		P2IE |= 0x02;		//P2IE  -> Enable/Disable Interrupt: 0 = disabled, 1 = enabled
+		TA1CTL = TASSEL_1 + MC_0 + TACLR;//turn off timer
+		//P2IFG &= 0x3F;//clears any "bounce" interrupts for gun hits
+	}
+	else{
+		laser = (GUN_CODE >> acount) & 0x01;
+		if(laser)
+			P2OUT |= 0x01;	//Turn on the laser
+		else
+			P2OUT &= 0xFE;	//Turn off the laser
+		acount++;
+	}
 }
 
-
+//Interrupt vector for timer1 A0
+#pragma vector=TIMER0_A0_VECTOR
+__interrupt void TIMER0_A0_ISR(void)
+{
+	P2OUT ^= 0x04;
+}
 
 void uart_putc(unsigned char c)
 {
@@ -68,6 +90,7 @@ void uart_getc(void)
 // buzzer and laser functionality
 void TriggerPull(void)
 {
+	/*
 	timeStamp = TA0R;//When trigger is pulled, get the timer value and put into variable timeStamp
 	//Append timeStamp to the time stamp string
 	laserDuration = 0;
@@ -77,6 +100,9 @@ void TriggerPull(void)
 		P2OUT ^= 0x04;		//Toggle the buzzer
 		laserDuration++;
 	}
+	//P2OUT |= 0x01;		//Turn on the laser
+	P2OUT &= 0xFE;
+	*/
 }
 
 
@@ -141,9 +167,15 @@ __interrupt void PORT2_ISR(void)
     case  2: break;                         // P2.0 IFG
 
     case  4:                          		// P2.1 IFG
+	P2IE &= 0xFD;		//turn off trigger interrupt, no interrupts while strobing laser
+
+	TA1CTL = TASSEL_1 + MC_1 + TACLR;//start timer to turn color on for a second
     P2IFG &= 0xFD;
     //buttonPressed = 1;
     TriggerPull();
+
+	__bic_SR_register_on_exit(LPM3_bits); // Exit active
+
 
     numShots = numShots + 1;			//NOT SURE ABOUT THIS LOGIC
     __bic_SR_register_on_exit(LPM3_bits); // Exit active
@@ -263,7 +295,7 @@ void main(void) {
 
   //  TA0CCTL0 = CCIE;                          // CCR0 interrupt enabled
   //  TA0CCR0 = 50000;
-    TA0CTL = TASSEL_2 + MC_2 + TACLR;         // SMCLK, upmode, clear TAR
+    /*TA0CTL = TASSEL_2 + MC_2 + TACLR;         // SMCLK, upmode, clear TAR
 
     //TIMER A1 CONFIGURATION - For strobing the laser in a pattern
   //  TA1CTL &= 0x00;
@@ -272,6 +304,14 @@ void main(void) {
     TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
     TA1CCR0 = 50000;
     TA1CTL = TASSEL_2 + MC_1 + TACLR;         // SMCLK, upmode, clear TAR
+*/
+    TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
+    TA1CCR0 = 40000;//50000;//about once a second
+    TA1CTL = TASSEL_1 + MC_0 + TACLR; //Start with timer halted, turn on at target hit//MC_1;// + TACLR;         // SMCLK, upmode, clear TAR
+
+    TA0CCR0 = 100;                 // Count limit (16 bit)
+    TA0CCTL0 = 0x10;                 // Enable Timer A1 interrupts, bit 4=1
+    TA0CTL = TASSEL_1 + MC_1 + TACLR;        // Timer A1 with ACLK, count UP
 
    __bis_SR_register(GIE);       				// Enter LPM0, Enable interrupts
    __no_operation();                         	// For debugger
