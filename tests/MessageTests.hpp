@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "Message.hpp"
+#include "QueryMessage.hpp"
 #include "SetupMessage.hpp"
 #include "ResultsResponseMessage.hpp"
 #include "StatusResponseMessage.hpp"
@@ -20,6 +21,8 @@ std::unique_ptr<M> makeMessage()
 }
 
 std::unique_ptr<ResponseMessage> makeResponseMessage();
+
+std::unique_ptr<QueryMessage> makeQueryMessage();
 
 std::unique_ptr<SetupMessage> makeSetupMessage(int16_t gameLength = 30, int16_t maxScore = -1);
 

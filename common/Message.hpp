@@ -18,6 +18,7 @@ public:
 	enum class Type : int8_t {
 		EMPTY, ///< A message containing nothing but an ID
 		RESPONSE, ///< A generic response
+		QUERY, ///< Query a board to see if it's in the system
 		SETUP, ///< Set up a game
 		START, ///< Start a game
 		STOP, ///< Stop a running game

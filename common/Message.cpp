@@ -6,6 +6,7 @@
 #include "Exceptions.hpp"
 #include "BinaryMessage.hpp"
 #include "ResponseMessage.hpp"
+#include "QueryMessage.hpp"
 #include "SetupMessage.hpp"
 #include "StartMessage.hpp"
 #include "StopMessage.hpp"
@@ -62,6 +63,7 @@ Json::Value Message::toJSON() const
 	static const std::unordered_map<Message::Type, StaticString> nameLookup = {
 		{Type::EMPTY, StaticString("empty")},
 		{Type::RESPONSE, StaticString("response")},
+		{Type::QUERY, StaticString("query")},
 		{Type::SETUP, StaticString("setup")},
 		{Type::START, StaticString("start")},
 		{Type::STOP, StaticString("stop")},
@@ -117,6 +119,7 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 	static const std::unordered_map<std::string, Message::Type> typeLookup = {
 		{"empty", Type::EMPTY},
 		{"response", Type::RESPONSE},
+		{"query", Type::QUERY},
 		{"setup", Type::SETUP},
 		{"start", Type::START},
 		{"stop", Type::STOP},
@@ -151,6 +154,9 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 
 		case Type::RESPONSE:
 			return ResponseMessage::fromJSON(object);
+
+		case Type::QUERY:
+			return QueryMessage::fromJSON(object);
 
 		case Type::SETUP:
 			return SetupMessage::fromJSON(object);
@@ -210,6 +216,9 @@ std::unique_ptr<Message> binaryToMessage(uint8_t* buf, size_t len)
 
 		case Type::RESPONSE:
 			return ResponseMessage::fromBinary(buf, len);
+
+		case Type::QUERY:
+			return QueryMessage::fromBinary(buf, len);
 
 		case Type::START:
 			return StartMessage::fromBinary(buf, len);

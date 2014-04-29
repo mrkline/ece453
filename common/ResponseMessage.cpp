@@ -1,5 +1,6 @@
 #include "ResponseMessage.hpp"
 
+#include <cassert>
 #include <unordered_map>
 
 #include "BinaryMessage.hpp"
@@ -107,6 +108,7 @@ std::unique_ptr<ResponseMessage> ResponseMessage::fromBinary(uint8_t* buf, size_
 	// Make sure the payload contains for our expected data (respondingTo ID and code)
 	ENFORCE(IOException, load.second >= sizeof(message_id_t) + 1, "The provided message is too small.");
 
+	static_assert(sizeof(message_id_t) == 2, "Someone changed the message ID size");
 	message_id_t resp = extractUInt16(load.first);
 	load.first += 2;
 	Code c = (Code)*load.first;
@@ -118,6 +120,8 @@ std::unique_ptr<ResponseMessage> ResponseMessage::fromBinary(uint8_t* buf, size_
 
 std::vector<uint8_t> ResponseMessage::getBinaryPayload() const
 {
+	assert(Message::getBinaryPayload().size() == 0);
+
 	vector<uint8_t> ret;
 	BinaryMessage::appendInt(ret, respondingTo);
 	ret.emplace_back((uint8_t)code);
