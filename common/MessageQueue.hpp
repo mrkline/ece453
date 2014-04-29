@@ -93,3 +93,13 @@ private:
 	std::atomic_bool closed;
 	std::condition_variable notifier;
 };
+
+struct MessageQueuePair {
+	MessageQueue& in;
+	MessageQueue& out;
+
+	MessageQueuePair(MessageQueue& i, MessageQueue& o) : in(i), out(o) { }
+
+	MessageQueuePair(const MessageQueuePair&) = default;
+	MessageQueuePair(MessageQueuePair&&) = default;
+};
