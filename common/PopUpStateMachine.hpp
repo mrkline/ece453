@@ -4,12 +4,14 @@
 
 #include "GameStateMachine.hpp"
 
+/// A state machine that handles the "pop up" game type
 class PopUpStateMachine : public GameStateMachine {
 
 public:
 
 	/**
 	 * \brief Constructs a state machine for the pop-up game type
+	 * \param numTargets The number of targets in the game
 	 * \param numPlayers The number of players playing the game.
 	 *                   The state machine does not make assumptions about how many players hardware supports,
 	 *                   so that should be checked elsewhere.

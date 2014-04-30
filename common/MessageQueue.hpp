@@ -94,6 +94,7 @@ private:
 	std::condition_variable notifier;
 };
 
+/// A convenience struct for holding two MessageQueues: one for input, one for output.
 struct MessageQueuePair {
 	MessageQueue& in;
 	MessageQueue& out;

@@ -58,10 +58,11 @@ public:
 
 	/**
 	 * \brief Constructs a game state machine
-	 * \param numPlayers The number of players playing the game.
+	 * \param numTargets The number of targets in the game
+	 * \param numPlayers The number of players playing the game
 	 *                   The state machine does not make assumptions about how many players hardware supports,
 	 *                   so that should be checked elsewhere.
-	 * \param gameDuration The duration of the game, in seconds.
+	 * \param gameDuration The duration of the game, in seconds
 	 *                     Pass std::chrono::seconds::max for infinite (ish) duration.
 	 * \param scoreToWin The winning score. Pass a negative value for no winning score
 	 */
@@ -71,8 +72,10 @@ public:
 	/// Returns true if the game is running
 	bool isRunning() { return gameState == State::RUNNING; }
 
+	/// Returns true if the game is over
 	bool isOver() { return gameState == State::OVER; }
 
+	/// Gets the current game state
 	State getState() { return gameState; }
 
 	/**
