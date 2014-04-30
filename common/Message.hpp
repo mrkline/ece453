@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #ifdef WITH_JSON
@@ -45,6 +46,10 @@ public:
 		TEST, ///< A test payload that holds a string
 		UNKNOWN ///< An unknown/invalid payload type
 	};
+
+	static const std::unordered_map<Message::Type, std::string> nameLookup;
+
+	static const std::unordered_map<std::string, Message::Type> typeLookup;
 
 	/// Constructs a base message, which only contains an ID.
 	Message(message_id_t idNum);

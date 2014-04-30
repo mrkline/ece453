@@ -1,7 +1,6 @@
 #include "Message.hpp"
 
 #include <cassert>
-#include <unordered_map>
 
 #include "Exceptions.hpp"
 #include "BinaryMessage.hpp"
@@ -38,6 +37,46 @@ const StaticString idKey("id");
 const StaticString Message::typeKey("type");
 #endif
 
+const std::unordered_map<Message::Type, std::string> Message::nameLookup = {
+	{Message::Type::EMPTY, "empty"},
+	{Message::Type::RESPONSE, "response"},
+	{Message::Type::QUERY, "query"},
+	{Message::Type::SETUP, "setup"},
+	{Message::Type::START, "start"},
+	{Message::Type::STOP, "stop"},
+	{Message::Type::STATUS, "status"},
+	{Message::Type::STATUS_RESPONSE, "status response"},
+	{Message::Type::RESULTS, "results"},
+	{Message::Type::RESULTS_RESPONSE, "results response"},
+	{Message::Type::SHOT, "shot"},
+	{Message::Type::MOVEMENT, "movement"},
+	{Message::Type::TARGET_CONTROL, "target control"},
+	{Message::Type::EXIT, "exit"},
+	{Message::Type::TEST, "test"}
+	// {Message::Type::UNKNOWN, "unknown"}
+};
+
+const std::unordered_map<std::string, Message::Type> Message::typeLookup = {
+	{"empty", Message::Type::EMPTY},
+	{"response", Message::Type::RESPONSE},
+	{"query", Message::Type::QUERY},
+	{"setup", Message::Type::SETUP},
+	{"start", Message::Type::START},
+	{"stop", Message::Type::STOP},
+	{"status", Message::Type::STATUS},
+	{"status response", Message::Type::STATUS_RESPONSE},
+	{"results", Message::Type::RESULTS},
+	{"results response", Message::Type::RESULTS_RESPONSE},
+	{"shot", Message::Type::SHOT},
+	{"movement", Message::Type::MOVEMENT},
+	{"target control", Message::Type::TARGET_CONTROL},
+	{"exit", Message::Type::EXIT},
+	{"test", Message::Type::TEST}
+	// {"unknown", Message::Type::UNKNOWN}
+};
+
+
+
 Message::Message(message_id_t idNum) :
 	id(idNum)
 {
@@ -58,27 +97,6 @@ std::unique_ptr<Message> Message::fromJSON(const Json::Value& object)
 
 Json::Value Message::toJSON() const
 {
-	using Type = Message::Type;
-
-	static const std::unordered_map<Message::Type, StaticString> nameLookup = {
-		{Type::EMPTY, StaticString("empty")},
-		{Type::RESPONSE, StaticString("response")},
-		{Type::QUERY, StaticString("query")},
-		{Type::SETUP, StaticString("setup")},
-		{Type::START, StaticString("start")},
-		{Type::STOP, StaticString("stop")},
-		{Type::STATUS, StaticString("status")},
-		{Type::STATUS_RESPONSE, StaticString("status response")},
-		{Type::RESULTS, StaticString("results")},
-		{Type::RESULTS_RESPONSE, StaticString("results response")},
-		{Type::SHOT, StaticString("shot")},
-		{Type::MOVEMENT, StaticString("movement")},
-		{Type::TARGET_CONTROL, StaticString("target control")},
-		{Type::EXIT, StaticString("exit")},
-		{Type::TEST, StaticString("test")}
-		// {Message::Type::UNKNOWN, "unknown"}
-	};
-
 	Value ret(objectValue);
 	ret[idKey] = id;
 	ret[typeKey] = nameLookup.at(getType());
@@ -116,34 +134,15 @@ std::unique_ptr<Message> JSONToMessage(const Json::Value& object)
 {
 	using Type = Message::Type;
 
-	static const std::unordered_map<std::string, Message::Type> typeLookup = {
-		{"empty", Type::EMPTY},
-		{"response", Type::RESPONSE},
-		{"query", Type::QUERY},
-		{"setup", Type::SETUP},
-		{"start", Type::START},
-		{"stop", Type::STOP},
-		{"status", Type::STATUS},
-		{"status response", Type::STATUS_RESPONSE},
-		{"results", Type::RESULTS},
-		{"results response", Type::RESULTS_RESPONSE},
-		{"shot", Type::SHOT},
-		{"movement", Type::MOVEMENT},
-		{"target control", Type::TARGET_CONTROL},
-		{"exit", Type::EXIT},
-		{"test", Type::TEST}
-		// {"unknown", Message::Type::UNKNOWN}
-	};
-
 	ENFORCE(IOException, object.isMember(Message::typeKey), "JSON object has no type field");
 
 	const Value& typeVal = object[Message::typeKey];
 
 	ENFORCE(IOException, typeVal.isString(), "The JSON object's type field is not a string");
 
-	auto it = typeLookup.find(typeVal.asString());
+	auto it = Message::typeLookup.find(typeVal.asString());
 
-	ENFORCE(IOException, it != end(typeLookup), "The JSON object's type field is unknown");
+	ENFORCE(IOException, it != end(Message::typeLookup), "The JSON object's type field is unknown");
 
 	using Type = Message::Type;
 
