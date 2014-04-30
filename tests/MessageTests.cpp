@@ -1,6 +1,7 @@
 #include "MessageTests.hpp"
 
 #include <random>
+#include <fstream> // TEMP
 
 #include "Test.hpp"
 #include "ResponseMessage.hpp"
@@ -35,6 +36,14 @@ void binaryCheck(const unique_ptr<Message>& load, Message::Type t)
 	assert(fromBinary->getType() == load->getType());
 	assert(load->getType() == t);
 	assert(*load == *fromBinary);
+
+	string messageTypeName = Message::nameLookup.at(t);
+	ofstream jsonOut("/tmp/reps/" + messageTypeName + ".json");
+	ofstream binOut("/tmp/reps/" + messageTypeName + ".bin");
+	assert(jsonOut.good());
+	assert(binOut.good());
+	jsonOut << load->toJSON();
+	binOut.write((char*)(buf.data()), buf.size());
 }
 
 } // end anonymous namespace
