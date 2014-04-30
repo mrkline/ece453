@@ -50,6 +50,28 @@ __interrupt void TIMER1_A0_ISR(void)
 	}
 }
 
+//ADC CONFIGURATION
+void adc_config(void)
+{
+	ADC12CTL0 = ADC12ON + ADC12MSC + ADC12SHT0_10;
+	ADC12CTL1 = ADC12SHP + ADC12CONSEQ_3;
+	ADC12MCTL0 = ADC12INCH_0;
+	ADC12MCTL1 = ADC12INCH_1;
+	ADC12MCTL2 = ADC12INCH_2 + ADC12EOS;
+	ADC12IE = 0x4;
+	ADC12CTL0 |= ADC12ENC;
+	/*
+	ADC12MCTL0 = ADC12SHP + ADC12CONSEQ_3;		//input A0
+	ADC12MCTL1 = 0x1;
+	ADC12MCTL2 = 0x2 + ADC12EOS;//change back?
+    ADC12CTL0 = ADC12SHT02 + ADC12ON ADC12;         // Sampling time, ADC12 on
+    ADC12CTL1 = ADC12SHP + ADC12CONSEQ_3;   //change back?                  // Use sampling timer
+    ADC12IE = 0x07;                           // Enable interrupt for 2.0, 2.1, and 2.2
+    ADC12CTL0 |= ADC12ENC;
+    */
+}
+
+
 //Interrupt for Port 2 bit that relates to the sensor,
 // We want to interrupt when the sensors detect light
 #pragma vector=PORT2_VECTOR
@@ -259,7 +281,44 @@ __interrupt void CC1101_ISR(void)
   __bic_SR_register_on_exit(LPM3_bits);
 }
 
-
+//Interrupt for the ADC
+#pragma vector = ADC12_VECTOR
+__interrupt void ADC12_ISR(void)
+{
+  switch(__even_in_range(ADC12IV,34))
+  {
+  case  0: break;                           // Vector  0:  No interrupt
+  case  2: break;                           // Vector  2:  ADC overflow
+  case  4: break;                           // Vector  4:  ADC timing overflow
+  case  6:                                  // Vector  6:  ADC12IFG0
+    break;
+  case  8:
+	    break;                           // Vector  8:  ADC12IFG1
+  case 10:      if (ADC12MEM0 >= 0x100 || ADC12MEM1 >= 0x100 || ADC12MEM2 >= 0x100){                 // ADC12MEM = A0 > 0.5AVcc?
+      //P1OUT |= BIT0;                        // P1.0 = 1
+    	color = GREEN;
+    	active = 0;
+    	LEDs();
+    }
+  else
+	  active = 1;
+    break;                           // Vector 10:  ADC12IFG2
+  case 12: break;                           // Vector 12:  ADC12IFG3
+  case 14: break;                           // Vector 14:  ADC12IFG4
+  case 16: break;                           // Vector 16:  ADC12IFG5
+  case 18: break;                           // Vector 18:  ADC12IFG6
+  case 20: break;                           // Vector 20:  ADC12IFG7
+  case 22: break;                           // Vector 22:  ADC12IFG8
+  case 24: break;                           // Vector 24:  ADC12IFG9
+  case 26: break;                           // Vector 26:  ADC12IFG10
+  case 28: break;                           // Vector 28:  ADC12IFG11
+  case 30: break;                           // Vector 30:  ADC12IFG12
+  case 32: break;                           // Vector 32:  ADC12IFG13
+  case 34: break;                           // Vector 34:  ADC12IFG14
+  default: break;
+  }
+  __bic_SR_register_on_exit(LPM0_bits);   // Exit active CPU
+}
 /*
  * main.c
  */
@@ -286,11 +345,12 @@ void main(void) {
     //Set up GPIO pins for LEDs and Sensors (0 for input, 1 for output)
     P2DIR &= 0x00;				//Set Sensors GPIO to an input
    // P2DIR |= 0x3A;				//Set LEDs GPIO to outputs
-    P2DIR |= 0x3A;			//FOR TESTING
+    P2DIR |= 0x38;			//FOR TESTING
     //P5DIR |= 0x01;
 
    // P2SEL &= 0xC1;				//Set all to be GPIO pins - 0 for GPIO
     P2SEL &= 0x01;		//FOR TESTING
+    P2SEL |= 0x07;
     //P5SEL &= 0xFD;
 
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
@@ -321,9 +381,29 @@ void main(void) {
     P2IES &= 0x3F;		//FOR TESTING
 
     count = 0;
-    P2OUT |= 0x08;		//Turn LEDs red
+    P2OUT = 0;//|= 0x08;		//Turn LEDs red
+    adc_config();
 
     //Assign unique target ID to each target
+
+    while(1)
+    {
+    	if(active)
+    	{
+    		color = 0;//RED;
+    		P2IE |= 0xC0;//turns on shot recieved interrupt
+    		LEDs();
+    	}
+    	//Respond to 'Are you there?' message from daughter board
+    		//Respond by matching targets ID to the message ID
+    	//Get message telling when to be turned on -> send confirmation back
+    	ADC12CTL0 |= ADC12SC;                   // Start sampling/conversion
+
+        __bis_SR_register(LPM0_bits + GIE);     // LPM0, ADC12_ISR will force exit
+        __no_operation();                       // For debugger
+
+    }
+    /*
     while(1)
     {
     	if(active){

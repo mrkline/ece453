@@ -311,7 +311,7 @@ void main(void) {
 
     TA0CCR0 = 100;                 // Count limit (16 bit)
     TA0CCTL0 = 0x10;                 // Enable Timer A1 interrupts, bit 4=1
-    TA0CTL = TASSEL_1 + MC_1 + TACLR;        // Timer A1 with ACLK, count UP
+    TA0CTL = TASSEL_1 + MC_0 + TACLR;        // Timer A1 with ACLK, count UP  TODO CHANGE to MC_1
 
    __bis_SR_register(GIE);       				// Enter LPM0, Enable interrupts
    __no_operation();                         	// For debugger
@@ -326,7 +326,7 @@ void main(void) {
     //INTERRUPT FOR PUSH BUTTON
     P2IES &= 0xFD;    	//P2IES -> Select interrupt edge: 0 = L to H, 1 = H to L
     P2IE |= 0x02;		//P2IE  -> Enable/Disable Interrupt: 0 = disabled, 1 = enabled
-    P2OUT &= 0xFE;		//Turn off laser
+    P2OUT |= 0x01;//&= 0xFE;		//Turn off laser
     while(1);
 
     	//P2OUT &= 0xFE;		//Turn off laser
