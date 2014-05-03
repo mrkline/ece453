@@ -29,6 +29,12 @@ void MessageQueue::prioritySend(std::unique_ptr<Message>&& toSend)
 	notifier.notify_one();
 }
 
+const Message* MessageQueue::peek()
+{
+	unique_lock<mutex> lock(qMutex);
+	return q.top();
+}
+
 std::unique_ptr<Message> MessageQueue::receive()
 {
 	// If we are not allowed to dequeue right now, just wait the expected time and return

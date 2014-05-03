@@ -32,6 +32,9 @@ public:
 	 */
 	void prioritySend(std::unique_ptr<Message>&& toSend);
 
+	/// Returns a const pointer to the top message
+	const Message* peek();
+
 	/// Dequeues a message, blocking indefinitely if the queue is empty
 	std::unique_ptr<Message> receive();
 
