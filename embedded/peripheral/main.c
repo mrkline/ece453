@@ -2,12 +2,27 @@
 #include "RF_Toggle_LED_Demo.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "validate.h"
 
 #define  PACKET_LEN         (0x05)			// PACKET_LEN <= 61
 #define  RSSI_IDX           (PACKET_LEN)    // Index of appended RSSI
 #define  CRC_LQI_IDX        (PACKET_LEN+1)  // Index of appended LQI, checksum
 #define  CRC_OK             (BIT7)          // CRC_OK bit
 #define  PATABLE_VAL        (0x51)          // 0 dBm output
+
+
+/////////message types//////////
+#define RESPONSE 1
+#define QUERY	2
+
+typedef enum {   //type int8_t
+	 OK,
+     INTERNAL_ERROR,
+     UNKNOWN_REQUEST,
+     INVALID_REQUEST,
+     UNSUPPORTED_REQUEST
+};
 
 extern RF_SETTINGS rfSettings;
 
@@ -103,8 +118,8 @@ __interrupt void USCI_A0_ISR(void)
 
     while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
     UCA0TXBUF = UCA0RXBUF;                  // TX -> RXed character
-    while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
-    UCA0TXBUF = 'T';                  // TX -> RXed character
+    //while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
+    //UCA0TXBUF = 'T';                  // TX -> RXed character
     break;
   case 4:
       __delay_cycles(5000);                 // Add small gap between TX'ed bytes
@@ -202,10 +217,227 @@ void main(void) {
       UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
       UCA0IE |= UCRXIE;                // Enable USCI_A0 RX interrupt
 
+
+
       uart_puts((char *)"\n\r**************\n\rPeripheral\n\r");
       uart_puts((char *)"***************\n\r\n\r");
+      	  	  	  	  	  	  //f	   u    querey   v id v   vpaylengthv vpayloadv  end
+      unsigned char string[] = {0x66, 0x75, 0x02, 0x00, 0x00, 0x00, 0x02, 0x01, 0x01, 0x79};
 
 
+      int i = 0;
+      while(!onChar(string[i]))
+    	  i++;
+      uart_puts("\n\rSUCCESS1\n\r");
+      char IDstring [20];
+  	  sprintf(IDstring, "id: %d\n\r", currentID);
+	  uart_puts(IDstring);
+  	  if(type==2)
+  		  uart_puts("typeNEW: query\n\r");
+      char PLstring [50];
+  	  sprintf(PLstring, "payloadLength: %d\n\r", payloadLength);
+	  uart_puts(PLstring);
+      char boardIDstring [20];
+  	  sprintf(boardIDstring, "board id: %d\n\r", string[7]);
+	  uart_puts(boardIDstring);
+	  if(string[8] == 1)
+		  uart_puts("boardType: target\n\r");
+
+
+	  //Main: (used as reader)
+	  //while(1){grab character and vvvifvvv
+	  //if(valid){case(type) :}
+	  //QUEREY:  //type == 2
+	  //if(payload length == whatever && boardid == this id && boardtype == this type)
+	  //Respond(id, paylength, payload<-payload will be an array of size paylength)
+
+	 uart_puts((char *)"\n\r**************\n\rPeripheral\n\r");
+	 uart_puts((char *)"***************\n\r\n\r");
+	      	  	  	  	  	   //f	   u   RESPONSE   v id v   vpaylengthv vpayloadv  end
+	 unsigned char string2[] = {0X66, 0X75, 0X01, 0X00, 0X00, 0X00, 0X03, 0X00, 0X19, 0X00, 0X79};
+
+      i = 0;
+      while(!onChar(string2[i]))
+    	  i++;
+      uart_puts("\n\rSUCCESS2\n\r");
+      char IDstring2 [20];
+  	  sprintf(IDstring2, "id: %d\n\r", currentID);
+	  uart_puts(IDstring2);
+  	  if(type==1)
+  		  uart_puts("typeNEW: RESPONSE\n\r");
+      char PLstring2 [50];
+  	  sprintf(PLstring2, "payloadLength: %d\n\r", payloadLength);
+	  uart_puts(PLstring2);
+      char boardIDstring2 [20];
+      uint16_t respTo = extractUInt16(string2 + 7);
+      char respString [20];
+  	  sprintf(respString, "responding to: %d\n\r", respTo);
+	  uart_puts(respString);
+      if(string2[9] == OK)
+    	  uart_puts("CODE: OK\n\r");
+      if(string2[10] == 'y'){
+    	  uart_puts("END\n\r");
+      }
+      //*NOTE: Response message does not need a board id or board type, it is implied to be daughter card's, don't implement in target and gun.
+	  //RESPONSE:  //type == 1
+	  //if(message_id == waiting_id)//make sure id of response message is one that has been issued. have an array indexed by sent message id count.  Decrement when entryID has beend recieved
+	  //use:payload length, payload->respTo, code
+
+
+
+     // 66 75 0a 00 00 00 06 02 04 00 00 00 f0 79
+
+      uart_puts((char *)"\n\r**************\n\rPeripheral\n\r");
+      uart_puts((char *)"***************\n\r\n\r");
+      	  	  	  	  	  	     //f     u    shot   v id v   vpaylengthv vpayloadv                             end
+      unsigned char string3[] = {0x66, 0x75, 0x0a, 0x00, 0x00, 0x00, 0x06, 0x02, 0x04, 0x00, 0x00, 0x00, 0xf0, 0x79};
+      //uart_puts(string3);
+
+
+       i = 0;
+      while(!onChar(string3[i]))
+    	  i++;
+      uart_puts("\n\rSUCCESS3\n\r");
+      char IDstring3 [20];
+  	  sprintf(IDstring3, "id: %d\n\r", currentID);
+	  uart_puts(IDstring3);
+  	  if(type==10)
+  		  uart_puts("typeNEW: SHOT\n\r");
+      char PLstring3 [50];
+  	  sprintf(PLstring3, "payloadLength: %d\n\r", payloadLength);
+	  uart_puts(PLstring3);
+	  char playerIDstring [20];
+	  sprintf(playerIDstring, "player id: %d\n\r", string3[7]);
+	  uart_puts(playerIDstring);
+      char targetIDstring3 [20];
+  	  sprintf(targetIDstring3, "target id: %d\n\r", string3[8]);//int8
+	  uart_puts(targetIDstring3);
+	  uint32_t stamp = extractUInt32(string3 + 9);
+	  char stampString [20];
+	  sprintf(stampString, "time stamp: %d \n\r", stamp);
+	  uart_puts(stampString);
+      if(string3[13] == 'y'){
+    	  uart_puts("END\n\r");
+      }
+
+
+
+	  //Main: (used as reader)
+	  //while(1){grab character and vvvifvvv
+	  //if(valid){case(type) :}
+	  //SHOT:  //type == 10  //SHOT Message is what target sends on hit.
+	  //if(payload length == whatever && targetid == activeTargetid && boardtype == this type)
+	  //Output playerid and timestamp?
+
+
+
+       uart_puts((char *)"\n\r**************\n\rPeripheral\n\r");
+       uart_puts((char *)"***************\n\r\n\r");
+       	  	  	  	  	  	     //f     u    start   v id v   vpaylengthv   end
+       unsigned char string4[] = {0x66, 0x75, 0x04, 0x00, 0x00, 0x00, 0x00, 0x79};
+       //uart_puts(string3);
+
+
+       i = 0;
+       while(!onChar(string4[i]))
+     	  i++;
+       uart_puts("\n\rSUCCESS4\n\r");
+       char IDstring4 [20];
+   	  sprintf(IDstring4, "id: %d\n\r", currentID);
+ 	  uart_puts(IDstring4);
+   	  if(type==4)
+   		  uart_puts("typeNEW: START\n\r");
+       char PLstring4 [50];
+   	  sprintf(PLstring4, "payloadLength: %d\n\r", payloadLength);
+ 	  uart_puts(PLstring4);
+       if(string4[7] == 'y'){
+     	  uart_puts("END\n\r");
+       }
+ 	  //Main: (used as reader)
+ 	  //while(1){grab character and vvvifvvv
+ 	  //if(valid){case(type) :}
+ 	  //START:  //type == 4  //START Starts a game.
+ 	  //if(payload length == 0
+
+       // 66 75 04 00 00 00 00 79
+
+       uart_puts((char *)"\n\r**************\n\rPeripheral\n\r");
+       uart_puts((char *)"***************\n\r\n\r");
+       	  	  	  	  	  	  //f	   u    stop   v id v     vpaylengthv  end
+       unsigned char string5[] = {0x66, 0x75, 0x05, 0x00, 0x00, 0x00, 0x00, 0x79};
+
+
+       i = 0;
+       while(!onChar(string5[i]))
+     	  i++;
+       uart_puts("\n\rSUCCESS5\n\r");
+       char IDstring5 [20];
+   	  sprintf(IDstring5, "id: %d\n\r", currentID);
+ 	  uart_puts(IDstring5);
+   	  if(type==5)
+   		  uart_puts("typeNEW: STOP\n\r");
+       char PLstring5 [50];
+   	  sprintf(PLstring5, "payloadLength: %d\n\r", payloadLength);
+ 	  uart_puts(PLstring5);
+
+ 	  //Main: (used as reader)
+ 	  //while(1){grab character and vvvifvvv
+ 	  //if(valid){case(type) :}
+ 	  //QUEREY:  //type == 2
+ 	  //if(payload length == whatever && boardid == this id && boardtype == this type)
+ 	  //Respond(id, paylength, payload<-payload will be an array of size paylength)
+
+ 	 //66 75 0c 00 00 00 04 01 01 03 00 79
+
+     uart_puts((char *)"\n\r**************\n\rPeripheral\n\r");
+     uart_puts((char *)"***************\n\r\n\r");
+     	  	  	  	  	  	  //f	   u    targctl  v id v   vpaylengthv
+     unsigned char string5[] = {0x66, 0x75, 0x0c, 0x00, 0x00, 0x00, 0x04, 0x01, 0x01, 0x03,0x00,  0x79};
+     //if(payloadlength ==
+
+     i = 0;
+     while(!onChar(string5[i]))
+   	  i++;
+     uart_puts("\n\rSUCCESS5\n\r");
+     char IDstring5 [20];
+ 	  sprintf(IDstring5, "id: %d\n\r", currentID);
+	  uart_puts(IDstring5);
+ 	  if(type== 12)
+ 		  uart_puts("typeNEW: STOP\n\r");
+     char PLstring5 [50];
+ 	  sprintf(PLstring5, "payloadLength: %d\n\r", payloadLength);
+	  uart_puts(PLstring5);
+	  char targetIdString [20];
+	  if(payloadLength >= 2){//&& string[7] == thisID
+		  sprintf(targetIdString, "targetId: %d\n\r", string[7]);
+		  uart_puts(targetIdString);
+		  if(string[8])
+			  uart_puts("target ON\n\r");
+		  else
+			  uart_puts("target OFF\n\r");
+	  }
+	  if(payloadLength >= 4){//&& string[9] == thisID
+		  sprintf(targetIdString, "targetId: %d\n\r", string[9]);
+		  uart_puts(targetIdString);
+		  if(string[10])
+			  uart_puts("target ON\n\r");
+		  else
+			  uart_puts("target OFF\n\r");
+	  }
+	  if(payloadLength == 6){//&& string[11] == thisID
+		  sprintf(targetIdString, "targetId: %d\n\r", string[9]);
+		  uart_puts(targetIdString);
+		  if(string[12])
+			  uart_puts("target ON\n\r");
+		  else
+			  uart_puts("target OFF\n\r");
+	  }
+	  //Main: (used as reader)
+	  //while(1){grab character and vvvifvvv
+	  //if(valid){case(type) :}
+	  //QUEREY:  //type == 2
+	  //if(payload length == whatever && boardid == this id && boardtype == this type)
+	  //Respond(id, paylength, payload<-payload will be an array of size paylength)
       //Set up GPIO pins for LEDs and Sensors
           P2DIR &= 0xFB;				//Set Sensors GPIO to an input
           P2DIR |= 0x3A;				//Set LEDs GPIO to outputs
@@ -222,9 +454,23 @@ void main(void) {
       transmitting = 1;
       Transmit( (unsigned char*)TxBuffer, sizeof TxBuffer); 			//In order to transmit
 
-     while(1);
+     while(1){
+    	 uint8_t byte = UCA0RXBUF;//potentially have to poll a different way, check for flag?
+    	 if(onChar(byte)){
+    		 switch (type){
+    		 	 case QUERY:
+    		 		 if(buffer[0] == 'f' && buffer[1] == 'u'){//&&bufferID == buffer[7] && boardType == buffer[8],check payload before reading buffer[7] and buffer [8]?
+    		 			 //handle Query, look at TX in uart ISR
+    		 			 uart_puts("QUERY");//TAKE OUT;
+    		 			 //print f,u, message type, message id, payload length, payload ->board id?, board type?
+    		 		 }
+    		 		 break;
+    		 }//end switch
+    	 }//end if(onChar)
+     }//end main
   /*    while(1)
       {
+
     	  //Check field for # of guns & targets - get each id and store into seperate array
     	  //Send a packet of game information to peripheral - number of targets used, rounds
     	  	  //Comes from zed which will be on port PM_UCA0SOMI

@@ -7,6 +7,7 @@
  *
  */
 #include <msp430.h> 
+#include <stdlib.h>
 #include "RF_Toggle_LED_Demo.h"
 
 #define  PACKET_LEN         (0x05)			// PACKET_LEN <= 61
@@ -14,7 +15,7 @@
 #define  CRC_LQI_IDX        (PACKET_LEN+1)  // Index of appended LQI, checksum
 #define  CRC_OK             (BIT7)          // CRC_OK bit
 #define  PATABLE_VAL        (0x51)          // 0 dBm output
-#define GUN_CODE 			0xAF
+
 extern RF_SETTINGS rfSettings;
 
 volatile unsigned char info;
@@ -36,7 +37,7 @@ unsigned char *time_stamp;
 uint32_t numShots = 0;			//Total shots this gun has taken
 
 const unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
-
+const unsigned char message[100];
 
 //Interrupt vector for timer1 A0
 #pragma vector=TIMER1_A0_VECTOR
