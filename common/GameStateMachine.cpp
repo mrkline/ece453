@@ -165,66 +165,51 @@ void runGame(MessageQueue& in, MessageQueue& out, board_id_t numberTargets, boar
 		};
 
 
-		try {
-			// If there is no message, that means we need to tick.
-			if (msg == nullptr) {
-				if (machine != nullptr) {
-					auto toSend = machine->onTick(uid++);
-					if (toSend != nullptr)
-						out.send(move(toSend));
-				}
-
-				// Bump up the next tick
-				while (chrono::steady_clock::now() > nextTick)
-					nextTick += tickInterval;
+		// If there is no message, that means we need to tick.
+		if (msg == nullptr) {
+			if (machine != nullptr) {
+				auto toSend = machine->onTick(uid++);
+				if (toSend != nullptr)
+					out.send(move(toSend));
 			}
-			else {
-				// Respond to messages. See the lambda functions above.
-				using Type = Message::Type;
-				switch (msg->getType()) {
 
-					case Type::SETUP:
-						doSetup();
-						break;
-
-					case Type::START:
-						start();
-						break;
-
-					case Type::STOP:
-						stop();
-						break;
-
-					case Type::SHOT:
-						onShot(*unique_dynamic_cast<ShotMessage>(move(msg)));
-						break;
-
-					case Type::STATUS:
-						getStatus();
-						break;
-
-					case Type::RESULTS:
-						getResults();
-						break;
-
-					default: // We don't know what this is.
-						wat();
-						break;
-				}
-			}
+			// Bump up the next tick
+			while (chrono::steady_clock::now() > nextTick)
+				nextTick += tickInterval;
 		}
-		catch (const std::exception& e) {
-			// Close the input queue, respond to all waiting messages with INTERNAL_ERROR,
-			// and return.
-			// We'll restart this thread, which is simpler than trying to recover
-			in.close();
-			for (; msg->getType() != Message::Type::EXIT; msg = in.receive()) {
-				out.send(unique_ptr<ResponseMessage>(
-					new ResponseMessage(uid++, msg->id, Code::INTERNAL_ERROR,
-					                    string("The game state machine encountered the following error:\n")
-					                    + e.what())));
+		else {
+			// Respond to messages. See the lambda functions above.
+			using Type = Message::Type;
+			switch (msg->getType()) {
+
+				case Type::SETUP:
+					doSetup();
+					break;
+
+				case Type::START:
+					start();
+					break;
+
+				case Type::STOP:
+					stop();
+					break;
+
+				case Type::SHOT:
+					onShot(*unique_dynamic_cast<ShotMessage>(move(msg)));
+					break;
+
+				case Type::STATUS:
+					getStatus();
+					break;
+
+				case Type::RESULTS:
+					getResults();
+					break;
+
+				default: // We don't know what this is.
+					wat();
+					break;
 			}
-			return;
 		}
 	}
 }
