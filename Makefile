@@ -5,7 +5,7 @@
 CXXFLAGS := -std=c++11 -Wall -Wextra -Wconversion -Weffc++ -pedantic
 LIBFLAGS := -pthread -ljsoncpp -lboost_system
 
-OBJS := $(patsubst %.cpp,%.o, $(wildcard common/*.cpp))
+OBJS := $(filter-out common/main.o, $(patsubst %.cpp,%.o, $(wildcard common/*.cpp)))
 TESTOBJS := $(patsubst %.cpp,%.o, $(wildcard tests/*.cpp))
 
 unit_tests: CXXFLAGS += -I. -Icommon -Itests -g -DWITH_JSON
@@ -13,13 +13,15 @@ unit_tests: $(OBJS) $(TESTOBJS)
 	echo $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(TESTOBJS) $(LIBFLAGS) -o unit_tests
 
-# debug: CXXFLAGS += -g
+debug: CXXFLAGS += -g
+debug: gallery
 
-# release: CXXFLAGS+= -O2 -DNDEBUG
+release: CXXFLAGS+= -O2 -DNDEBUG
+debug: gallery
 
 # link
-gallery: $(OBJS) main.o
-	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBFLAGS) main.o -o gallery
+gallery: $(OBJS) common/main.o
+	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBFLAGS) common/main.o -o gallery
 
 # pull in dependency info for *existing* .o files
 -include $(OBJS:.o=.d)
