@@ -47,6 +47,12 @@ std::unique_ptr<ResponseMessage> makeResponseMessage()
 		new ResponseMessage(0, 25, ResponseMessage::ResponseMessage::Code::OK, "I am a response!"));
 }
 
+std::unique_ptr<QueryMessage> makeQueryMessage()
+{
+	return unique_ptr<QueryMessage>(
+		new QueryMessage(0, 1, QueryMessage::BoardType::TARGET));
+}
+
 std::unique_ptr<SetupMessage> makeSetupMessage(int16_t gameLength, int16_t maxScore)
 {
 	return unique_ptr<SetupMessage>(
@@ -95,6 +101,7 @@ void MessageTests()
 	beginUnit("Message");
 	test("Message -> JSON", []{ JSONCheck(makeMessage(), Type::EMPTY); });
 	test("ResponseMessage -> JSON", []{ JSONCheck(makeResponseMessage(), Type::RESPONSE); });
+	test("QueryMessage -> JSON", []{ JSONCheck(makeQueryMessage(), Type::QUERY); });
 	test("SetupMessage -> JSON", []{ JSONCheck(makeSetupMessage(), Type::SETUP); });
 	test("StartMessage -> JSON", []{ JSONCheck(makeMessage<StartMessage>(), Type::START); });
 	test("StopMessage -> JSON", []{ JSONCheck(makeMessage<StopMessage>(), Type::STOP); });
@@ -109,12 +116,11 @@ void MessageTests()
 
 	test("Message -> Binary", []{ binaryCheck(makeMessage(), Type::EMPTY); });
 	test("ResponseMessage -> Binary", []{ binaryCheck(makeResponseMessage(), Type::RESPONSE); });
+	test("QueryMessage -> Binary", []{ binaryCheck(makeQueryMessage(), Type::QUERY); });
 	test("StartMessage -> Binary", []{ binaryCheck(makeMessage<StartMessage>(), Type::START); });
 	test("StopMessage -> Binary", []{ binaryCheck(makeMessage<StopMessage>(), Type::STOP); });
 	test("ShotMessage -> Binary", []{ binaryCheck(makeShotMessage(), Type::SHOT); });
-	/*
 	test("TargetControlMessage -> Binary", [] { binaryCheck(makeTargetControlMessage(), Type::TARGET_CONTROL); });
-	*/
 }
 
 } // end namespace Testing
