@@ -120,7 +120,10 @@ std::vector<uint8_t> TargetControlMessage::getBinaryPayload() const
 {
 	assert(Message::getBinaryPayload().size() == 0);
 	vector<uint8_t> ret;
-	ret.emplace_back((uint8_t)commands.size());
+
+	// We're omitting the number of messages as it can be inferred
+	// from the payload size / 2.
+	// ret.emplace_back((uint8_t)commands.size());
 
 	for (const auto& command : commands) {
 		ret.emplace_back(command.id);
