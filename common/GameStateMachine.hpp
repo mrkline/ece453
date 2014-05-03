@@ -69,6 +69,8 @@ public:
 	GameStateMachine(board_id_t numTargets, board_id_t numPlayers,
 	                 const std::chrono::seconds& gameDuration, score_t scoreToWin);
 
+	virtual ~GameStateMachine() { }
+
 	/// Returns true if the game is running
 	bool isRunning() { return gameState == State::RUNNING; }
 

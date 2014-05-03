@@ -54,6 +54,8 @@ public:
 	/// Constructs a base message, which only contains an ID.
 	Message(message_id_t idNum);
 
+	virtual ~Message() { }
+
 #ifdef WITH_JSON
 	/// Deserializes a message from a JSON object.
 	/// \warning Do not call this directly. Call JSONToMessage instead.
