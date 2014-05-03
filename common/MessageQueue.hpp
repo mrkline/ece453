@@ -93,14 +93,3 @@ private:
 	std::atomic_bool closed;
 	std::condition_variable notifier;
 };
-
-/// A convenience struct for holding two MessageQueues: one for input, one for output.
-struct MessageQueuePair {
-	MessageQueue& in;
-	MessageQueue& out;
-
-	MessageQueuePair(MessageQueue& i, MessageQueue& o) : in(i), out(o) { }
-
-	MessageQueuePair(const MessageQueuePair&) = default;
-	MessageQueuePair(MessageQueuePair&&) = default;
-};
