@@ -15,7 +15,7 @@
 #define  CRC_LQI_IDX        (PACKET_LEN+1)  // Index of appended LQI, checksum
 #define  CRC_OK             (BIT7)          // CRC_OK bit
 #define  PATABLE_VAL        (0x51)          // 0 dBm output
-
+#define  GUN_CODE			(0xAA)
 extern RF_SETTINGS rfSettings;
 
 volatile unsigned char info;
@@ -103,7 +103,7 @@ void TriggerPull(void)
 	}
 	//P2OUT |= 0x01;		//Turn on the laser
 	P2OUT &= 0xFE;
-	*/
+	*/ return;
 }
 
 
@@ -307,7 +307,7 @@ void main(void) {
     TA1CTL = TASSEL_2 + MC_1 + TACLR;         // SMCLK, upmode, clear TAR
 */
     TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
-    TA1CCR0 = 40000;//50000;//about once a second
+    TA1CCR0 = 50000;//1000;//50000;//about once a second
     TA1CTL = TASSEL_1 + MC_0 + TACLR; //Start with timer halted, turn on at target hit//MC_1;// + TACLR;         // SMCLK, upmode, clear TAR
 
     TA0CCR0 = 100;                 // Count limit (16 bit)
@@ -328,7 +328,50 @@ void main(void) {
     P2IES &= 0xFD;    	//P2IES -> Select interrupt edge: 0 = L to H, 1 = H to L
     P2IE |= 0x02;		//P2IE  -> Enable/Disable Interrupt: 0 = disabled, 1 = enabled
     P2OUT |= 0x01;//&= 0xFE;		//Turn off laser
-    while(1);
+
+    while(1)
+    {
+  /*  	uint8_t recChar = UCA0RXBUF; //grab next byte in uart.
+    	if(onChar(recChar)){
+    	//valid, check if message is start, stop, querey, targetctl.
+    		switch (type) {
+    			case QUERY:
+    				if(payloadLength == 2 && buffer[7] == ID && buffer[8] == TARGET){
+    					//query is valid.
+    					uart_putc('f');
+    					uart_putc('u');
+    					uint8_t byte = currentID >> 8;
+    					uart_putc(byte);
+    					byte = currentID && 0xFF;
+    					uart_putc(byte);
+    					uart_putc(0x00);
+    					uart_putc(0x03);
+    					//continue, don't know how to "respond To"
+    				}
+    				break;
+    			case START:
+    				if(payloadLength == 0){
+    					running = true;
+    				}
+    				break;
+    			case STOP:
+    				if(payloadLength == 0){
+    					running = false;
+    				}
+    				break;
+    			case TARGET_CTL:
+    				  if(payloadLength >= 2 && buffer[7] == ID){//&& string[7] == thisID
+    					  active = buffer[8];
+    				  }
+    				  if(payloadLength >= 4 && buffer[9] == ID){//&& string[9] == thisID
+    					  active = buffer[10];
+    				  }
+    				  if(payloadLength == 6 && buffer[11] == ID){//&& string[11] == thisID
+    					 active = buffer[11];
+    				  }
+    				  //response;
+    			}*/
+    	}
 
     	//P2OUT &= 0xFE;		//Turn off laser
 

@@ -6,6 +6,7 @@
 
 #include <msp430.h>
 #include "RF_Toggle_LED_Demo.h"
+#include "validate.h"
 
 #define  PACKET_LEN         (0x05)			// PACKET_LEN <= 61
 #define  RSSI_IDX           (PACKET_LEN)    // Index of appended RSSI
@@ -16,25 +17,40 @@
 #define  BLUE				(0x20)
 #define  GREEN 				(0x10)
 #define  RED				(0x08)
+#define TARGET					1			//used for type of board
+#define  ID						1			//target id
+#define TARGET_CTL             12
+#define STOP 					5
+#define START 					4
+#define QUERY					 2
 extern RF_SETTINGS rfSettings;
 
+//volatile int pattern;
+//volatile int intCount;
 volatile unsigned int active;			//Set to 1 if target is currently the one to be shot at otherwise its 0
 unsigned int counter;			//Counter for the sensors being high - could also use a timer?
 
 unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0x00};
 unsigned char RxBuffer[PACKET_LEN+2];
+volatile unsigned int gunCode[8];
 unsigned char RxBufferLength = 0;
-
+uint8_t playerID;// used to in SHOT message
+uint8_t j;
+int8_t receiveLaser = 7;
+uint32_t stamp;//used by target
+uint16_t respTo;//
 unsigned char transmitting = 0;
 unsigned char receiving = 0;
 unsigned char targetID;
 uint16_t timeStamp;
 unsigned char count;
+volatile bool photo;
 volatile unsigned char color;
 unsigned char cont;
+bool running;//used for game start/stop
 uint32_t ledcount;
 
-
+/*
 //Interrupt for the ADC
 #pragma vector = ADC12_VECTOR
 __interrupt void ADC12_ISR(void)
@@ -70,8 +86,33 @@ __interrupt void ADC12_ISR(void)
   }
 }
 
+*/
 
-volatile acount;//used for debug, turn target off after hit for 3 seconds.  Then turn target back to active.
+void shot(void){
+	uart_putc('f');
+	uart_putc('u');
+	uart_putc(0x0a);//response
+	uint8_t byte = currentID >> 8;
+	uart_putc(byte);
+	byte = currentID && 0xFF;
+	uart_putc(byte);
+	uart_putc(0x00);
+	uart_putc(0x06);//size of payload
+	uart_putc(playerID);
+	uart_putc(ID);
+	byte = stamp >> 24;
+	uart_putc(byte);
+	byte = (stamp >> 16) & 0xFF;
+	uart_putc(byte);
+	byte = (stamp >> 8) & 0xFF;
+	uart_putc(byte);
+	byte = stamp & 0xFF;
+	uart_putc(byte);
+	uart_putc('y');
+	uart_putc('y');
+}
+
+volatile int acount;//used for debug, turn target off after hit for 3 seconds.  Then turn target back to active.
 
 //Interrupt vector for timer1 A0
 #pragma vector=TIMER1_A0_VECTOR
@@ -83,10 +124,66 @@ __interrupt void TIMER1_A0_ISR(void)
 	//P2OUT ^= 0x20;
 	if(acount > 3){
 		active = 1;//turn target back on, for debug testing
+		color = RED;
+		LEDs();
 		acount = 0;
 		TA1CTL = TASSEL_1 + MC_0 + TACLR;//turn off timer
 		P2IFG &= 0x3F;//clears any "bounce" interrupts for gun hits
 	}
+}
+
+//Interrupt vector for timer1 A1
+#pragma vector=TIMER0_A0_VECTOR
+__interrupt void TIMER0_A0_ISR(void)
+{
+	TA0CTL = TASSEL_1 + MC_0 + TACLR;
+	color = 0;
+	LEDs();
+	shot();
+	active = true;//remove
+	/*
+	//JUMPTIME
+	if(receiveLaser >= 0)
+	{
+		gunCode[receiveLaser] = photo;
+		if(photo){
+			color = BLUE;
+		}
+		else{
+			color = GREEN;
+		}
+		//j--;
+		LEDs();
+		receiveLaser--;
+	}
+	else
+	{
+
+		receiveLaser =7;
+		//j = 0;
+		TA0CTL = TASSEL_1 + MC_0 + TACLR;//turn off timer
+		if(*gunCode == 0xAA)
+		{
+			active = 0;
+			color = BLUE;
+	    	playerID = 1;
+	    	shot();
+	    	LEDs();
+	    	//ADC12IE
+			//SHOT
+		}
+		if(*gunCode == 0xBB)
+		{
+			active = 0;
+	    	color = GREEN;
+	    	playerID = 2;
+	    	shot();
+	    	LEDs();
+	    	//ADC12IE
+			//SHOT
+		}
+		ADC12IE |= 0x04;
+	}*/
 }
 
 //ADC CONFIGURATION
@@ -111,6 +208,7 @@ void adc_config(void)
 }
 
 
+
 //Interrupt for Port 2 bit that relates to the sensor,
 // We want to interrupt when the sensors detect light
 #pragma vector=PORT2_VECTOR
@@ -132,7 +230,7 @@ __interrupt void PORT2_ISR(void)
     case 10: break;                         // P2.4 IFG
     case 12: break;                         // P2.5 IFG
     case 14:
-    	active = 0;//set target to off, it has been hit and should not read anymore
+    	//active = 0;//set target to off, it has been hit and should not read anymore
     	//P1IFG &= 0xDF;
     	P2IE = 0;		//gun 1 hit
 
@@ -142,7 +240,7 @@ __interrupt void PORT2_ISR(void)
     	__bic_SR_register_on_exit(LPM3_bits); // Exit active
     	break;                         // P2.6 IFG
     case 16:
-    	active = 0;//set target to off, it has been hit and should not read anymore;
+    	//active = 0;//set target to off, it has been hit and should not read anymore;
     	P1IFG &= 0xBF;
     	P2IE = 0;		//gun2 hit
     	color = GREEN;
@@ -165,7 +263,7 @@ void Sensors(void)
 	if(!counter)
 	{
 		LEDs();					//Go to LED method
-		active = 0;				//Make target inactive
+		//active = 0;				//Make target inactive
 	}
 
 	return;						//Return back to main method
@@ -177,18 +275,18 @@ void LEDs(void)
 	//When this is reached, we know the target is "hit"
 
 	ledcount = 0;
-	//TA0CTL |= 0x0010;				//Start the timer
+	//TA1CTL |= 0x0010;				//Start the timer
+
 	P2OUT &= 0x00;		//Turn off LEDs
 	P2OUT |= color;//0x10;		//Turn on desired leds showing target has been hit
 	return;
-	while(!cont)
+	/*while(!cont)
 	{
 
-	}
+	}*/
 	//Send message to daughter board when it gets hit - wait for a second -> if no acknowledgement then send again
 	//P2OUT &= 0x00;
 	//Indicate hit
-	return;
 }
 
 //Function to have high power mode enabled for the radio, write the correct settings
@@ -262,7 +360,7 @@ __interrupt void USCI_A0_ISR(void)
   case 0:break;                             // Vector 0 - no interrupt
   case 2:                                   // Vector 2 - RXIFG
     while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
-    UCA0TXBUF = UCA0RXBUF;                  // TX -> RXed character
+    //UCA0TXBUF = UCA0RXBUF;                  // TX -> RXed character
     while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
     UCA0TXBUF = 'T';                  // TX -> RXed character
     break;
@@ -321,7 +419,6 @@ __interrupt void CC1101_ISR(void)
   __bic_SR_register_on_exit(LPM3_bits);
 }
 
-<<<<<<< HEAD
 //Interrupt for the ADC
 #pragma vector = ADC12_VECTOR
 __interrupt void ADC12_ISR(void)
@@ -337,12 +434,18 @@ __interrupt void ADC12_ISR(void)
 	    break;                           // Vector  8:  ADC12IFG1
   case 10:      if (ADC12MEM0 >= 0x100 || ADC12MEM1 >= 0x100 || ADC12MEM2 >= 0x100){                 // ADC12MEM = A0 > 0.5AVcc?
       //P1OUT |= BIT0;                        // P1.0 = 1
-    	color = GREEN;
-    	active = 0;
-    	LEDs();
+	  //if(active){
+	  	  color = GREEN;
+	  	  //jump
+	  	  TA0CTL = TASSEL_1 + MC_1 + TACLR;
+	  	  active = 0;
+	  	  LEDs();
+	  	  //TA0CTL |= 0x0010;
+	  //}
     }
   else
-	  active = 1;
+	  //active = 0;
+  	  //photo = false;
     break;                           // Vector 10:  ADC12IFG2
   case 12: break;                           // Vector 12:  ADC12IFG3
   case 14: break;                           // Vector 14:  ADC12IFG4
@@ -360,30 +463,10 @@ __interrupt void ADC12_ISR(void)
   }
   __bic_SR_register_on_exit(LPM0_bits);   // Exit active CPU
 }
-/*
- * main.c
- */
-void main(void) {
-    WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
-
-    // Increase PMMCOREV level to 2 in order to avoid low voltage error
-    // when the RF core is enabled
-    SetVCore(2);
-    ResetRadioCore();
-    InitRadio();		//Set up the antenna for 915 MHz
-    active = 0;			//Target starts as inactive
 
 
-    PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
-    P1MAP5 = PM_UCA0RXD;                      // Map UCA0RXD output to P1.5
-    P1MAP6 = PM_UCA0TXD;                      // Map UCA0TXD output to P1.6
-    PMAPPWD = 0;                              // Lock port mapping registers
-
-    __bis_SR_register(GIE);       				// Enter LPM0, Enable interrupts
-      __no_operation();                         	// For debugger
-
-=======
 //ADC CONFIGURATION
+/*
 void adc_config(void)
 {
     ADC12CTL0 = ADC12SHT02 + ADC12ON;         // Sampling time, ADC12 on
@@ -391,16 +474,15 @@ void adc_config(void)
     ADC12IE = 0x07;                           // Enable interrupt for 2.0, 2.1, and 2.2
     ADC12CTL0 |= ADC12ENC;
 }
+*/
 
 //GPIO CONFIGURATION
 void gpio_config(void)
 {
->>>>>>> 860d5d24e4fa5aec04594e2f8b8776e88dd01312
     P2OUT &= 0x00;		//Clear the output register for Port 2
     //Set up GPIO pins for LEDs and Sensors (0 for input, 1 for output)
     P2DIR &= 0x00;				//Set Sensors GPIO to an input
    // P2DIR |= 0x3A;				//Set LEDs GPIO to outputs
-<<<<<<< HEAD
     P2DIR |= 0x38;			//FOR TESTING
     //P5DIR |= 0x01;
 
@@ -408,8 +490,7 @@ void gpio_config(void)
     P2SEL &= 0x01;		//FOR TESTING
     P2SEL |= 0x07;
     //P5SEL &= 0xFD;
-=======
-    P2DIR |= 0x3A;			//FOR TESTING
+    //P2DIR |= 0x3A;			//FOR TESTING
 
    // P2SEL &= 0xC1;				//Set all to be GPIO pins - 0 for GPIO
     P2SEL &= 0x01;		//FOR TESTING
@@ -422,7 +503,7 @@ void gpio_config(void)
     P2IES &= 0x3F;		//FOR TESTING
 
     count = 0;
-    P2OUT |= 0x08;		//Turn LEDs red
+    P2OUT = 0x00;		//Turn LEDs red
 
 
     P2SEL |= BIT0;                            // P2.0 ADC option select
@@ -436,7 +517,9 @@ void uart_config(void)
     P1MAP5 = PM_UCA0RXD;                      // Map UCA0RXD output to P1.5
     P1MAP6 = PM_UCA0TXD;                      // Map UCA0TXD output to P1.6
     PMAPPWD = 0;                              // Lock port mapping registers
->>>>>>> 860d5d24e4fa5aec04594e2f8b8776e88dd01312
+
+    P1DIR |= BIT6;                            // Set P1.6 as TX output
+    P1SEL |= BIT5 + BIT6;                     // Select P1.5 & P1.6 to UART function
 
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
     UCA0CTL1 |= UCSSEL_1;                     // CLK = ACLK
@@ -453,10 +536,34 @@ void timer_config(void)
     TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
     TA1CCR0 = 40000;//50000;
     TA1CTL = TASSEL_1 + MC_0 + TACLR; //Start with timer halted, turn on at target hit//MC_1;// + TACLR;         // SMCLK, upmode, clear TAR
+
+
+    TA0CCTL0 = CCIE;                          // CCR0 interrupt enabled
+    TA0CCR0 = 50000; //1000;//50000;//about once a second
+    TA0CTL = TASSEL_1 + MC_0 + TACLR;
 }
 /*
  * main.c
  */
+void response(void){
+	uart_putc('f');
+	uart_putc('u');
+	uart_putc(0x01);//response
+	uint8_t byte = currentID >> 8;
+	uart_putc(byte);
+	byte = currentID && 0xFF;
+	uart_putc(byte);
+	uart_putc(0x00);
+	uart_putc(0x03);
+	byte = respTo >> 8;
+	uart_putc(byte);
+	byte = respTo & 0xff;
+	uart_putc(byte);
+	uart_putc(0);//Code is OK
+	uart_putc('y');
+	uart_putc('y');
+
+}
 void main(void) {
     WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 
@@ -466,49 +573,101 @@ void main(void) {
     SetVCore(2);
     ResetRadioCore();
     InitRadio();		//Set up the antenna for 915 MHz
-    active = 0;			//Target starts as inactive
+    //active = false;			//Target starts as inactive
 
 
   //  __bis_SR_register(GIE);       				// Enter LPM0, Enable interrupts
     //  __no_operation();                         	// For debugger
 
 
-<<<<<<< HEAD
     count = 0;
     P2OUT = 0;//|= 0x08;		//Turn LEDs red
-    adc_config();
-=======
+    //adc_config();
     //TIMER A0 CONFIGURATIONS - For the LEDs on the target to time their color change
     //TA0CTL &= 0x00;			//Clear the control register
    // TA0CTL |= 0x0102;		//Set Timer to use ACLK, in stop mode, has interrupts
     //TA0CCTL0 |= CCIE;		//Set this interrupt as the highest priority
     //TA0CCR0 = TRIGGER;		//Compare/Capture for Timer will interrupt when this value is reached - should be one second
 
+    uart_config();				//Configure the UART
     gpio_config();				//Configure the GPIOs
     adc_config();				//Configure the ADC
-    uart_config();				//Configure the UART
     timer_config();				//Configure the timer
->>>>>>> 860d5d24e4fa5aec04594e2f8b8776e88dd01312
 
     //Assign unique target ID to each target
 
+    stamp = 250;//for debug;
+    respTo = 4;//for debug;
+    //color = RED;
+    LEDs();
+    active = true;
     while(1)
     {
+    	uint8_t recChar = UCA0RXBUF; //grab next byte in uart.
+    	if(onChar(recChar)){
+    		//color = RED;
+    		//LEDs();
+    	//valid, check if message is start, stop, querey, targetctl.
+    		switch (type) {
+    			case QUERY: //2
+    				if(payloadLength == 2 && buffer[7] == ID && buffer[8] == TARGET){
+    					//query is valid.
+    					response();//daugther expects a response
+    					//continue, don't know how to "respond To"
+    				}
+    				break;
+    			case START://4
+    				if(payloadLength == 0){
+    					running = true;//daughter does not expect a response
+    				}
+    				break;
+    			case STOP://5
+    				if(payloadLength == 0){
+    					running = false;//daughter does not expect a response
+    				}
+    				break;
+    			case TARGET_CTL://12
+    				  if(payloadLength >= 2 && buffer[7] == ID){//&& string[7] == thisID
+    					  active = buffer[8];
+    					  if(active){
+    						  color = RED;//RED;
+    						  LEDs();
+    					  }
+    				  }
+    				  if(payloadLength >= 4 && buffer[9] == ID){//&& string[9] == thisID
+    					  active = buffer[10];
+    					  if(active){
+    						  color = RED;
+    					  	LEDs();
+    					  }
+    				  }
+    				  if(payloadLength == 6 && buffer[11] == ID){//&& string[11] == thisID
+    					 active = buffer[11];
+    					 if(active){
+    						 color = RED;
+    						 LEDs();
+    					 }
+    				  }
+    				  response();//daughter expects a response
+    			}
+    	}
     	if(active)
     	{
-    		color = 0;//RED;
+        	ADC12CTL0 |= ADC12SC;                   // Start sampling/conversion
+
+            __bis_SR_register(LPM0_bits + GIE);     // LPM0, ADC12_ISR will force exit
+            __no_operation();                       // For debugger
+            color = RED;//RED;
     		P2IE |= 0xC0;//turns on shot recieved interrupt
     		LEDs();
     	}
     	//Respond to 'Are you there?' message from daughter board
     		//Respond by matching targets ID to the message ID
     	//Get message telling when to be turned on -> send confirmation back
-    	ADC12CTL0 |= ADC12SC;                   // Start sampling/conversion
-
-        __bis_SR_register(LPM0_bits + GIE);     // LPM0, ADC12_ISR will force exit
-        __no_operation();                       // For debugger
 
     }
+}
+
     /*
     while(1)
     {
@@ -528,4 +687,4 @@ void main(void) {
 
     }
 }
-
+*/
