@@ -2,7 +2,7 @@
 
 #include <QMainWindow>
 
-#include <thread>
+#include <future>
 #include <memory>
 
 #include <jsoncpp/json/json.h>
@@ -24,10 +24,11 @@ public:
 
 	~RangeUI();
 
-
 private:
 
 	void connectToSM();
+
+	bool ensureConnection();
 
 	void closeConnection();
 
@@ -39,7 +40,7 @@ private:
 
 	message_id_t uid = 0;
 
-	std::unique_ptr<std::thread> commsThread;
+	std::future<void> commsThread;
 
 	MessageQueue toSM;
 	MessageQueue fromSM;
