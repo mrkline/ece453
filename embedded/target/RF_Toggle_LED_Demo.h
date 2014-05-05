@@ -5,12 +5,10 @@
 /*******************
  * Function Definition
  */
-void Transmit(unsigned char *buffer, unsigned char length);
-void ReceiveOn(void);
-void ReceiveOff(void);
+
 
 //void InitButtonLeds(void);
-void InitRadio(void);
+
 
 void Sensors(void);
 void LEDs(void);
