@@ -53,7 +53,7 @@ void runGame(MessageQueue& in, MessageQueue& out, board_id_t numberTargets, boar
 
 		// Setup a new state machine, or complain if now is not the time to do so.
 		const auto doSetup = [&] {
-			if (machine != nullptr && !machine->isRunning()) {
+			if (machine != nullptr && machine->isRunning()) {
 				out.send(unique_ptr<ResponseMessage>(
 					new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
 					                    "You cannot set up a new game while one is in progress")));
@@ -218,7 +218,7 @@ GameStateMachine::GameStateMachine(board_id_t numTargets, board_id_t numPlayers,
 	                               const std::chrono::seconds& gameDuration, shot_t scoreToWin) :
 	targetCount(numTargets),
 	players(numPlayers),
-	gameEndTime(),
+	gameEndTime(TimePoint::max()), // Max this out so we don't time out before we even start
 	duration(gameDuration),
 	winningScore(scoreToWin),
 	shots()

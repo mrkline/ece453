@@ -73,7 +73,7 @@ void runTCPMessageServer(MessageQueue& in, MessageQueue& out)
 		});
 
 		thread_local static Json::FastWriter writer;
-		
+
 		while (connected) {
 			service.poll();
 
@@ -115,7 +115,7 @@ void runTCPMessageClient(MessageQueue& in, MessageQueue& out, std::string server
 	});
 
 	thread_local static Json::FastWriter writer;
-	
+
 	while (connected) {
 		service.poll();
 

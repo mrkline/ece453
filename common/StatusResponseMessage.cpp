@@ -57,9 +57,6 @@ StatusResponseMessage::StatusResponseMessage(message_id_t id, message_id_t respT
 	winningScore(winScore),
 	players(move(playerStats))
 {
-	ENFORCE(ArgumentException, timeRemaining >= -1, "Invalid remaining time");
-	ENFORCE(ArgumentException, winningScore >= -1, "Invalid winning score");
-
 	if (running)
 		ENFORCE(ArgumentException, players.size() > 0, "You must have at least one player.");
 }
