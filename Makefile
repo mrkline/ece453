@@ -8,13 +8,13 @@ LIBFLAGS := -pthread -ljsoncpp -lboost_system
 OBJS := $(filter-out common/main.o, $(patsubst %.cpp,%.o, $(wildcard common/*.cpp)))
 TESTOBJS := $(patsubst %.cpp,%.o, $(wildcard tests/*.cpp))
 
+debug: CXXFLAGS += -g
+debug: gallery
+
 unit_tests: CXXFLAGS += -I. -Icommon -Itests -g
 unit_tests: $(OBJS) $(TESTOBJS)
 	echo $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) $(TESTOBJS) $(LIBFLAGS) -o unit_tests
-
-debug: CXXFLAGS += -g
-debug: gallery
 
 release: CXXFLAGS+= -O2 -flto -DNDEBUG
 debug: gallery
