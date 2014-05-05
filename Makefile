@@ -5,7 +5,7 @@
 CXXFLAGS := -std=c++11 -Wall -Wextra -Wconversion -Weffc++ -pedantic -DWITH_JSON
 LIBFLAGS := -pthread -ljsoncpp -lboost_system
 
-OBJS := $(filter-out common/main.o, $(patsubst %.cpp,%.o, $(wildcard common/*.cpp)))
+OBJS := $(patsubst %.cpp,%.o, $(wildcard common/*.cpp))
 TESTOBJS := $(patsubst %.cpp,%.o, $(wildcard tests/*.cpp))
 
 debug: CXXFLAGS += -g
@@ -20,8 +20,8 @@ release: CXXFLAGS+= -O2 -flto -DNDEBUG
 debug: gallery
 
 # link
-gallery: $(OBJS) common/main.o
-	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBFLAGS) common/main.o -o gallery
+gallery: $(OBJS) main.o
+	$(CXX) $(CXXFLAGS) $(OBJS) $(LIBFLAGS) main.o -o gallery
 
 # pull in dependency info for *existing* .o files
 -include $(OBJS:.o=.d)

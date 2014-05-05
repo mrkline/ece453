@@ -1,10 +1,10 @@
 #include <thread>
 #include <cstdio>
 
-#include "MessageJunction.hpp"
-#include "GameStateMachine.hpp"
-#include "TCPMessageBridge.hpp"
-#include "MessageQueue.hpp"
+#include "common/MessageJunction.hpp"
+#include "common/GameStateMachine.hpp"
+#include "common/TCPMessageBridge.hpp"
+#include "common/MessageQueue.hpp"
 
 using namespace std;
 
