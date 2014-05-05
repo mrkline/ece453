@@ -1,4 +1,5 @@
 #include <thread>
+#include <cstdio>
 
 #include "MessageJunction.hpp"
 #include "GameStateMachine.hpp"
@@ -14,13 +15,24 @@ int main()
 	MessageQueue toSys, fromSys;
 
 	// TODO: Figure out our controller setup from the controller link
+	printf("Lighting up state machine...\n");
+	fflush(stdout);
 	thread smThread(&runGame, ref(toSM), ref(fromSM), 2, 2);
+
+	printf("Lighting up UI communications...\n");
+	fflush(stdout);
 	thread uiThread(&runTCPMessageServer, ref(toUI), ref(fromUI));
+
+	printf("Lighting up the message juntion...\n");
+	fflush(stdout);
 	thread junctionThread(&runMessageJunction, ref(toSM), ref(fromSM),
 	                                           ref(toUI), ref(fromUI),
 	                                           ref(toSys), ref(fromSys));
 
-	// We'll never return here unless something goes wrong,
-	// so don't bother joining for now.
-	return 0;
+	// We should never finish, but call join so that we stall here forever.
+	junctionThread.join();
+	smThread.join();
+	uiThread.join();
+	// We have a problem if we got here
+	return 1;
 }
