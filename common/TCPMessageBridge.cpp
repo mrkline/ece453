@@ -1,8 +1,10 @@
 #include "TCPMessageBridge.hpp"
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <functional>
+#include <cctype>
 
 #include <boost/asio.hpp>
 
@@ -32,12 +34,15 @@ void onReceive(tcp::socket& sock, asio::streambuf& buf,
 		string line;
 		getline(is, line);
 
-		thread_local static Json::Reader reader;
-		Json::Value val;
-		if (!reader.parse(line, val))
-			THROW(IOException, "Could not parse JSON:" + reader.getFormatedErrorMessages());
+		// Only take lines that aren't all whitespace
+		if (any_of(begin(line), end(line), [](char c) { return !isspace(c); })) {
+			thread_local static Json::Reader reader;
+			Json::Value val;
+			if (!reader.parse(line, val))
+				THROW(IOException, "Could not parse JSON:" + reader.getFormatedErrorMessages());
 
-		out.send(JSONToMessage(val));
+			out.send(JSONToMessage(val));
+		}
 
 		// Re-up for next time
 		async_read_until(sock, buf, "\r\n", [&](boost_error errIn, size_t sizeIn) {
@@ -70,7 +75,12 @@ void runTCPMessageServer(MessageQueue& in, MessageQueue& out)
 		thread_local static Json::FastWriter writer;
 		
 		while (connected) {
+			service.poll();
+
 			auto msg = in.receiveUntil(Clock::now() + milliseconds(100));
+
+			if (msg == nullptr)
+				continue;
 
 			if (msg->getType() == Message::Type::EXIT)
 				return;
@@ -80,7 +90,7 @@ void runTCPMessageServer(MessageQueue& in, MessageQueue& out)
 			boost_error sendError;
 			write(sock, buffer(toSend + "\r\n"), transfer_all(), sendError);
 
-			if (!sendError)
+			if (sendError)
 				THROW(IOException, sendError.message());
 		}
 	}
@@ -107,7 +117,12 @@ void runTCPMessageClient(MessageQueue& in, MessageQueue& out, std::string server
 	thread_local static Json::FastWriter writer;
 	
 	while (connected) {
+		service.poll();
+
 		auto msg = in.receiveUntil(Clock::now() + milliseconds(100));
+
+		if (msg == nullptr)
+			continue;
 
 		if (msg->getType() == Message::Type::EXIT)
 			return;
@@ -117,7 +132,7 @@ void runTCPMessageClient(MessageQueue& in, MessageQueue& out, std::string server
 		boost_error sendError;
 		write(sock, buffer(toSend + "\r\n"), transfer_all(), sendError);
 
-		if (!sendError)
+		if (sendError)
 			THROW(IOException, sendError.message());
 	}
 }

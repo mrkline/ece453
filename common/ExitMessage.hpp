@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Message.hpp"
+#include "Exceptions.hpp"
 
 /// Indicates that the receiver should finish/exit.
 /// Not used with the boards, but internally with the state machine and UI
