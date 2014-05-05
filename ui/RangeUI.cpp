@@ -8,6 +8,10 @@
 
 #include "StatusMessage.hpp"
 #include "StatusResponseMessage.hpp"
+#include "ResultsMessage.hpp"
+#include "ResultsResponseMessage.hpp"
+#include "StartMessage.hpp"
+#include "StopMessage.hpp"
 #include "SetupMessage.hpp"
 #include "ExitMessage.hpp"
 #include "TCPMessageBridge.hpp"
@@ -42,7 +46,10 @@ RangeUI::RangeUI(QWidget *parent) :
 
 	connect(ui->btnConnect, &QPushButton::clicked, [this](bool) { connectToSM(); });
 	connect(ui->btnSetup, &QPushButton::clicked, [this](bool) { setup(); });
+	connect(ui->btnStart, &QPushButton::clicked, [this](bool) { start(); });
+	connect(ui->btnStop, &QPushButton::clicked, [this](bool) { stop(); });
 	connect(ui->btnStatus, &QPushButton::clicked, [this](bool) { getStatus(); });
+	connect(ui->btnResults, &QPushButton::clicked, [this](bool) { getResults(); });
 }
 
 RangeUI::~RangeUI()
@@ -99,51 +106,98 @@ void RangeUI::closeConnection()
 	}
 }
 
-void RangeUI::setup()
+std::unique_ptr<Message> RangeUI::awaitResponse(Message* toSend)
 {
 	if (!ensureConnection())
-		return;
+		return nullptr;
 
-	toSM.send(unique_ptr<Message>(new SetupMessage(++uid, GameType::POP_UP,
-	                                               (board_id_t)ui->spnPlayers->value(),
-	                                               ui->chkTime->isChecked() ? ui->spnTime->value() : -1,
-	                                               ui->chkScore->isChecked() ? ui->spnScore->value() : -1)));
+	toSM.send(std::unique_ptr<Message>(toSend));
 
 	auto msg = fromSM.receive(patienceWithGame);
 
 	if (msg == nullptr) {
 		if (ensureConnection())
 			QMessageBox::critical(this, "Unresponsive game", "The game is not responding.");
-		return;
 	}
+
+	return msg;
+}
+
+void RangeUI::setup()
+{
+	auto msg = awaitResponse(new SetupMessage(++uid, GameType::POP_UP,
+	                         (board_id_t)ui->spnPlayers->value(),
+	                         ui->chkTime->isChecked() ? ui->spnTime->value() : -1,
+	                         ui->chkScore->isChecked() ? ui->spnScore->value() : -1));
+
+	if (msg == nullptr)
+		return;
+
+	ui->txtTerminal->append(fromStd(jWriter.write(msg->toJSON())));
 
 	auto rm = unique_dynamic_cast<ResponseMessage>(std::move(msg));
 
 	if (rm == nullptr)
 		QMessageBox::critical(this, "Wrong Message", "Setup got the wrong response.");
+}
 
-	ui->txtTerminal->append(fromStd(jWriter.write(rm->toJSON())));
+void RangeUI::start()
+{
+	auto msg = awaitResponse(new StartMessage(++uid));
+
+	if (msg == nullptr)
+		return;
+
+	ui->txtTerminal->append(fromStd(jWriter.write(msg->toJSON())));
+
+	auto rm = unique_dynamic_cast<ResponseMessage>(std::move(msg));
+
+	if (rm == nullptr)
+		QMessageBox::critical(this, "Wrong Message", "Start got the wrong response.");
+}
+
+void RangeUI::stop()
+{
+	auto msg = awaitResponse(new StopMessage(++uid));
+
+	if (msg == nullptr)
+		return;
+
+	ui->txtTerminal->append(fromStd(jWriter.write(msg->toJSON())));
+
+	auto rm = unique_dynamic_cast<ResponseMessage>(std::move(msg));
+
+	if (rm == nullptr)
+		QMessageBox::critical(this, "Wrong Message", "Stop got the wrong response.");
 }
 
 void RangeUI::getStatus()
 {
-	if (!ensureConnection())
+	auto msg = awaitResponse(new StatusMessage(++uid));
+
+	if (msg == nullptr)
 		return;
 
-	toSM.send(unique_ptr<Message>(new StatusMessage(++uid)));
-	auto msg = fromSM.receive(patienceWithGame);
-
-	if (msg == nullptr) {
-		// Hmm, we didn't get a message back. Check the connection
-		if (ensureConnection())
-			QMessageBox::critical(this, "Unresponsive game", "The game is not responding.");
-		return;
-	}
+	ui->txtTerminal->append(fromStd(jWriter.write(msg->toJSON())));
 
 	auto srm = unique_dynamic_cast<StatusResponseMessage>(std::move(msg));
 
 	if (srm == nullptr)
 		QMessageBox::critical(this, "Wrong Message", "Get Status got the wrong response.");
+}
 
-	ui->txtTerminal->append(fromStd(jWriter.write(srm->toJSON())));
+
+void RangeUI::getResults()
+{
+	auto msg = awaitResponse(new ResultsMessage(++uid));
+
+	if (msg == nullptr)
+		return;
+
+	ui->txtTerminal->append(fromStd(jWriter.write(msg->toJSON())));
+
+	auto rrm = unique_dynamic_cast<ResponseMessage>(std::move(msg));
+
+	if (rrm == nullptr)
+		QMessageBox::critical(this, "Wrong Message", "Get Results got the wrong response.");
 }
