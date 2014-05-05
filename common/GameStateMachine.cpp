@@ -72,8 +72,7 @@ void runGame(MessageQueue& in, MessageQueue& out, board_id_t numberTargets, boar
 					return;
 				}
 
-				const auto gameDuration = setupMessage->gameLength <= 0 ?
-					chrono::seconds::max() : chrono::seconds(setupMessage->gameLength);
+				const auto gameDuration = chrono::seconds(setupMessage->gameLength);
 
 				// TODO: Be able to pass game data into the state machines
 				switch(setupMessage->gameType) {
@@ -354,7 +353,7 @@ std::unique_ptr<Message> GameStateMachine::onTick(uint16_t)
 		&& any_of(begin(players), end(players), [this](const Player& p) { return p.score >= winningScore; }))
 		gameState = State::OVER;
 
-	if (Clock::now() >= gameEndTime)
+	if (duration > chrono::seconds(0) && Clock::now() >= gameEndTime)
 		gameState = State::OVER;
 
 	return nullptr;
