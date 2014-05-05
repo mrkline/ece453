@@ -12,7 +12,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdbool.h>
-
+ 
 /// Extracts at 16-bit unsigned integer from the memory at `buf`
 uint16_t extractUInt16(const uint8_t* buf)
 {
