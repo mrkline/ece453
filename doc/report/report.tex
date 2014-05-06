@@ -1,0 +1,102 @@
+%\documentclass{report}
+\documentclass[oneside]{book}
+\usepackage{fullpage}
+\usepackage{setspace}
+\usepackage{parskip}
+\setcounter{secnumdepth}{0}
+\begin{document}
+\title{The Practical and Ethical Consequences of United States Software Patent Law}
+\author{Matthew Kline, , Tyler Kuske, Creighton Long}
+\begin{titlepage}
+\vspace*{\fill}
+\begin{Large}
+\begin{center}
+\textbf{LED Shooting Range Post-Project Report}
+
+Matthew Kline, Creighton Long, Tyler Kuske, and James Gordon \\
+Computer Engineering \\
+University of Wisconsin-Madison \\
+May 9, 2014
+\end{center}
+\end{Large}
+\vspace*{\fill}
+\end{titlepage}
+\pagenumbering{roman}
+\frontmatter
+\begin{Large}
+\begin{center}
+\textbf{Executive Summary}
+\end{center}
+\end{Large}
+
+\noindent
+It is a period of civil war. Rebel \\
+spaceships, striking from a hidden \\
+base, have won their first victory \\
+against the evil Galactic Empire. \\
+
+\noindent
+During the battle, Rebel spies managed \\
+to steal secret plans to the Empire's \\
+ultimate weapon, the Death Star, an \\
+armored space station with enough \\
+power to destroy an entire planet. \\
+
+\noindent
+Pursued by the Empire's sinister agents, \\
+Princess Leia races home aboard her \\
+starship, custodian of the stolen plans \\
+that can save her people and restore \\
+freedom to the galaxy...
+\newpage
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+\mainmatter
+
+\section{Initial Design}
+
+\subsection{Overview}
+
+Our initial design called for an infrared shooting range.
+The setup was to consist of multiple targets and ``guns'',
+combined with a daughter board to interface them with the ZedBoard.
+The ZedBoard was to run the game state machine and communicate via the daughter board
+with the peripherals.
+Guns would contain an IR-emitting diode used to ``fire'' a shot,
+a piezo buzzer for additional user feedback,
+and LEDs for indicating game state and for use in debugging.
+Targets would contain IR diodes for detecting ``shots,''
+as well as LEDs to indicate target state and for use in debugging.
+Multiple games were to be supported,
+including multiplayer ones and single-player drills.
+Statistics would be collected during the game and displayed at the end of a match
+along with players' scores.
+
+\subsection{Hardware}
+
+Three different PCBs were to be designed---one for the targets, one for the guns,
+and one for the daughter board.
+Each would contain a TI MSP430 microcontroller, which would be used for processing
+as well as wireless communications.
+The ZedBoards FPGA would be minimized andused mainly for routing,
+with some switch and LED functionality for configuration.
+Most (if not all) logic was to be done in software for more rapid design and debugging.
+
+\subsection{Software}
+
+As mentioned above, software was to handle as much logic as possible,
+simplifying the hardware and FPGA designs.
+Targets were to differentiate between guns by having each gun emit a unique
+sequence of IR pulses, which would be resolved by the targets to a gun ID.
+
+On the ZedBoard, the game control software was to be written in C++.
+The control software would communicate with the peripherals, track game state,
+and report the game results back to users.
+A message protocol was developed so that game events including querying controllers,
+registering shots, changing target states, and so on could be passed as message\ldots
+
+% TODO Carry on here
+
+To interface with players, the UI would run on a separate machine.
+\end{document}
