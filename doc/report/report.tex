@@ -79,7 +79,7 @@ Three different PCBs were to be designed---one for the targets, one for the guns
 and one for the daughter board.
 Each would contain a TI MSP430 microcontroller, which would be used for processing
 as well as wireless communications.
-The ZedBoards FPGA would be minimized andused mainly for routing,
+The ZedBoards FPGA would be minimized and used mainly for routing,
 with some switch and LED functionality for configuration.
 Most (if not all) logic was to be done in software for more rapid design and debugging.
 
@@ -93,10 +93,41 @@ sequence of IR pulses, which would be resolved by the targets to a gun ID.
 On the ZedBoard, the game control software was to be written in C++.
 The control software would communicate with the peripherals, track game state,
 and report the game results back to users.
-A message protocol was developed so that game events including querying controllers,
-registering shots, changing target states, and so on could be passed as message\ldots
-
-% TODO Carry on here
+A message protocol would be developed so that game events including querying controllers,
+registering shots, changing target states, and so on could be passed as messages
+between the various software components.
 
 To interface with players, the UI would run on a separate machine.
+In order to make the UI platform and framework-independent,
+the ZedBoard software was to contain a TCP server.
+Messages in the same format as described above would be passed in a JSON encoding,
+with some sort of delimiter between messages.
+
+\section{Implementation}
+
+\subsection{Software}
+
+Software development proceeded mainly as-expected, though here too,
+time estimates were too short and time could have been better utilized.
+Development began with the messaging system,
+which served as the underpinning of the rest of the software.
+After the messages were largely completed,
+work progressed to the development of the game state machine,
+followed by the TCP server used to communicate with the UI.
+The TCP server was constructed using Boost.Asio,
+an asynchronous networking library in Boost,
+the de-facto ``non-standard standard'' set of C++ libraries.
+Messages were passed between components using a thread-safe message queue,
+which allowed the game state machine and server to run in separate threads
+with minimal hassle.
+
+To help ensure code quality and decouple software development with hardware development,
+unit tests were written for the messages, their serialization to and from JSON,
+and other components as they were written.
+Unit testing became less comprehensive towards the end of the project for two main reasons:
+\begin{enumerate}
+\item Networking and user input-dependent code are harder to test than pure computational code.
+\item Incoming deadlines dictated the development focus on actual project code and not meta-work.
+\end{enumerate}
+
 \end{document}
