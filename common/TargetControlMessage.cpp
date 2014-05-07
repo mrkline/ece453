@@ -98,12 +98,11 @@ std::unique_ptr<TargetControlMessage> TargetControlMessage::fromBinary(uint8_t* 
 	auto msg = Message::fromBinary(buf, len);
 	auto load = BinaryMessage::getPayload(buf);
 	ENFORCE(IOException, load.second > 3, "The payload cannot fit target commands.");
-	
-	const uint8_t numCommands = *load.first;
-	ENFORCE(IOException, load.second - 1 == numCommands * 2,
+
+	ENFORCE(IOException, load.second % 2 == 0,
 	        "The payload is the incorrect size for target commands.");
 
-	++load.first;
+	const uint8_t numCommands = (uint8_t)(load.second / 2);
 
 	CommandList comms;
 

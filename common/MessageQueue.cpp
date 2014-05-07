@@ -32,7 +32,7 @@ void MessageQueue::prioritySend(std::unique_ptr<Message>&& toSend)
 const Message* MessageQueue::peek()
 {
 	unique_lock<mutex> lock(qMutex);
-	return q.top();
+	return q.front().get();
 }
 
 std::unique_ptr<Message> MessageQueue::receive()

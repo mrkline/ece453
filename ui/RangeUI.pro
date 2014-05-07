@@ -11,10 +11,14 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = range_ui
 TEMPLATE = app
 
-CONFIG += c++11 debug
+CONFIG += c++11 debug -D
 #CONFIG += c++11 release
 
-LIBS += -ljsoncpp
+DEFINES += WITH_JSON
+
+LIBS += -ljsoncpp -pthread -ljsoncpp -lboost_system
+
+INCLUDEPATH += ../common/
 
 QMAKE_CXXFLAGS += -Wall -Wextra
 

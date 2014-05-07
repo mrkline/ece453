@@ -53,7 +53,7 @@ void runGame(MessageQueue& in, MessageQueue& out, board_id_t numberTargets, boar
 
 		// Setup a new state machine, or complain if now is not the time to do so.
 		const auto doSetup = [&] {
-			if (machine != nullptr && !machine->isRunning()) {
+			if (machine != nullptr && machine->isRunning()) {
 				out.send(unique_ptr<ResponseMessage>(
 					new ResponseMessage(uid++, msg->id, Code::INVALID_REQUEST,
 					                    "You cannot set up a new game while one is in progress")));
@@ -72,8 +72,7 @@ void runGame(MessageQueue& in, MessageQueue& out, board_id_t numberTargets, boar
 					return;
 				}
 
-				const auto gameDuration = setupMessage->gameLength <= 0 ?
-					chrono::seconds::max() : chrono::seconds(setupMessage->gameLength);
+				const auto gameDuration = chrono::seconds(setupMessage->gameLength);
 
 				// TODO: Be able to pass game data into the state machines
 				switch(setupMessage->gameType) {
@@ -218,7 +217,7 @@ GameStateMachine::GameStateMachine(board_id_t numTargets, board_id_t numPlayers,
 	                               const std::chrono::seconds& gameDuration, shot_t scoreToWin) :
 	targetCount(numTargets),
 	players(numPlayers),
-	gameEndTime(),
+	gameEndTime(TimePoint::max()), // Max this out so we don't time out before we even start
 	duration(gameDuration),
 	winningScore(scoreToWin),
 	shots()
@@ -354,7 +353,7 @@ std::unique_ptr<Message> GameStateMachine::onTick(uint16_t)
 		&& any_of(begin(players), end(players), [this](const Player& p) { return p.score >= winningScore; }))
 		gameState = State::OVER;
 
-	if (Clock::now() >= gameEndTime)
+	if (duration > chrono::seconds(0) && Clock::now() >= gameEndTime)
 		gameState = State::OVER;
 
 	return nullptr;

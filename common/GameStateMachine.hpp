@@ -63,7 +63,6 @@ public:
 	 *                   The state machine does not make assumptions about how many players hardware supports,
 	 *                   so that should be checked elsewhere.
 	 * \param gameDuration The duration of the game, in seconds
-	 *                     Pass std::chrono::seconds::max for infinite (ish) duration.
 	 * \param scoreToWin The winning score. Pass a negative value for no winning score
 	 */
 	GameStateMachine(board_id_t numTargets, board_id_t numPlayers,

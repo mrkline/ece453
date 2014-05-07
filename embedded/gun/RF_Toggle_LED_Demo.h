@@ -10,5 +10,5 @@ void ReceiveOn(void);
 void ReceiveOff(void);
 
 //void InitButtonLeds(void);
-void InitRadio(void);
+
 void TriggerPull(void);
