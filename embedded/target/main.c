@@ -23,72 +23,35 @@
 #define TARGET_CTL             12
 #define STOP 					5
 #define START 					4
-#define QUERY					 2
-extern RF_SETTINGS rfSettings;
+#define QUERY					2
 
-//volatile int pattern;
-//volatile int intCount;
-volatile unsigned int active;			//Set to 1 if target is currently the one to be shot at otherwise its 0
-unsigned int counter;			//Counter for the sensors being high - could also use a timer?
+extern RF_SETTINGS rfSettings;				//Settings for the wireless radio
 
-unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0x00};
-unsigned char RxBuffer[PACKET_LEN+2];
-volatile unsigned int gunCode[8];
-unsigned char RxBufferLength = 0;
-uint8_t playerID;// used to in SHOT message
+volatile unsigned int active;				//Set to 1 if target is currently the one to be shot at otherwise its 0
+unsigned int counter;						//Counter for the sensors being high - could also use a timer?
+
+unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0x00};	//Wireless transmit buffer
+unsigned char RxBuffer[PACKET_LEN+2];		//Receive buffer for the wireless radio
+volatile unsigned int gunCode[8];			//Strobed pattern from the laser to be read in
+unsigned char RxBufferLength 		= 0;	//Receive buffer length from the wireless radio
+uint8_t playerID;							// used to in SHOT message
 uint8_t j;
-int8_t receiveLaser = 7;
-uint32_t stamp;//used by target
-uint16_t respTo;//
-unsigned char transmitting = 0;
-unsigned char receiving = 0;
-unsigned char targetID;
-uint16_t timeStamp;
-unsigned char count;
+int8_t receiveLaser 				= 7;	//Used to time the receiving of the pattern of the laser
+uint32_t stamp;								//used by target
+uint16_t respTo;							//
+unsigned char transmitting 			= 0;	//Asserted when the wireless radio is transmitting
+unsigned char receiving 			= 0;	//Asserted when the wireless radio is receiving
+unsigned char targetID;						//Unique ID for each target (Hard coded in)
+uint16_t timeStamp;							//Tracks time for certain events
+unsigned char count;						//Counter
 volatile bool hitInt;
-volatile unsigned char color;
+volatile unsigned char color;				//Color of LEDs to be displayed
 unsigned char cont;
-bool running;//used for game start/stop
+bool running;								//used for game start/stop
 uint32_t ledcount;
+volatile int acount;						//used for debug, turn target off after hit for 3 seconds.  Then turn target back to active.
 
-/*
-//Interrupt for the ADC
-#pragma vector = ADC12_VECTOR
-__interrupt void ADC12_ISR(void)
-{
-  switch(__even_in_range(ADC12IV,34))
-  {
-  case  0: break;                           // Vector  0:  No interrupt
-  case  2: break;                           // Vector  2:  ADC overflow
-  case  4: break;                           // Vector  4:  ADC timing overflow
-  case  6:                                  // Vector  6:  ADC12IFG0
-    if (ADC12MEM0 >= 0x1FF)                 // ADC12MEM = A0 > 0.5AVcc?
-      //P1OUT |= BIT0;                        // P1.0 = 1
-    	color = GREEN;
-    	active = 0;
-    	LEDs();
-
-    __bic_SR_register_on_exit(LPM0_bits);   // Exit active CPU
-  case  8: break;                           // Vector  8:  ADC12IFG1
-  case 10: break;                           // Vector 10:  ADC12IFG2
-  case 12: break;                           // Vector 12:  ADC12IFG3
-  case 14: break;                           // Vector 14:  ADC12IFG4
-  case 16: break;                           // Vector 16:  ADC12IFG5
-  case 18: break;                           // Vector 18:  ADC12IFG6
-  case 20: break;                           // Vector 20:  ADC12IFG7
-  case 22: break;                           // Vector 22:  ADC12IFG8
-  case 24: break;                           // Vector 24:  ADC12IFG9
-  case 26: break;                           // Vector 26:  ADC12IFG10
-  case 28: break;                           // Vector 28:  ADC12IFG11
-  case 30: break;                           // Vector 30:  ADC12IFG12
-  case 32: break;                           // Vector 32:  ADC12IFG13
-  case 34: break;                           // Vector 34:  ADC12IFG14
-  default: break;
-  }
-}
-
-*/
-/*
+/* THIS METHOD CONSTRUCTS A SHOT MESSAGE TO SEND TO DAUGHTER CARD WIRELESSLY
 void shot(void){
 	uart_putc('f');
 	uart_putc('u');
@@ -113,38 +76,39 @@ void shot(void){
 	uart_putc('y');
 }
 */
-volatile int acount;//used for debug, turn target off after hit for 3 seconds.  Then turn target back to active.
+
 
 //Interrupt vector for timer1 A0
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void TIMER1_A0_ISR(void)
 {
-	if(rand()%5 == 0 && !active){// && !hitInt){
+	if(rand()%5 == 0 && !active)
+	{
 		active = true;
 	}
-	//else if(hitInt){
+
 	acount++;
-	color = 0;
-	P2OUT = 0x00;	//Turn off the LEDs - the target has been hit
-	cont = 1;
-	//P2OUT ^= 0x20;
-	if(acount > 3){
-			active = 1;//turn target back on, for debug testing
-			hitInt = 0;
-			color = 0;
-			LEDs();
-			acount = 0;
-			TA1CTL = TASSEL_1 + MC_1 + TACLR;//reset timer
-			P2IFG &= 0x3F;//clears any "bounce" interrupts for gun hits
-		}
-	//}
+	color 	= 0;			//Clear the color
+	P2OUT 	= 0x00;			//Turn off the LEDs - the target has been hit
+	cont 	= 1;
+
+	if(acount > 3)
+	{
+		active 	= 1;							//turn target back on, for debug testing
+		hitInt 	= 0;							//
+		color	= 0;							//Clear current color
+		LEDs();									//Call method to set LEDs color
+		acount 	= 0;							//Reset counter
+		TA1CTL 	= TASSEL_1 + MC_1 + TACLR;		//reset timer
+		P2IFG &= 0x3F;							//clears any "bounce" interrupts for gun hits
+	}
 }
 
-//Interrupt vector for timer1 A1
-//Interrupt vector for timer1 A1
+//Interrupt vector for timer0 A0
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void TIMER0_A0_ISR(void)
 {
+	//Pulse width modulating LEDs for easier viewing
 	if(ledcount <= 8)
 	{
 		P2OUT &= 0x00;		//Turn off LEDs
@@ -159,74 +123,18 @@ __interrupt void TIMER0_A0_ISR(void)
 		ledcount = 0;
 	}
 }
-	//active = true;//remove
-	/*
-	//JUMPTIME
-	if(receiveLaser >= 0)
-	{
-		gunCode[receiveLaser] = photo;
-		if(photo){
-			color = BLUE;
-		}
-		else{
-			color = GREEN;
-		}
-		//j--;
-		LEDs();
-		receiveLaser--;
-	}
-	else
-	{
-
-		receiveLaser =7;
-		//j = 0;
-		TA0CTL = TASSEL_1 + MC_0 + TACLR;//turn off timer
-		if(*gunCode == 0xAA)
-		{
-			active = 0;
-			color = BLUE;
-	    	playerID = 1;
-	    	shot();
-	    	LEDs();
-	    	//ADC12IE
-			//SHOT
-		}
-		if(*gunCode == 0xBB)
-		{
-			active = 0;
-	    	color = GREEN;
-	    	playerID = 2;
-	    	shot();
-	    	LEDs();
-	    	//ADC12IE
-			//SHOT
-		}
-		ADC12IE |= 0x04;
-	}*/
-//}
 
 //ADC CONFIGURATION
 void adc_config(void)
 {
-	ADC12CTL0 = ADC12ON + ADC12MSC + ADC12SHT0_10;
-	ADC12CTL1 = ADC12SHP + ADC12CONSEQ_3;
-	ADC12MCTL0 = ADC12INCH_0;
-	ADC12MCTL1 = ADC12INCH_1;
-	ADC12MCTL2 = ADC12INCH_2 + ADC12EOS;
-	ADC12IE = 0x4;
-	ADC12CTL0 |= ADC12ENC;
-	/*
-	ADC12MCTL0 = ADC12SHP + ADC12CONSEQ_3;		//input A0
-	ADC12MCTL1 = 0x1;
-	ADC12MCTL2 = 0x2 + ADC12EOS;//change back?
-    ADC12CTL0 = ADC12SHT02 + ADC12ON ADC12;         // Sampling time, ADC12 on
-    ADC12CTL1 = ADC12SHP + ADC12CONSEQ_3;   //change back?                  // Use sampling timer
-    ADC12IE = 0x07;                           // Enable interrupt for 2.0, 2.1, and 2.2
-    ADC12CTL0 |= ADC12ENC;
-    */
+	ADC12CTL0 	= ADC12ON + ADC12MSC + ADC12SHT0_10;
+	ADC12CTL1 	= ADC12SHP + ADC12CONSEQ_3;
+	ADC12MCTL0 	= ADC12INCH_0;
+	ADC12MCTL1 	= ADC12INCH_1;
+	ADC12MCTL2 	= ADC12INCH_2 + ADC12EOS;
+	ADC12IE 	= 0x4;
+	ADC12CTL0  |= ADC12ENC;
 }
-
-
 
 //Interrupt for Port 2 bit that relates to the sensor,
 // We want to interrupt when the sensors detect light
@@ -236,37 +144,34 @@ __interrupt void PORT2_ISR(void)
   switch(__even_in_range(P2IV, 16))
   {
     case  0: break;
-    case  2: break;                         // P2.0 IFG
-    case  4: break;                         // P2.1 IFG
+    case  2: break;                         	// P2.0 IFG
+    case  4: break;                         	// P2.1 IFG
     case  6:
-    	//P2IE = 0;							//Clear the interrupt
 
-    	//Sensors();							//Go into the Sensors function
-
-    	__bic_SR_register_on_exit(LPM3_bits); // Exit active
-    	break;                         		// P2.2 IFG
-    case  8: break;                         // P2.3 IFG
-    case 10: break;                         // P2.4 IFG
-    case 12: break;                         // P2.5 IFG
+    	__bic_SR_register_on_exit(LPM3_bits); 	// Exit active
+    	break;                         			// P2.2 IFG
+    case  8: break;                         	// P2.3 IFG
+    case 10: break;                         	// P2.4 IFG
+    case 12: break;                         	// P2.5 IFG
     case 14:
-    	//active = 0;//set target to off, it has been hit and should not read anymore
-    	//P1IFG &= 0xDF;
-    	P2IE = 0;		//gun 1 hit
+    	//For testing/debugging, shows how target reacts to a
+    	// different gun pattern being read in
+    	P2IE 	= 0;							//gun 1 hit
 
-    	TA1CTL = TASSEL_1 + MC_1 + TACLR;//start timer to turn color on for a second
-    	color = BLUE;
-    	LEDs();
-    	__bic_SR_register_on_exit(LPM3_bits); // Exit active
-    	break;                         // P2.6 IFG
+    	TA1CTL 	= TASSEL_1 + MC_1 + TACLR;		//start timer to turn color on for a second
+    	color 	= BLUE;							//Set color of LEDs to BLUE
+    	LEDs();									//Go change the color of the LEDs
+    	__bic_SR_register_on_exit(LPM3_bits); 	// Exit active
+    	break;                         			// P2.6 IFG
     case 16:
-    	//active = 0;//set target to off, it has been hit and should not read anymore;
-    	P1IFG &= 0xBF;
-    	P2IE = 0;		//gun2 hit
-    	color = GREEN;
-    	TA1CTL = TASSEL_1 + MC_1 + TACLR;//start timer to turn color on for a second
-    	LEDs();
-    	__bic_SR_register_on_exit(LPM3_bits); // Exit active
-    	break;                         // P2.7 IFG
+
+    	P1IFG  &= 0xBF;							//Reset the interrupt flag
+    	P2IE 	= 0;							//gun2 hit
+    	color 	= GREEN;						//Set the color
+    	TA1CTL 	= TASSEL_1 + MC_1 + TACLR;		//start timer to turn color on for a second
+    	LEDs();									//Set color of LEDs
+    	__bic_SR_register_on_exit(LPM3_bits); 	// Exit active
+    	break;                         			// P2.7 IFG
     default: break;
   }
 }
@@ -289,23 +194,12 @@ void Sensors(void)
 
 }
 
+//Turns LEDs to the correct color
 void LEDs(void)
 {
-	//When this is reached, we know the target is "hit"
-
-	//ledcount = 0;
-	//TA1CTL |= 0x0010;				//Start the timer
-
-	P2OUT &= 0x00;		//Turn off LEDs
-	P2OUT |= color;//0x10;		//Turn on desired leds showing target has been hit
+	P2OUT &= 0x00;				//Turn off LEDs
+	P2OUT |= color;				//Turn on desired leds showing target has been hit
 	return;
-	/*while(!cont)
-	{
-
-	}*/
-	//Send message to daughter board when it gets hit - wait for a second -> if no acknowledgement then send again
-	//P2OUT &= 0x00;
-	//Indicate hit
 }
 
 //Function to have high power mode enabled for the radio, write the correct settings
@@ -323,6 +217,7 @@ void InitRadio(void)
   WriteSinglePATable(PATABLE_VAL);
 }
 
+//Transmits data across the wireless radio
 void Transmit(unsigned char *buffer, unsigned char length)
 {
 	//Transmit on the antenna here when ready to send data
@@ -335,6 +230,7 @@ void Transmit(unsigned char *buffer, unsigned char length)
 	Strobe( RF_STX );                         // Strobe STX
 }
 
+//Turn on the receive function of the wireless radio
 void ReceiveOn(void)
 {
 	//Receive signals from the peripheral
@@ -346,6 +242,7 @@ void ReceiveOn(void)
 	Strobe( RF_SRX );
 }
 
+//Turn off the receive function of the wireless radio
 void ReceiveOff(void)
 {
 	//Turn off Receive function when it is not needed
@@ -359,12 +256,14 @@ void ReceiveOff(void)
 	Strobe( RF_SFRX  );
 }
 
-
+//Send character via UART
 void uart_putc(unsigned char c)
 {
 	while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
 	    UCA0TXBUF = c;                  // TX -> RXed character
 }
+
+//Send string via UART
 void uart_puts(const char *str)
 {
      while(*str) uart_putc(*str++);
@@ -379,15 +278,14 @@ __interrupt void USCI_A0_ISR(void)
   case 0:break;                             // Vector 0 - no interrupt
   case 2:                                   // Vector 2 - RXIFG
     while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
-    //UCA0TXBUF = UCA0RXBUF;                  // TX -> RXed character
-    while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
-    UCA0TXBUF = 'T';                  // TX -> RXed character
+    	UCA0TXBUF = UCA0RXBUF;              // TX -> RXed character
     break;
   case 4:break;                             // Vector 4 - TXIFG
   default: break;
   }
 }
 
+//Interrupt for sending data across wireless radio
 #pragma vector=CC1101_VECTOR
 __interrupt void CC1101_ISR(void)
 {
@@ -404,29 +302,25 @@ __interrupt void CC1101_ISR(void)
     case 16: break;                         // RFIFG7
     case 18: break;                         // RFIFG8
     case 20:                                // RFIFG9
-      if(receiving)			    // RX end of packet
+      if(receiving)			    			// RX end of packet
       {
-    	  P2OUT &= 0xF7;		//Turn off the red LEDs
-    	  P2OUT |= 0x20;		//Turn on blue LEDs
-        // Read the length byte from the FIFO
+    	  P2OUT &= 0xF7;					//Turn off the red LEDs
+    	  P2OUT |= 0x20;					//Turn on blue LEDs
+
+    	// Read the length byte from the FIFO
         RxBufferLength = ReadSingleReg( RXBYTES );
         ReadBurstReg(RF_RXFIFORD, RxBuffer, RxBufferLength);
 
         // Stop here to see contents of RxBuffer
         __no_operation();
-
-        // Check the CRC results
-        /*if(RxBuffer[CRC_LQI_IDX] & CRC_OK)
-          P2OUT ^= BIT6;                  */  // Toggle LED1
       }
-      else if(transmitting)		    // TX end of packet
+      else if(transmitting)		    		// TX end of packet
       {
-    	  P2OUT &= 0xF7;		//Light the diode
-        RF1AIE &= ~BIT9;                    // Disable TX end-of-packet interrupt
-        //P2OUT &= ~BIT7;                     // Turn off LED after Transmit
-        transmitting = 0;
+    	  P2OUT &= 0xF7;					//Light the diode
+    	  RF1AIE &= ~BIT9;                  // Disable TX end-of-packet interrupt
+    	  transmitting = 0;
       }
-      else while(1); 			    // trap
+      else while(1); 			    		// trap
       break;
     case 22: break;                         // RFIFG10
     case 24: break;                         // RFIFG11
@@ -451,25 +345,18 @@ __interrupt void ADC12_ISR(void)
     break;
   case  8:
 	    break;                           // Vector  8:  ADC12IFG1
-  case 10:      if (ADC12MEM0 >= 0x100 || ADC12MEM1 >= 0x100 || ADC12MEM2 >= 0x100){                 // ADC12MEM = A0 > 0.5AVcc?
-      //P1OUT |= BIT0;                        // P1.0 = 1
-	  //if(active){
-	  	  //if(!hitInt && active){
-		  	  color = GREEN;
-		  	  //jump
-		  	  hitInt = 1;
-		  	 // ADC12CTL0 &= !ADC12SC;                   // Start sampling/conversion
-		  	  TA1CTL = TASSEL_1 + MC_1 + TACLR;//turns timer active
-		  	  active = 0;
-		  	  LEDs();
-		  	  //TA0CTL |= 0x0010;
-
-	  	  //}
+  case 10:
+	  //Check the AC values of all three sensors to see if they are tripped by light
+	  if (ADC12MEM0 >= 0x100 || ADC12MEM1 >= 0x100 || ADC12MEM2 >= 0x100)
+	  {
+		  color 	= GREEN;					//Color for LEDs is green
+		  hitInt 	= 1;						//Indicate sensors have been tripped
+		  TA1CTL 	= TASSEL_1 + MC_1 + TACLR;	//turns timer active
+		  active 	= 0;
+		  LEDs();								//Change color of LEDs
     }
-  else
-	  //active = 0;
-  	  //photo = false;
-    break;                           // Vector 10:  ADC12IFG2
+
+    break;                          	 	// Vector 10:  ADC12IFG2
   case 12: break;                           // Vector 12:  ADC12IFG3
   case 14: break;                           // Vector 14:  ADC12IFG4
   case 16: break;                           // Vector 16:  ADC12IFG5
@@ -487,50 +374,26 @@ __interrupt void ADC12_ISR(void)
   __bic_SR_register_on_exit(LPM0_bits);   // Exit active CPU
 }
 
-
-//ADC CONFIGURATION
-/*
-void adc_config(void)
-{
-    ADC12CTL0 = ADC12SHT02 + ADC12ON;         // Sampling time, ADC12 on
-    ADC12CTL1 = ADC12SHP;                     // Use sampling timer
-    ADC12IE = 0x07;                           // Enable interrupt for 2.0, 2.1, and 2.2
-    ADC12CTL0 |= ADC12ENC;
-}
-*/
-
 //GPIO CONFIGURATION
 void gpio_config(void)
 {
-    P2OUT &= 0x00;		//Clear the output register for Port 2
-    //Set up GPIO pins for LEDs and Sensors (0 for input, 1 for output)
+	//Set up GPIO pins for LEDs and Sensors (0 for input, 1 for output)
+    P2OUT &= 0x00;				//Clear the output register for Port 2
     P2DIR &= 0x00;				//Set Sensors GPIO to an input
-   // P2DIR |= 0x3A;				//Set LEDs GPIO to outputs
-    P2DIR |= 0x38;			//FOR TESTING
-    //P5DIR |= 0x01;
+    P2DIR |= 0x38;				//Set LEDs GPIO to outputs
 
-   // P2SEL &= 0xC1;				//Set all to be GPIO pins - 0 for GPIO
-    P2SEL &= 0x01;		//FOR TESTING
+    //Set all to be GPIO pins - 0 for GPIO
+    P2SEL &= 0x01;
     P2SEL |= 0x07;
-    //P5SEL &= 0xFD;
-    //P2DIR |= 0x3A;			//FOR TESTING
-
-   // P2SEL &= 0xC1;				//Set all to be GPIO pins - 0 for GPIO
-    P2SEL &= 0x01;		//FOR TESTING
 
     //Set up an interrupt on the sensors when they detect light
-   // P2IES &= 0xFB;    	//P2IES -> Select interrupt edge: 0 = L to H, 1 = H to L -> Check this with schematic tomorrow
-   // P2IE |= 0x04;		//P2IE  -> Enable/Disable Interrupt: 0 = disabled, 1 = enabled
-
-    P2IE |= 0xC0;		//FOR TESTING
-    P2IES &= 0x3F;		//FOR TESTING
+    P2IE |= 0xC0;
+    P2IES &= 0x3F;
 
     count = 0;
-    P2OUT = 0x00;		//Turn LEDs red
 
-
-    P2SEL |= BIT0;                            // P2.0 ADC option select
-    P1DIR |= BIT0;                            // P1.0 output
+    P2SEL |= BIT0;              // P2.0 ADC option select
+    P1DIR |= BIT0;              // P1.0 output
 }
 
 //UART CONFIGURATION
@@ -556,17 +419,15 @@ void uart_config(void)
 //TIMER 1 CONFIGURATION
 void timer_config(void)
 {
-    TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
-    TA1CCR0 = 40000;//50000;
-    TA1CTL = TASSEL_1 + MC_0 + TACLR; //Start with timer halted, turn on at target hit//MC_1;// + TACLR;         // SMCLK, upmode, clear TAR
+    TA1CCTL0 	= CCIE;                          // CCR0 interrupt enabled
+    TA1CCR0 	= 40000;						 //Set value timer counts up to
+    TA1CTL 		= TASSEL_1 + MC_0 + TACLR; 		 //Start with timer halted, turn on at target hit
 
-    TA0CCTL0 = CCIE;                          // CCR0 interrupt enabled
-    TA0CCR0 = 30; //1000;//50000;//about once a second
-    TA0CTL = TASSEL_1 + MC_2 + TACLR;
+    TA0CCTL0 	= CCIE;                          // CCR0 interrupt enabled
+    TA0CCR0 	= 30;							 //Set value timer counts up to
+    TA0CTL 		= TASSEL_1 + MC_2 + TACLR;		 //Start with timer halted, continuous counting
 }
-/*
- * main.c
- */
+/* RESPONSE MESSAGE CONSTRUCTION TO SEND BACK TO DAUGHTER BOARD
 void response(void){
 	uart_putc('f');
 	uart_putc('u');
@@ -586,69 +447,51 @@ void response(void){
 	uart_putc('y');
 
 }
+*/
+
+/*
+ * main.c
+ */
 void main(void) {
     WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
-
 
     // Increase PMMCOREV level to 2 in order to avoid low voltage error
     // when the RF core is enabled
     SetVCore(2);
     ResetRadioCore();
     InitRadio();		//Set up the antenna for 915 MHz
-    //active = false;			//Target starts as inactive
-
-
-  //  __bis_SR_register(GIE);       				// Enter LPM0, Enable interrupts
-    //  __no_operation();                         	// For debugger
-
 
     count = 0;
-    P2OUT = 0;//|= 0x08;		//Turn LEDs red
-    //adc_config();
-    //TIMER A0 CONFIGURATIONS - For the LEDs on the target to time their color change
-    //TA0CTL &= 0x00;			//Clear the control register
-   // TA0CTL |= 0x0102;		//Set Timer to use ACLK, in stop mode, has interrupts
-    //TA0CCTL0 |= CCIE;		//Set this interrupt as the highest priority
-    //TA0CCR0 = TRIGGER;		//Compare/Capture for Timer will interrupt when this value is reached - should be one second
+    P2OUT = 0;					//Clear the Port 2 outputs (LEDs)
 
     uart_config();				//Configure the UART
     gpio_config();				//Configure the GPIOs
     adc_config();				//Configure the ADC
     timer_config();				//Configure the timer
 
-    //Assign unique target ID to each target
+    stamp = 250;				//for debug;
+    respTo = 4;					//for debug;
 
-    stamp = 250;//for debug;
-    respTo = 4;//for debug;
-    //color = RED;
-    //LEDs();
-    active = true;
+    active = true;				//Target is active for this game
     srand(3);
-    hitInt = 0;
-    ledcount = 0;
-    TA0CTL |= 0x0010;
+    hitInt 		= 0;			//Target not hit yet
+    ledcount 	= 0;			//Reset counter
+    TA0CTL 	   |= 0x0010;		//Start the timer
     while(1)
     {
     	if(active){
-    		hitInt = 0;
-    		acount = 0;
-        	ADC12CTL0 |= ADC12SC;                   // Start sampling/conversion
+    		hitInt 		= 0;						//Target has not been hit yet
+    		acount 		= 0;						//Reset counter
+        	ADC12CTL0  |= ADC12SC;                  // Start sampling/conversion
 
             __bis_SR_register(LPM0_bits + GIE);     // LPM0, ADC12_ISR will force exit
             __no_operation();                       // For debugger
-    		color = RED;
-    		//LEDs();
-    		TA1CTL = TASSEL_1 + MC_0 + TACLR;//turn off timer
+    		color 		= RED;						//LEDs to be red
+    		TA1CTL 		= TASSEL_1 + MC_0 + TACLR;	//turn off timer
     	}
-    	else if(!active){
-    		//color = 0;
-    		//LEDs();
-
-    	}
-
     }
 }
-    	/*
+    	/*CODE BELOW IS FOR WIRELESS RADIO COMMUNICATION BETWEEN DAUGHTER BOARD & TARGET BOARD
     	uint8_t recChar = UCA0RXBUF; //grab next byte in uart.
     	if(onChar(recChar)){
     		//color = RED;

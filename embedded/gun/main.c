@@ -16,58 +16,49 @@
 #define  CRC_OK             (BIT7)          // CRC_OK bit
 #define  PATABLE_VAL        (0x51)          // 0 dBm output
 #define  GUN_CODE			(0xAA)
-extern RF_SETTINGS rfSettings;
+
+extern RF_SETTINGS rfSettings;				//Settings for the wireless radio
 
 volatile unsigned char info;
 
-unsigned int buzz;
-unsigned char RxBuffer[PACKET_LEN+2];
-unsigned char RxBufferLength = 0;
+unsigned int buzz;							//Counter for the duration of the buzzer noise length
+unsigned char RxBuffer[PACKET_LEN+2];		//Receive buffer for the wireless radio
+unsigned char RxBufferLength = 0;			//The variable length of the receive buffer
 
-unsigned char transmitting = 0;
-unsigned char receiving = 0;
-unsigned char gunID;				//Hard coded gun ID to distinguish between the guns when sending messages
-unsigned char laser;				//boolean for laser on or off
-unsigned char rounds;				//Duration of game being played
-unsigned laserDuration;				//How long the laser stays on after a trigger pull
-unsigned char r;					//The character received from the RX uart buffer
-uint16_t timeStamp;				//Time of each shot that is taken -> Change to 16 bit int
-volatile acount;
-unsigned char *time_stamp;
-uint32_t numShots = 0;			//Total shots this gun has taken
+unsigned char transmitting 		= 0;		//Asserted if wireless radio is transmitting
+unsigned char receiving 		= 0;		//Asserted if wireless radio is receiving
+unsigned char gunID;						//Hard coded gun ID to distinguish between the guns when sending messages
+unsigned char laser;						//boolean for laser on or off
+unsigned char rounds;						//Duration of game being played
+unsigned laserDuration;						//How long the laser stays on after a trigger pull
+unsigned char r;							//The character received from the RX uart buffer
+uint16_t timeStamp;							//Time of each shot that is taken -> Change to 16 bit int
+volatile acount;							//Counter for how long the green lights stay on
+unsigned char *time_stamp;					//Time stamp to record the time of each shot
+uint32_t numShots 				= 0;		//Total shots this gun has taken
 
-const unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
-const unsigned char message[100];
+const unsigned char TxBuffer[PACKET_LEN]
+                          = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};  //Transmit buffer for the wireless radio
+const unsigned char message[100];			//Message length cap
 
-//Interrupt vector for timer1 A0
-#pragma vector=TIMER1_A0_VECTOR
-__interrupt void TIMER1_A0_ISR(void)
-{
-
-}
-
-//Interrupt vector for timer1 A0
-#pragma vector=TIMER0_A0_VECTOR
-__interrupt void TIMER0_A0_ISR(void)
-{
-
-}
-
+//Transmit character by UART
 void uart_putc(unsigned char c)
 {
-	while (!(UCA0IFG & UCTXIFG));             // USCI_A0 TX buffer ready?
-	    UCA0TXBUF = c;                  // TX -> RXed character
+	while (!(UCA0IFG & UCTXIFG));             	// USCI_A0 TX buffer ready?
+	    UCA0TXBUF = c;                  		// TX -> RXed character
 }
+
+//Transmit string via UART
 void uart_puts(const char *str)
 {
      while(*str) uart_putc(*str++);
 }
 
+//Receive character via UART
 void uart_getc(void)
 {
 	while(!(UCA0IFG & UCRXIFG));
 		r = UCA0RXBUF;
-
 }
 
 //If the trigger is pulled, we will go to this method to take care of the
@@ -75,19 +66,17 @@ void uart_getc(void)
 void TriggerPull(void)
 {
 
-	timeStamp = TA0R;//When trigger is pulled, get the timer value and put into variable timeStamp
-	//Append timeStamp to the time stamp string
+	timeStamp = TA0R;						//When trigger is pulled, get the timer value and put into variable timeStamp
 	laserDuration = 0;
 	while(laserDuration != 5000)
 	{
-		P2OUT |= 0x01;		//Turn on the laser
-		P2OUT ^= 0x04;		//Toggle the buzzer
+		P2OUT |= 0x01;						//Turn on the laser
+		P2OUT ^= 0x04;						//Toggle the buzzer
 		laserDuration++;
 	}
-	P2OUT &= 0xFE;
+	P2OUT &= 0xFE;							//Turn off the laser
 	return;
 }
-
 
 //Interrupt for when the trigger is pulled
 #pragma vector=PORT2_VECTOR
@@ -99,11 +88,11 @@ __interrupt void PORT2_ISR(void)
     case  2: break;                         // P2.0 IFG
 
     case  4:                          		// P2.1 IFG
-	TA1CTL = TASSEL_1 + MC_1 + TACLR;//start timer to turn color on for a second
+	TA1CTL = TASSEL_1 + MC_1 + TACLR;		//start timer to turn color on for a second
     P2IFG &= 0xFD;
     TriggerPull();
-    numShots = numShots + 1;			//NOT SURE ABOUT THIS LOGIC
-    __bic_SR_register_on_exit(LPM3_bits); // Exit active
+    numShots = numShots + 1;				//Track number of shots after a trigger pull
+    __bic_SR_register_on_exit(LPM3_bits); 	// Exit active
     break;
 
     case  6: break;                         // P2.2 IFG
@@ -112,7 +101,6 @@ __interrupt void PORT2_ISR(void)
     case 12: break;                         // P2.5 IFG
     case 14: break;                         // P2.6 IFG
     case 16: break;                         // P2.7 IFG
-    //default: break;
   }
 }
 
@@ -162,14 +150,6 @@ void main(void) {
     UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
     UCA0IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
 
-    TA1CCTL0 = CCIE;                          // CCR0 interrupt enabled
-    TA1CCR0 = 500;						//1000;//50000;//about once a second
-    TA1CTL = TASSEL_1 + MC_0 + TACLR; //Start with timer halted, turn on at target hit//MC_1;// + TACLR;         // SMCLK, upmode, clear TAR
-
-    TA0CCR0 = 100;                 // Count limit (16 bit)
-    TA0CCTL0 = 0x10;                 // Enable Timer A1 interrupts, bit 4=1
-    TA0CTL = TASSEL_1 + MC_2 + TACLR;        // Timer A1 with ACLK, count UP  TODO CHANGE to MC_1
-
    __bis_SR_register(GIE);       				// Enter LPM0, Enable interrupts
    __no_operation();                         	// For debugger
 
@@ -187,7 +167,8 @@ void main(void) {
 
     while(1)
     {
-  /*  	uint8_t recChar = UCA0RXBUF; //grab next byte in uart.
+  /*  	LOGIC BELOW IS FOR PASSING THE MESSAGES BETWEEN THE WIRELESS & DECODING EACH MESSAGE
+   * uint8_t recChar = UCA0RXBUF; //grab next byte in uart.
     	if(onChar(recChar)){
     	//valid, check if message is start, stop, querey, targetctl.
     		switch (type) {

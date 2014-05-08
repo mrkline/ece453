@@ -1,3 +1,11 @@
+/*
+ * Daughter Card Embedded Software
+ * Written by Tyler Kuske & James Gordon
+ * This is the software for the card that plugs into the Zedboard. It is meant
+ * to get messages from the GUI through the Zed. It then broadcasts the messages
+ * out to the targets and the guns in packets. It is also able to receive
+ * messages back to relay to the Zedboard.
+ */
 #include <msp430.h>
 #include "RF_Toggle_LED_Demo.h"
 #include <stdio.h>
@@ -24,33 +32,34 @@ typedef enum {   //type int8_t
      UNSUPPORTED_REQUEST
 };
 
-extern RF_SETTINGS rfSettings;
+extern RF_SETTINGS rfSettings;									//Radio settings set in external file
 
 volatile unsigned int info[6];
-//volatile unsigned int transmit_flag;
 
-const unsigned char TxBuffer[PACKET_LEN]= {0xAA, 0xBB, 0xCC, 0xDD, 0x00};
-unsigned char RxBuffer[PACKET_LEN+2];
-unsigned char RxBufferLength = 0;
+const unsigned char TxBuffer[PACKET_LEN]
+                         = {0xAA, 0xBB, 0xCC, 0xDD, 0x00};		//Transmit buffer for radio
+unsigned char RxBuffer[PACKET_LEN+2];							//Receive buffer for radio
+unsigned char RxBufferLength 	= 0;							//Length of info in the receive buffer
 
-unsigned char transmitting = 0;
-unsigned char receiving = 0;
-unsigned char targets;
-unsigned char rounds;
-unsigned char gunIDs[2];
-unsigned char targetIDs[3];
+unsigned char transmitting 		= 0;							//Asserted if radio is transmitting
+unsigned char receiving 		= 0;							//Asserted if radio is receiving
+unsigned char targets;											//Number of targets in current game
+unsigned char rounds;											//Number of rounds in current games
+unsigned char gunIDs[2];										//Unique IDs for each gun
+unsigned char targetIDs[3];										//Unique IDs for each target
 
-
+//Transmit character function for UART
 void uart_putc(unsigned char c)
 {
 	while (!(UCA0IFG & UCTXIFG));             // USCI_A0 TX buffer ready?
 	    UCA0TXBUF = c;                  // TX -> RXed character
 }
+
+//Transmit string function for UART
 void uart_puts(const char *str)
 {
      while(*str) uart_putc(*str++);
 }
-
 
 //Function to have high power mode enabled for the radio, write the correct settings
 // to the radio and set up the PA table values
@@ -62,12 +71,13 @@ void InitRadio(void)
   PMMCTL0_L |= PMMHPMRE_L;
   PMMCTL0_H = 0x00;
 
+  //Set radio settings
   WriteRfSettings(&rfSettings);
 
   WriteSinglePATable(PATABLE_VAL);
 }
 
-
+//Transmit function for the wireless radio
 void Transmit(unsigned char *buffer, unsigned char length)
 {
 	//Transmit on the antenna here when ready to send data
@@ -81,6 +91,7 @@ void Transmit(unsigned char *buffer, unsigned char length)
 	Strobe( RF_STX );                         // Strobe STX
 }
 
+//Set the wireless radio up to receive messages
 void ReceiveOn(void)
 {
 	//Receive signals from the peripheral
@@ -92,6 +103,7 @@ void ReceiveOn(void)
 	Strobe( RF_SRX );
 }
 
+//Turn off the wireless radio to receive messages
 void ReceiveOff(void)
 {
 	//Turn off Receive function when it is not needed
@@ -105,7 +117,6 @@ void ReceiveOff(void)
 	Strobe( RF_SFRX  );
 }
 
-
 // Echo back RXed character, confirm TX buffer is ready first
 #pragma vector=USCI_A0_VECTOR
 __interrupt void USCI_A0_ISR(void)
@@ -118,8 +129,6 @@ __interrupt void USCI_A0_ISR(void)
 
     while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
     UCA0TXBUF = UCA0RXBUF;                  // TX -> RXed character
-    //while (!(UCA0IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
-    //UCA0TXBUF = 'T';                  // TX -> RXed character
     break;
   case 4:
       __delay_cycles(5000);                 // Add small gap between TX'ed bytes
@@ -130,7 +139,6 @@ __interrupt void USCI_A0_ISR(void)
   default: break;
   }
 }
-
 
 //Interrupt Vector for the antenna for both receiving and transmitting
 #pragma vector=CC1101_VECTOR
@@ -194,10 +202,9 @@ void uart_config(void)
     UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
     UCA0CTL1 |= UCSSEL_1;                     // CLK = ACLK
     UCA0BR0 = 0x03;                           // 32kHz/9600=3.41 (see User's Guide)
-    UCA0BR1 = 0x00;                           //
+    UCA0BR1 = 0x00;
     UCA0MCTL = UCBRS_3+UCBRF_0;               // Modulation UCBRSx=3, UCBRFx=0
     UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
-    //UCA0IE |= UCRXIE;                         // Enable USCI_A0 RX interrupt
 }
 
 /*
@@ -207,14 +214,11 @@ void main(void) {
 
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 
-    //Peripheral is going to send and receive information from other modules so need to set it up to receive information
-    // and send it along the PM_UCA0SOMI pin to the Zedboard or the Cypress
-
     // Increase PMMCOREV level to 2 in order to avoid low voltage error
     // when the RF core is enabled
       SetVCore(2);
       ResetRadioCore();
-      InitRadio();		//Sets up the antenna radio to be active
+      InitRadio();								//Sets up the antenna radio to be active
 
       PMAPPWD = 0x02D52;                        // Get write-access to port mapping regs
       P1MAP5 = PM_UCA0RXD;                      // Map UCA0RXD output to P1.5
@@ -224,7 +228,7 @@ void main(void) {
       P1DIR |= BIT6;                            // Set P1.6 as TX output
       P1SEL |= BIT5 + BIT6;                     // Select P1.5 & P1.6 to UART function
 
-      P2DIR |= 0x02;							//COnfigure the buffer
+      P2DIR |= 0x02;							//Configure the buffer
       P2SEL &= 0xFD;
 
       UCA0CTL1 |= UCSWRST;                      // **Put state machine in reset**
@@ -233,19 +237,20 @@ void main(void) {
       UCA0BR1 = 0x00;                           //
       UCA0MCTL = UCBRS_3+UCBRF_0;               // Modulation UCBRSx=3, UCBRFx=0
       UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
-      UCA0IE |= UCRXIE;                // Enable USCI_A0 RX interrupt
-      uart_config();
+      UCA0IE |= UCRXIE;                			// Enable USCI_A0 RX interrupt
 
-      //turn on target
-      //uart_puts("Hi Creighton\n\r");
+      uart_config();							//Configure the UART
+
+      //Code for testing the UART communication
       unsigned char string6[] = {0x66, 0x75, 0x0c, 0x00, 0x00, 0x00, 0x04, 0x01, 0x01, 0x03,0x00, 0x79, 0x79};
       int i;
       while(1)
-    		  {
-      for(i = 0; i <=12; i++){
-    	  uart_putc(string6[i]);
+      {
+    	  for(i = 0; i <=12; i++)
+    	  {
+    		  uart_putc(string6[i]);
+    	  }
       }
-    		  }
   	/*uint8_t recChar = UCA0RXBUF; //grab next byte in uart.
   	while(!onChar(recChar)){
   		recChar = UCA0RXBUF;
@@ -518,21 +523,25 @@ void main(void) {
       transmitting = 1;
       Transmit( (unsigned char*)TxBuffer, sizeof TxBuffer); 			//In order to transmit
 
-     while(1){
+     while(1)
+     {
     	 uint8_t byte = UCA0RXBUF;//potentially have to poll a different way, check for flag?
-    	 if(onChar(byte)){
-    		 switch (type){
+    	 if(onChar(byte))
+    	 {
+    		 switch (type)
+    		 {
     		 	 case QUERY:
-    		 		 if(buffer[0] == 'f' && buffer[1] == 'u'){//&&bufferID == buffer[7] && boardType == buffer[8],check payload before reading buffer[7] and buffer [8]?
+    		 		 if(buffer[0] == 'f' && buffer[1] == 'u')
+    		 		 {
     		 			 //handle Query, look at TX in uart ISR
-    		 			 uart_puts("QUERY");//TAKE OUT;
-    		 			 //print f,u, message type, message id, payload length, payload ->board id?, board type?
+    		 			 uart_puts("QUERY");							//Send message across UART
     		 		 }
     		 		 break;
-    		 }//end switch
-    	 }//end if(onChar)
-     }//end main
-  /*    while(1)
+    		 }
+    	 }
+     }
+  /* CODE BELOW WAS FOR THE GAME FLOW CONTROL WITH SENDING MESSAGES BETWEEN THE DAUGHTER BOARD & OTHER MODULES
+   * while(1)
       {
 
     	  //Check field for # of guns & targets - get each id and store into seperate array
@@ -564,7 +573,7 @@ void main(void) {
 
    }
 
-/*
+/*		ALL CODE BELOW WAS FOR THE PERIPHERAL TO SET UP PACKETS & SEND THEM ACROSS WIRELESS IF OUR ANTENNA/UART WOULD HAVE WORKED
       uart_puts((char *)"\n\r**************\n\rPeripheral\n\r");
       uart_puts((char *)"***************\n\r\n\r");
       	  	  	  	  	  	  //f	   u    querey   v id v   vpaylengthv vpayloadv  end
