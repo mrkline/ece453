@@ -3,6 +3,8 @@
 \usepackage{fullpage}
 \usepackage{setspace}
 \usepackage{parskip}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage[bookmarks,colorlinks,linktoc=all,linkcolor=DarkGreen,urlcolor=Blue]{hyperref}
 \setcounter{secnumdepth}{0}
 \begin{document}
 \title{The Practical and Ethical Consequences of United States Software Patent Law}
@@ -29,25 +31,23 @@ May 9, 2014
 \end{center}
 \end{Large}
 
-\noindent
-It is a period of civil war. Rebel \\
-spaceships, striking from a hidden \\
-base, have won their first victory \\
-against the evil Galactic Empire. \\
+This semester, we decided to create a laser tag shooting range as our design project.
+It was to consist of two guns and three targets,
+each controlled via wireless communication through the ZedBoard by a user interface.
+Different games were to be implemented for both single and multiple players,
+basing score on speed and accuracy.
 
-\noindent
-During the battle, Rebel spies managed \\
-to steal secret plans to the Empire's \\
-ultimate weapon, the Death Star, an \\
-armored space station with enough \\
-power to destroy an entire planet. \\
+Throughout the project, we had difficulties getting our hardware working correctly.
+Problems with wireless communications and the JTAG programmer kept us behind schedule.
+This ultimately led us to falling short of our final goal.
+However, we were able to get a proof of concept working with a single gun and target,
+demonstrating that when you hit a target with a laser it would respond correctly.
 
-\noindent
-Pursued by the Empire's sinister agents, \\
-Princess Leia races home aboard her \\
-starship, custodian of the stolen plans \\
-that can save her people and restore \\
-freedom to the galaxy...
+Despite not getting as far as we wanted on our project, we all learned a lot this semester.
+This class was our first taste of seeing a project from start to finish,
+and pulled together many of the skills we have learned in computer engineering here
+at Madison.
+
 \newpage
 \tableofcontents
 \newpage
@@ -79,7 +79,7 @@ Three different PCBs were to be designed---one for the targets, one for the guns
 and one for the daughter board.
 Each would contain a TI MSP430 microcontroller, which would be used for processing
 as well as wireless communications.
-The ZedBoards FPGA would be minimized and used mainly for routing,
+The ZedBoard's FPGA's role would be minimized and used mainly for routing,
 with some switch and LED functionality for configuration.
 Most (if not all) logic was to be done in software for more rapid design and debugging.
 
@@ -105,6 +105,40 @@ with some sort of delimiter between messages.
 
 \section{Implementation}
 
+\subsection{Hardware}
+
+Early in the project, we decided to use visible-spectrum LEDs instead of IR ones.
+This is because they were cheaper and a visible beam made it easier to determine
+if the LEDs were working properly.
+Besides that, we stayed fairly faithful to our original design plans.
+
+Hardware and embedded software development proved to be our most arduous task.
+Most of our major issues and setbacks occurred here, including.
+\begin{enumerate}
+\item Of the several LEDs we ordered, only one was bright enough to activate
+	our photodiodes.
+	Because of this, we were only able to construct a single gun.
+\item Our photodiodes failed to reach their desired voltage output
+	when hit with light from the LEDs.
+	We had to modify the board so that the diodes fed into analog inputs
+	on the MSP430 so that we could adjust the transition point in software.
+\item We were unable to program the MSP430 microcontrollers initially.
+	Our JTAG headers were oriented improperly, so solutions included flipping the header,
+	or running wires between the JTAG header and the programmer.
+	This took approximately a week to diagnose.
+\item Wireless communication failed.
+	Our group attempted to diagnose the problem by comparing our design to the reference one,
+	by comparing our design to the designs of other teams with working wireless,
+	and by using the other teams' code.
+	Despite these, we were unable to find the problem,
+	and after about a week and a half of debugging we gave up and switched to UART.
+\item We had a great deal of trouble properly setting up the ZedBoard's FPGA
+	capabilities, and were unable to get it working in time for the final presentation.
+\end{enumerate}
+
+These setbacks put us very behind schedule,
+to the point where we were unable to finish establishing reliable UART communications.
+
 \subsection{Software}
 
 Software development proceeded mainly as-expected, though here too,
@@ -120,9 +154,11 @@ the de-facto ``non-standard standard'' set of C++ libraries.
 Messages were passed between components using a thread-safe message queue,
 which allowed the game state machine and server to run in separate threads
 with minimal hassle.
+The user interface was built using the Qt framework,
+and was able to reuse the TCP code and messages built for the state machine.
 
 To help ensure code quality and decouple software development with hardware development,
-unit tests were written for the messages, their serialization to and from JSON,
+unit tests were created for the messages, their serialization to and from JSON,
 and other components as they were written.
 Unit testing became less comprehensive towards the end of the project for two main reasons:
 \begin{enumerate}
@@ -130,4 +166,51 @@ Unit testing became less comprehensive towards the end of the project for two ma
 \item Incoming deadlines dictated the development focus on actual project code and not meta-work.
 \end{enumerate}
 
+Software was documented via Doxygen, a Javadoc-like system which generates
+HTML, \LaTeX/PDF, \texttt{man}, CHM, and other formats of documentation from
+the source code's comments.
+Message protocols were also first laid out and documented using Markdown files.
+
+Unfortunately, the last component (a module for serial I/O with the daughter board)
+was not written at the time of final presentations.
+
+\section{Analysis}
+
+Though we were able to get multiple embedded systems working in tandem to the point where
+guns could shoot at and light up targets, our project fell short of our original goals.
+Though time could have been perhaps managed better,
+the largest detriment to our success was our continued struggles in getting the hardware to work.
+In retrospect, the following changes may have helped us over our major hurdles:
+\begin{enumerate}
+\item Using a pre-built wireless package, such as a ZigBee,
+	may have greatly alleviated our wireless issues.
+\item Instead of building specialized PCBs for each task,
+	bugs in our hardware may have been minimized by building a single PCB capable
+	of all needed tasks when the correct subset of components were placed on it.
+\end{enumerate}
+Software went fairly well overall, but also fell short on time.
+Better time management may have helped here.
+
+Our test plans did a fair job at assessing our project's functionality---though
+they may have taken long periods of time to resolve,
+little time was wasted wondering what component was causing our various issues.
+
+\section{Lessons Learned}
+
+While our project was certainly frustrating at times,
+we all agree that it was still one of the most educational and fulfilling
+classes we have taken at the University of Wisconsin.
+This was due to how it blended many of our previous courses,
+including ones in analog and digital hardware, Verilog and digital design,
+and software engineering.
+We now have a good appreciation for the difficulties in hardware prototyping,
+and have hopefully picked up some useful debugging skills that we can take
+into graduate school and/or the workplace.
+
+Particular lessons that we certainly learned are:
+\begin{itemize}
+\item Being more attentive with the data sheets when creating the schematic
+\item How to diagnose hardware issues and how to modify development PCBs
+\item The importance of picking parts carefully and ordering extras
+\end{itemize}
 \end{document}
